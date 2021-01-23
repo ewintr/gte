@@ -2,11 +2,15 @@ package task
 
 import "time"
 
-type Date struct {
-	date time.Time
+type Date time.Time
+
+func (d *Date) Weekday() Weekday {
+	return d.Weekday()
 }
 
-type Weekday int
+type Weekday time.Weekday
+
+type Period int
 
 type Task struct {
 	Action string
@@ -23,6 +27,8 @@ type Weekly struct {
 }
 
 func (w *Weekly) FirstAfter(date Date) Date {
+	//sd := w.Start.Weekday()
+
 	return date
 }
 
