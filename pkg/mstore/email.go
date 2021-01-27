@@ -2,6 +2,7 @@ package mstore
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
@@ -100,4 +101,8 @@ func (es *EMailStore) Inbox() ([]*Message, error) {
 	}
 
 	return messages, nil
+}
+
+func (es *EMailStore) Append(mbox string, msg imap.Literal) error {
+	return es.imap.Append(mbox, nil, time.Time{}, msg)
 }

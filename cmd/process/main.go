@@ -2,11 +2,34 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"strings"
 
 	"git.sr.ht/~ewintr/gte/pkg/mstore"
+	"github.com/emersion/go-imap"
 )
+
+type Body struct {
+	reader io.Reader
+	length int
+}
+
+func NewBody(msg string) *Body {
+	return &Body{
+		reader: strings.NewReader(msg),
+		length: len([]byte(msg)),
+	}
+}
+
+func (b *Body) Read(p []byte) (int, error) {
+	return b.reader.Read(p)
+}
+
+func (b *Body) Len() int {
+	return b.length
+}
 
 func main() {
 	config := &mstore.EMailStoreConfiguration{
@@ -34,12 +57,22 @@ func main() {
 		fmt.Println(f.Name)
 	}
 
-	messages, err := mailStore.Inbox()
-	if err != nil {
+	/*
+		messages, err := mailStore.Inbox()
+		if err != nil {
+			log.Fatal(err)
+		}
+		for _, m := range messages {
+			fmt.Println(m.Subject)
+		}
+	*/
+
+	body := NewBody(`From: todo <process@erikwinter.nl>
+Subject: the subject
+
+And here comes the body`)
+
+	if err := mailStore.Append("INBOX", imap.Literal(body)); err != nil {
 		log.Fatal(err)
 	}
-	for _, m := range messages {
-		fmt.Println(m.Subject)
-	}
-
 }
