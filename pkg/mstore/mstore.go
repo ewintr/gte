@@ -6,10 +6,11 @@ type Folder struct {
 
 type Message struct {
 	Subject string
+	Body    string
 }
 
 type MStorer interface {
-	Folders() ([]Folder, error)
+	Folders() ([]*Folder, error)
 	Messages(folder Folder) ([]Message, error)
 	Move(message Message, folder Folder) error
 	Update(message Message) error
