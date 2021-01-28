@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"git.sr.ht/~ewintr/gte/pkg/mstore"
-	"github.com/emersion/go-imap"
 )
 
 type Body struct {
@@ -32,7 +31,7 @@ func (b *Body) Len() int {
 }
 
 func main() {
-	config := &mstore.EMailStoreConfiguration{
+	config := &mstore.EmailConfiguration{
 		IMAPURL:      os.Getenv("IMAP_URL"),
 		IMAPUsername: os.Getenv("IMAP_USERNAME"),
 		IMAPPassword: os.Getenv("IMAP_PASSWORD"),
@@ -43,36 +42,50 @@ func main() {
 	}
 	//fmt.Printf("conf: %+v\n", config)
 
-	mailStore, err := mstore.EMailConnect(config)
+	mailStore, err := mstore.EmailConnect(config)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer mailStore.Disconnect()
 
-	folders, err := mailStore.Folders()
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, f := range folders {
-		fmt.Println(f.Name)
-	}
-
 	/*
-		messages, err := mailStore.Inbox()
+		folders, err := mailStore.FolderNames()
 		if err != nil {
 			log.Fatal(err)
 		}
-		for _, m := range messages {
-			fmt.Println(m.Subject)
+		for _, f := range folders {
+			fmt.Println(f)
 		}
 	*/
 
-	body := NewBody(`From: todo <process@erikwinter.nl>
-Subject: the subject
-
-And here comes the body`)
-
-	if err := mailStore.Append("INBOX", imap.Literal(body)); err != nil {
+	if err := mailStore.Select("Today"); err != nil {
 		log.Fatal(err)
 	}
+
+	messages, err := mailStore.Messages()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, m := range messages {
+		fmt.Printf("%d: %s\n", m.ID, m.Subject)
+	}
+	if len(messages) == 0 {
+		log.Fatal("no messages")
+		return
+	}
+
+	if err := mailStore.Remove(messages[0].ID); err != nil {
+		log.Fatal(err)
+	}
+
+	/*
+			body := NewBody(`From: todo <process@erikwinter.nl>
+		Subject: the subject
+
+		And here comes the body`)
+
+			if err := mailStore.Append("INBOX", imap.Literal(body)); err != nil {
+				log.Fatal(err)
+			}
+	*/
 }

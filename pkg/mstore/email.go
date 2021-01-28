@@ -8,13 +8,13 @@ import (
 	"github.com/emersion/go-imap/client"
 )
 
-type EMailStoreConfiguration struct {
+type EmailConfiguration struct {
 	IMAPURL      string
 	IMAPUsername string
 	IMAPPassword string
 }
 
-func (esc *EMailStoreConfiguration) Valid() bool {
+func (esc *EmailConfiguration) Valid() bool {
 	if esc.IMAPURL == "" {
 		return false
 	}
@@ -25,73 +25,77 @@ func (esc *EMailStoreConfiguration) Valid() bool {
 	return true
 }
 
-type smtpConf struct {
-	url string
-	to  string
+type Email struct {
+	imap       *client.Client
+	mboxStatus *imap.MailboxStatus
 }
 
-type EMailStore struct {
-	imap *client.Client
-}
-
-func EMailConnect(conf *EMailStoreConfiguration) (*EMailStore, error) {
+func EmailConnect(conf *EmailConfiguration) (*Email, error) {
 	imap, err := client.DialTLS(conf.IMAPURL, nil)
 	if err != nil {
-		return &EMailStore{}, err
+		return &Email{}, err
 	}
 	if err := imap.Login(conf.IMAPUsername, conf.IMAPPassword); err != nil {
-		return &EMailStore{}, err
+		return &Email{}, err
 	}
 
-	return &EMailStore{
+	return &Email{
 		imap: imap,
 	}, nil
 }
 
-func (es *EMailStore) Disconnect() {
+func (es *Email) Disconnect() {
 	es.imap.Logout()
 }
 
-func (es *EMailStore) Folders() ([]*Folder, error) {
+func (es *Email) FolderNames() ([]string, error) {
 	boxes, done := make(chan *imap.MailboxInfo), make(chan error)
 	go func() {
 		done <- es.imap.List("", "*", boxes)
 	}()
 
-	folders := []*Folder{}
+	folders := []string{}
 	for b := range boxes {
-		folders = append(folders, &Folder{
-			Name: b.Name,
-		})
+		folders = append(folders, b.Name)
 	}
 
 	if err := <-done; err != nil {
-		return []*Folder{}, err
+		return []string{}, err
 	}
 
 	return folders, nil
 }
 
-func (es *EMailStore) Inbox() ([]*Message, error) {
-	mbox, err := es.imap.Select("INBOX", false)
+func (es *Email) Select(folder string) error {
+	status, err := es.imap.Select(folder, false)
 	if err != nil {
-		return []*Message{}, err
+		return err
 	}
-	fmt.Println("Flags for INBOX:", mbox.Flags)
+	fmt.Printf("status: %+v\n", status)
 
-	fmt.Println("Messages: ", mbox.Messages)
+	es.mboxStatus = status
+
+	return nil
+}
+
+func (es *Email) Messages() ([]*Message, error) {
+	if es.mboxStatus == nil {
+		return []*Message{}, fmt.Errorf("no mailbox selected")
+	}
 
 	seqset := new(imap.SeqSet)
-	seqset.AddRange(uint32(1), mbox.Messages)
+	seqset.AddRange(uint32(1), es.mboxStatus.Messages)
 
 	imsg, done := make(chan *imap.Message), make(chan error)
 	go func() {
-		done <- es.imap.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope}, imsg)
+		done <- es.imap.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope, imap.FetchUid}, imsg)
 	}()
 
 	messages := []*Message{}
 	for m := range imsg {
+		//fmt.Printf("%+v\n", m)
 		messages = append(messages, &Message{
+			ID:      m.Uid,
 			Subject: m.Envelope.Subject,
 		})
 	}
@@ -103,6 +107,28 @@ func (es *EMailStore) Inbox() ([]*Message, error) {
 	return messages, nil
 }
 
-func (es *EMailStore) Append(mbox string, msg imap.Literal) error {
+func (es *Email) Append(mbox string, msg imap.Literal) error {
 	return es.imap.Append(mbox, nil, time.Time{}, msg)
+}
+
+func (es *Email) Remove(id uint32) error {
+	if es.mboxStatus == nil {
+		return fmt.Errorf("no mailbox selected")
+	}
+
+	// set deleted flag
+	seqset := new(imap.SeqSet)
+	seqset.AddRange(id, id)
+	storeItem := imap.FormatFlagsOp(imap.SetFlags, true)
+	err := es.imap.UidStore(seqset, storeItem, imap.FormatStringList([]string{imap.DeletedFlag}), nil)
+	if err != nil {
+		return err
+	}
+
+	// expunge box
+	if err := es.imap.Expunge(nil); err != nil {
+		return err
+	}
+
+	return nil
 }
