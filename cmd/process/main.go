@@ -67,14 +67,14 @@ func main() {
 		log.Fatal(err)
 	}
 	for _, m := range messages {
-		fmt.Printf("%d: %s\n", m.ID, m.Subject)
+		fmt.Printf("%d: %s\n", m.Uid, m.Subject)
 	}
 	if len(messages) == 0 {
 		log.Fatal("no messages")
 		return
 	}
 
-	if err := mailStore.Remove(messages[0].ID); err != nil {
+	if err := mailStore.Remove(messages[0].Uid); err != nil {
 		log.Fatal(err)
 	}
 

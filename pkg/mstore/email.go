@@ -83,6 +83,10 @@ func (es *Email) Messages() ([]*Message, error) {
 		return []*Message{}, fmt.Errorf("no mailbox selected")
 	}
 
+	if es.mboxStatus.Messages == 0 {
+		return []*Message{}, nil
+	}
+
 	seqset := new(imap.SeqSet)
 	seqset.AddRange(uint32(1), es.mboxStatus.Messages)
 
@@ -95,7 +99,7 @@ func (es *Email) Messages() ([]*Message, error) {
 	for m := range imsg {
 		//fmt.Printf("%+v\n", m)
 		messages = append(messages, &Message{
-			ID:      m.Uid,
+			Uid:     m.Uid,
 			Subject: m.Envelope.Subject,
 		})
 	}
@@ -111,14 +115,17 @@ func (es *Email) Append(mbox string, msg imap.Literal) error {
 	return es.imap.Append(mbox, nil, time.Time{}, msg)
 }
 
-func (es *Email) Remove(id uint32) error {
+func (es *Email) Remove(uid uint32) error {
+	if uid == 0 {
+		return fmt.Errorf("invalid uid: %d", uid)
+	}
 	if es.mboxStatus == nil {
 		return fmt.Errorf("no mailbox selected")
 	}
 
 	// set deleted flag
 	seqset := new(imap.SeqSet)
-	seqset.AddRange(id, id)
+	seqset.AddRange(uid, uid)
 	storeItem := imap.FormatFlagsOp(imap.SetFlags, true)
 	err := es.imap.UidStore(seqset, storeItem, imap.FormatStringList([]string{imap.DeletedFlag}), nil)
 	if err != nil {
