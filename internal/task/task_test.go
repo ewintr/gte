@@ -69,6 +69,7 @@ id: %s
 action: %s
 				`, id, action),
 			},
+			hasId: true,
 			exp: &task.Task{
 				Id:     id,
 				Folder: folder,
@@ -82,6 +83,27 @@ action: %s
 				Subject: action,
 				Body:    fmt.Sprintf(`id: %s`, id),
 			},
+			hasId: true,
+			exp: &task.Task{
+				Id:     id,
+				Folder: folder,
+				Action: action,
+				Dirty:  true,
+			},
+		},
+		{
+			name: "quoted fields",
+			message: &mstore.Message{
+				Folder: folder,
+				Body: fmt.Sprintf(`
+action: %s
+
+Forwarded message:
+> id: %s
+> action: old action
+				`, action, id),
+			},
+			hasId: true,
 			exp: &task.Task{
 				Id:     id,
 				Folder: folder,
@@ -162,10 +184,11 @@ action: an action
 
 func TestFieldFromBody(t *testing.T) {
 	for _, tc := range []struct {
-		name  string
-		field string
-		body  string
-		exp   string
+		name     string
+		field    string
+		body     string
+		expValue string
+		expDirty bool
 	}{
 		{
 			name: "empty field",
@@ -190,7 +213,7 @@ fielda: valuea
 fieldb: valueb
 fieldc: valuec
 			`,
-			exp: "valueb",
+			expValue: "valueb",
 		},
 		{
 			name:  "present twice",
@@ -199,29 +222,39 @@ fieldc: valuec
 field: valuea
 field: valueb
 			`,
-			exp: "valuea",
+			expValue: "valuea",
+			expDirty: true,
 		},
 		{
-			name:  "with colons",
-			field: "field",
-			body:  "field:: val:ue",
-			exp:   ": val:ue",
+			name:     "with colons",
+			field:    "field",
+			body:     "field:: val:ue",
+			expValue: ": val:ue",
 		},
 		{
 			name:  "trim field",
 			field: "field",
 			body: " field		: value",
-			exp: "value",
+			expValue: "value",
 		},
 		{
 			name:  "trim value",
 			field: "field",
 			body: "field: 			value  ",
-			exp: "value",
+			expValue: "value",
+		},
+		{
+			name: "quoted",
+
+			field:    "field",
+			body:     "> field: value",
+			expValue: "value",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			test.Equals(t, tc.exp, task.FieldFromBody(tc.field, tc.body))
+			actValue, actDirty := task.FieldFromBody(tc.field, tc.body)
+			test.Equals(t, tc.expValue, actValue)
+			test.Equals(t, tc.expDirty, actDirty)
 		})
 	}
 }

@@ -17,6 +17,7 @@ const (
 	FOLDER_INBOX = "INBOX"
 	FOLDER_NEW   = "New"
 
+	QUOTE_PREFIX    = ">"
 	FIELD_SEPARATOR = ":"
 	FIELD_ID        = "id"
 	FIELD_ACTION    = "action"
@@ -50,18 +51,24 @@ type Task struct {
 // This enables updating a task by forwarding a topposted message whith new values for fields that the user wants to update.
 func New(msg *mstore.Message) *Task {
 	dirty := false
-	id := FieldFromBody(FIELD_ID, msg.Body)
+	id, d := FieldFromBody(FIELD_ID, msg.Body)
 	if id == "" {
 		id = uuid.New().String()
 		dirty = true
 	}
+	if d {
+		dirty = true
+	}
 
-	action := FieldFromBody(FIELD_ACTION, msg.Body)
+	action, d := FieldFromBody(FIELD_ACTION, msg.Body)
 	if action == "" {
 		action = FieldFromSubject(FIELD_ACTION, msg.Subject)
 		if action != "" {
 			dirty = true
 		}
+	}
+	if d {
+		dirty = true
 	}
 
 	folder := msg.Folder
@@ -111,19 +118,28 @@ func (t *Task) FormatBody() string {
 	return body
 }
 
-func FieldFromBody(field, body string) string {
+func FieldFromBody(field, body string) (string, bool) {
+	value := ""
+	dirty := false
+
 	lines := strings.Split(body, "\n")
 	for _, line := range lines {
 		parts := strings.SplitN(line, FIELD_SEPARATOR, 2)
 		if len(parts) < 2 {
 			continue
 		}
-		if strings.ToLower(strings.TrimSpace(parts[0])) == field {
-			return strings.TrimSpace(parts[1])
+
+		fieldName := strings.ToLower(strings.TrimSpace(strings.TrimPrefix(parts[0], QUOTE_PREFIX)))
+		if fieldName == field {
+			if value == "" {
+				value = strings.TrimSpace(parts[1])
+			} else {
+				dirty = true
+			}
 		}
 	}
 
-	return ""
+	return value, dirty
 }
 
 func FieldFromSubject(field, subject string) string {
