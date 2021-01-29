@@ -169,10 +169,17 @@ action:
 			task: &task.Task{
 				Id:     id,
 				Action: action,
+				Message: &mstore.Message{
+					Body: "previous body",
+				},
 			},
 			exp: `
 id:     an id
 action: an action
+
+Previous version:
+
+previous body
 `,
 		},
 	} {
@@ -249,6 +256,30 @@ field: valueb
 			field:    "field",
 			body:     "> field: value",
 			expValue: "value",
+		},
+		{
+			name:  "previous body",
+			field: "field",
+			body: `
+field: valuea
+
+Previous version:
+
+field: valueb
+			`,
+			expValue: "valuea",
+		},
+		{
+			name:  "quoted previous body",
+			field: "field",
+			body: `
+field: valuea
+
+> Previous version:
+>
+> field: valueb
+			`,
+			expValue: "valuea",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

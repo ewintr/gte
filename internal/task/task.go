@@ -17,10 +17,11 @@ const (
 	FOLDER_INBOX = "INBOX"
 	FOLDER_NEW   = "New"
 
-	QUOTE_PREFIX    = ">"
-	FIELD_SEPARATOR = ":"
-	FIELD_ID        = "id"
-	FIELD_ACTION    = "action"
+	QUOTE_PREFIX       = ">"
+	PREVIOUS_SEPARATOR = "Previous version:"
+	FIELD_SEPARATOR    = ":"
+	FIELD_ID           = "id"
+	FIELD_ACTION       = "action"
 )
 
 // Task reperesents a task based on the data stored in a message
@@ -115,6 +116,9 @@ func (t *Task) FormatBody() string {
 		body += fmt.Sprintf("%s\n", line)
 	}
 
+	if t.Message != nil {
+		body += fmt.Sprintf("\nPrevious version:\n\n%s\n", t.Message.Body)
+	}
 	return body
 }
 
@@ -124,12 +128,18 @@ func FieldFromBody(field, body string) (string, bool) {
 
 	lines := strings.Split(body, "\n")
 	for _, line := range lines {
+		line = strings.TrimSpace(strings.TrimPrefix(line, QUOTE_PREFIX))
+
+		if line == PREVIOUS_SEPARATOR {
+			return value, dirty
+		}
+
 		parts := strings.SplitN(line, FIELD_SEPARATOR, 2)
 		if len(parts) < 2 {
 			continue
 		}
 
-		fieldName := strings.ToLower(strings.TrimSpace(strings.TrimPrefix(parts[0], QUOTE_PREFIX)))
+		fieldName := strings.ToLower(strings.TrimSpace(parts[0]))
 		if fieldName == field {
 			if value == "" {
 				value = strings.TrimSpace(parts[1])
