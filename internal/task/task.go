@@ -19,9 +19,18 @@ const (
 
 	QUOTE_PREFIX       = ">"
 	PREVIOUS_SEPARATOR = "Previous version:"
-	FIELD_SEPARATOR    = ":"
-	FIELD_ID           = "id"
-	FIELD_ACTION       = "action"
+
+	FIELD_SEPARATOR   = ":"
+	SUBJECT_SEPARATOR = " - "
+
+	FIELD_ID      = "id"
+	FIELD_ACTION  = "action"
+	FIELD_PROJECT = "project"
+	FIELD_DUE     = "date"
+)
+
+var (
+	knownFolders = []string{FOLDER_INBOX, FOLDER_NEW}
 )
 
 // Task reperesents a task based on the data stored in a message
@@ -33,8 +42,11 @@ type Task struct {
 	// Folder is the same name as the mstore folder
 	Folder string
 
+	// Ordinary task attributes
 	Action  string
+	Project string
 	Due     Date
+
 	Message *mstore.Message
 
 	// Current indicates whether the task represents an existing message in the mstore
@@ -51,6 +63,7 @@ type Task struct {
 // Keys that exist more than once are merged. The one that appears first in the body takes precedence. A value present in the Body takes precedence over one in the subject.
 // This enables updating a task by forwarding a topposted message whith new values for fields that the user wants to update.
 func New(msg *mstore.Message) *Task {
+	// Id
 	dirty := false
 	id, d := FieldFromBody(FIELD_ID, msg.Body)
 	if id == "" {
@@ -61,6 +74,7 @@ func New(msg *mstore.Message) *Task {
 		dirty = true
 	}
 
+	// Action
 	action, d := FieldFromBody(FIELD_ACTION, msg.Body)
 	if action == "" {
 		action = FieldFromSubject(FIELD_ACTION, msg.Subject)
@@ -72,16 +86,24 @@ func New(msg *mstore.Message) *Task {
 		dirty = true
 	}
 
+	// Folder
 	folder := msg.Folder
 	if folder == FOLDER_INBOX {
 		folder = FOLDER_NEW
 		dirty = true
 	}
 
+	// Project
+	project, d := FieldFromBody(FIELD_PROJECT, msg.Body)
+	if d {
+		dirty = true
+	}
+
 	return &Task{
 		Id:      id,
-		Action:  action,
 		Folder:  folder,
+		Action:  action,
+		Project: project,
 		Message: msg,
 		Current: true,
 		Dirty:   dirty,
@@ -89,15 +111,29 @@ func New(msg *mstore.Message) *Task {
 }
 
 func (t *Task) FormatSubject() string {
-	return t.Action
+	order := []string{FIELD_PROJECT, FIELD_ACTION}
+	fields := map[string]string{
+		FIELD_PROJECT: t.Project,
+		FIELD_ACTION:  t.Action,
+	}
+
+	parts := []string{}
+	for _, f := range order {
+		if fields[f] != "" {
+			parts = append(parts, fields[f])
+		}
+	}
+
+	return strings.Join(parts, SUBJECT_SEPARATOR)
 }
 
 func (t *Task) FormatBody() string {
 	body := fmt.Sprintf("\n")
-	order := []string{FIELD_ID, FIELD_ACTION}
+	order := []string{FIELD_ID, FIELD_PROJECT, FIELD_ACTION}
 	fields := map[string]string{
-		FIELD_ID:     t.Id,
-		FIELD_ACTION: t.Action,
+		FIELD_ID:      t.Id,
+		FIELD_PROJECT: t.Project,
+		FIELD_ACTION:  t.Action,
 	}
 
 	keyLen := 0

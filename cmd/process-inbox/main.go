@@ -36,4 +36,7 @@ func main() {
 			}
 		}
 	}
+	if err := taskRepo.CleanUp(); err != nil {
+		log.Fatal(err)
+	}
 }

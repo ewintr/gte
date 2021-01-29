@@ -12,7 +12,9 @@ import (
 func TestNewFromMessage(t *testing.T) {
 	id := "an id"
 	action := "some action"
+	project := "project"
 	folder := task.FOLDER_NEW
+
 	for _, tc := range []struct {
 		name    string
 		message *mstore.Message
@@ -27,19 +29,21 @@ func TestNewFromMessage(t *testing.T) {
 			},
 		},
 		{
-			name: "with id, action and folder",
+			name: "id, action, project and folder",
 			message: &mstore.Message{
 				Folder: folder,
 				Body: fmt.Sprintf(`
 id: %s
 action: %s
-`, id, action),
+project: %s
+`, id, action, project),
 			},
 			hasId: true,
 			exp: &task.Task{
-				Id:     id,
-				Folder: folder,
-				Action: action,
+				Id:      id,
+				Folder:  folder,
+				Action:  action,
+				Project: project,
 			},
 		},
 		{
@@ -127,6 +131,8 @@ Forwarded message:
 
 func TestFormatSubject(t *testing.T) {
 	action := "an action"
+	project := " a project"
+
 	for _, tc := range []struct {
 		name string
 		task *task.Task
@@ -137,9 +143,19 @@ func TestFormatSubject(t *testing.T) {
 			task: &task.Task{},
 		},
 		{
-			name: "with action",
+			name: "action",
 			task: &task.Task{Action: action},
 			exp:  action,
+		},
+		{
+			name: "project",
+			task: &task.Task{Project: project},
+			exp:  project,
+		},
+		{
+			name: "action and project",
+			task: &task.Task{Action: action, Project: project},
+			exp:  fmt.Sprintf("%s - %s", project, action),
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -151,6 +167,8 @@ func TestFormatSubject(t *testing.T) {
 func TestFormatBody(t *testing.T) {
 	id := "an id"
 	action := "an action"
+	project := "project"
+
 	for _, tc := range []struct {
 		name string
 		task *task.Task
@@ -161,21 +179,24 @@ func TestFormatBody(t *testing.T) {
 			task: &task.Task{},
 			exp: `
 id:
+project:
 action:
 `,
 		},
 		{
 			name: "filled",
 			task: &task.Task{
-				Id:     id,
-				Action: action,
+				Id:      id,
+				Action:  action,
+				Project: project,
 				Message: &mstore.Message{
 					Body: "previous body",
 				},
 			},
 			exp: `
-id:     an id
-action: an action
+id:      an id
+project: project
+action:  an action
 
 Previous version:
 
@@ -233,7 +254,7 @@ field: valueb
 			expDirty: true,
 		},
 		{
-			name:     "with colons",
+			name:     "colons",
 			field:    "field",
 			body:     "field:: val:ue",
 			expValue: ": val:ue",
