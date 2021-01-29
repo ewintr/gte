@@ -12,18 +12,18 @@ var (
 
 type Message struct {
 	Uid     uint32
+	Folder  string
 	Subject string
 	Body    string
 }
 
 func (m *Message) Valid() bool {
-	return m.Uid != 0 && m.Subject != ""
+	return m.Uid != 0 && m.Subject != "" && m.Folder != ""
 }
 
 type MStorer interface {
 	Folders() ([]string, error)
-	Select(folder string) error
-	Messages() ([]*Message, error)
-	Add(message *Message) error
-	Remove(uid uint32) error
+	Messages(folder string) ([]*Message, error)
+	Add(folder, subject, body string) error
+	Remove(msg *Message) error
 }

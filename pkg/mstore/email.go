@@ -2,11 +2,34 @@ package mstore
 
 import (
 	"fmt"
+	"io"
+	"strings"
 	"time"
 
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 )
+
+type Body struct {
+	reader io.Reader
+	length int
+}
+
+func NewBody(msg string) *Body {
+
+	return &Body{
+		reader: strings.NewReader(msg),
+		length: len([]byte(msg)),
+	}
+}
+
+func (b *Body) Read(p []byte) (int, error) {
+	return b.reader.Read(p)
+}
+
+func (b *Body) Len() int {
+	return b.length
+}
 
 type EmailConfiguration struct {
 	IMAPURL      string
@@ -48,7 +71,7 @@ func (es *Email) Disconnect() {
 	es.imap.Logout()
 }
 
-func (es *Email) FolderNames() ([]string, error) {
+func (es *Email) Folders() ([]string, error) {
 	boxes, done := make(chan *imap.MailboxInfo), make(chan error)
 	go func() {
 		done <- es.imap.List("", "*", boxes)
@@ -66,21 +89,20 @@ func (es *Email) FolderNames() ([]string, error) {
 	return folders, nil
 }
 
-func (es *Email) Select(folder string) error {
+func (es *Email) selectFolder(folder string) error {
 	status, err := es.imap.Select(folder, false)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("status: %+v\n", status)
 
 	es.mboxStatus = status
 
 	return nil
 }
 
-func (es *Email) Messages() ([]*Message, error) {
-	if es.mboxStatus == nil {
-		return []*Message{}, fmt.Errorf("no mailbox selected")
+func (es *Email) Messages(folder string) ([]*Message, error) {
+	if err := es.selectFolder(folder); err != nil {
+		return []*Message{}, err
 	}
 
 	if es.mboxStatus.Messages == 0 {
@@ -97,9 +119,9 @@ func (es *Email) Messages() ([]*Message, error) {
 
 	messages := []*Message{}
 	for m := range imsg {
-		//fmt.Printf("%+v\n", m)
 		messages = append(messages, &Message{
 			Uid:     m.Uid,
+			Folder:  folder,
 			Subject: m.Envelope.Subject,
 		})
 	}
@@ -111,21 +133,29 @@ func (es *Email) Messages() ([]*Message, error) {
 	return messages, nil
 }
 
-func (es *Email) Append(mbox string, msg imap.Literal) error {
-	return es.imap.Append(mbox, nil, time.Time{}, msg)
+func (es *Email) Add(folder, subject, body string) error {
+	msgStr := fmt.Sprintf(`From: todo <process@erikwinter.nl>
+Subject: %s
+
+%s`, subject, body)
+
+	msg := NewBody(msgStr)
+
+	return es.imap.Append(folder, nil, time.Time{}, imap.Literal(msg))
 }
 
-func (es *Email) Remove(uid uint32) error {
-	if uid == 0 {
-		return fmt.Errorf("invalid uid: %d", uid)
+func (es *Email) Remove(msg *Message) error {
+	if !msg.Valid() {
+		return ErrInvalidMessage
 	}
-	if es.mboxStatus == nil {
-		return fmt.Errorf("no mailbox selected")
+
+	if err := es.selectFolder(msg.Folder); err != nil {
+		return err
 	}
 
 	// set deleted flag
 	seqset := new(imap.SeqSet)
-	seqset.AddRange(uid, uid)
+	seqset.AddRange(msg.Uid, msg.Uid)
 	storeItem := imap.FormatFlagsOp(imap.SetFlags, true)
 	err := es.imap.UidStore(seqset, storeItem, imap.FormatStringList([]string{imap.DeletedFlag}), nil)
 	if err != nil {

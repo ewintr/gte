@@ -2,21 +2,9 @@ package task
 
 import "time"
 
-type Date time.Time
-
-func (d *Date) Weekday() Weekday {
-	return d.Weekday()
-}
-
 type Weekday time.Weekday
 
 type Period int
-
-type Task struct {
-	Action string
-	Due    Date
-}
-
 type Recurrer interface {
 	FirstAfter(date Date) Date
 }

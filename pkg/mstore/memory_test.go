@@ -101,12 +101,6 @@ func TestMemorySelect(t *testing.T) {
 func TestMemoryAdd(t *testing.T) {
 	folder := "folder"
 
-	t.Run("no folder selected", func(t *testing.T) {
-		mem, err := mstore.NewMemory([]string{folder})
-		test.OK(t, err)
-		test.Equals(t, mstore.ErrNoFolderSelected, mem.Add("subject", ""))
-	})
-
 	for _, tc := range []struct {
 		name    string
 		subject string
@@ -124,8 +118,7 @@ func TestMemoryAdd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mem, err := mstore.NewMemory([]string{folder})
 			test.OK(t, err)
-			mem.Select(folder)
-			test.Equals(t, tc.exp, mem.Add(tc.subject, ""))
+			test.Equals(t, tc.exp, mem.Add(folder, tc.subject, ""))
 		})
 	}
 }
@@ -168,7 +161,6 @@ func TestMemoryMessages(t *testing.T) {
 			test.OK(t, err)
 
 			expMessages := []*mstore.Message{}
-			test.OK(t, mem.Select(folderA))
 			for i := 1; i <= tc.amount; i++ {
 				m := &mstore.Message{
 					Uid:     uint32(i),
@@ -178,7 +170,7 @@ func TestMemoryMessages(t *testing.T) {
 				if tc.folder == folderA {
 					expMessages = append(expMessages, m)
 				}
-				test.OK(t, mem.Add(m.Subject, m.Body))
+				test.OK(t, mem.Add(folderA, m.Subject, m.Body))
 			}
 
 			test.OK(t, mem.Select(tc.folder))
@@ -200,9 +192,8 @@ func TestMemoryRemove(t *testing.T) {
 
 	mem, err := mstore.NewMemory([]string{folderA, folderB})
 	test.OK(t, err)
-	test.OK(t, mem.Select(folderA))
 	for i := 1; i <= 3; i++ {
-		test.OK(t, mem.Add(fmt.Sprintf("subject-%d", i), ""))
+		test.OK(t, mem.Add(folderA, fmt.Sprintf("subject-%d", i), ""))
 	}
 	for _, tc := range []struct {
 		name    string

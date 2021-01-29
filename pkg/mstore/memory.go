@@ -37,7 +37,7 @@ func NewMemory(folders []string) (*Memory, error) {
 
 func (mem *Memory) Folders() ([]string, error) {
 	folders := []string{}
-	for f, _ := range mem.messages {
+	for f := range mem.messages {
 		folders = append(folders, f)
 	}
 
@@ -56,15 +56,15 @@ func (mem *Memory) Select(folder string) error {
 	return nil
 }
 
-func (mem *Memory) Add(subject, body string) error {
+func (mem *Memory) Add(folder, subject, body string) error {
 	if subject == "" {
 		return ErrInvalidMessage
 	}
-	if mem.Selected == "" {
-		return ErrNoFolderSelected
+	if _, ok := mem.messages[folder]; !ok {
+		return ErrFolderDoesNotExist
 	}
 
-	mem.messages[mem.Selected] = append(mem.messages[mem.Selected], &Message{
+	mem.messages[folder] = append(mem.messages[folder], &Message{
 		Uid:     mem.nextUid,
 		Subject: subject,
 		Body:    body,

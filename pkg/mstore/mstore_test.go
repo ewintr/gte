@@ -18,22 +18,47 @@ func TestMessageValid(t *testing.T) {
 			message: &mstore.Message{},
 		},
 		{
-			name:    "no uid",
-			message: &mstore.Message{Subject: "subject", Body: "body"},
+			name: "no uid",
+			message: &mstore.Message{
+				Subject: "subject",
+				Folder:  "folder",
+				Body:    "body",
+			},
 		},
 		{
-			name:    "no subject",
-			message: &mstore.Message{Uid: 1, Body: "body"},
+			name: "no  folder",
+			message: &mstore.Message{
+				Uid:     1,
+				Subject: "subject",
+				Body:    "body",
+			},
 		},
 		{
-			name:    "no body",
-			message: &mstore.Message{Uid: 1, Subject: "subject"},
-			exp:     true,
+			name: "no subject",
+			message: &mstore.Message{
+				Uid:    1,
+				Folder: "folder",
+				Body:   "body",
+			},
 		},
 		{
-			name:    "all present",
-			message: &mstore.Message{Uid: 1, Subject: "subject", Body: "body"},
-			exp:     true,
+			name: "no body",
+			message: &mstore.Message{
+				Uid:     1,
+				Folder:  "folder",
+				Subject: "subject",
+			},
+			exp: true,
+		},
+		{
+			name: "all present",
+			message: &mstore.Message{
+				Uid:     1,
+				Folder:  "folder",
+				Subject: "subject",
+				Body:    "body",
+			},
+			exp: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
