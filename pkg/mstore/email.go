@@ -3,11 +3,13 @@ package mstore
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"strings"
 	"time"
 
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
+	"github.com/emersion/go-message/mail"
 )
 
 type Body struct {
@@ -31,47 +33,47 @@ func (b *Body) Len() int {
 	return b.length
 }
 
-type EmailConfiguration struct {
-	IMAPURL      string
-	IMAPUsername string
-	IMAPPassword string
+type ImapConfiguration struct {
+	ImapUrl      string
+	ImapUsername string
+	ImapPassword string
 }
 
-func (esc *EmailConfiguration) Valid() bool {
-	if esc.IMAPURL == "" {
+func (esc *ImapConfiguration) Valid() bool {
+	if esc.ImapUrl == "" {
 		return false
 	}
-	if esc.IMAPUsername == "" || esc.IMAPPassword == "" {
+	if esc.ImapUsername == "" || esc.ImapPassword == "" {
 		return false
 	}
 
 	return true
 }
 
-type Email struct {
+type Imap struct {
 	imap       *client.Client
 	mboxStatus *imap.MailboxStatus
 }
 
-func EmailConnect(conf *EmailConfiguration) (*Email, error) {
-	imap, err := client.DialTLS(conf.IMAPURL, nil)
+func ImapConnect(conf *ImapConfiguration) (*Imap, error) {
+	imap, err := client.DialTLS(conf.ImapUrl, nil)
 	if err != nil {
-		return &Email{}, err
+		return &Imap{}, err
 	}
-	if err := imap.Login(conf.IMAPUsername, conf.IMAPPassword); err != nil {
-		return &Email{}, err
+	if err := imap.Login(conf.ImapUsername, conf.ImapPassword); err != nil {
+		return &Imap{}, err
 	}
 
-	return &Email{
+	return &Imap{
 		imap: imap,
 	}, nil
 }
 
-func (es *Email) Disconnect() {
+func (es *Imap) Disconnect() {
 	es.imap.Logout()
 }
 
-func (es *Email) Folders() ([]string, error) {
+func (es *Imap) Folders() ([]string, error) {
 	boxes, done := make(chan *imap.MailboxInfo), make(chan error)
 	go func() {
 		done <- es.imap.List("", "*", boxes)
@@ -89,7 +91,7 @@ func (es *Email) Folders() ([]string, error) {
 	return folders, nil
 }
 
-func (es *Email) selectFolder(folder string) error {
+func (es *Imap) selectFolder(folder string) error {
 	status, err := es.imap.Select(folder, false)
 	if err != nil {
 		return err
@@ -100,7 +102,7 @@ func (es *Email) selectFolder(folder string) error {
 	return nil
 }
 
-func (es *Email) Messages(folder string) ([]*Message, error) {
+func (es *Imap) Messages(folder string) ([]*Message, error) {
 	if err := es.selectFolder(folder); err != nil {
 		return []*Message{}, err
 	}
@@ -112,17 +114,57 @@ func (es *Email) Messages(folder string) ([]*Message, error) {
 	seqset := new(imap.SeqSet)
 	seqset.AddRange(uint32(1), es.mboxStatus.Messages)
 
+	// Get the whole message body
+	section := &imap.BodySectionName{}
+	items := []imap.FetchItem{imap.FetchUid, section.FetchItem()}
+
 	imsg, done := make(chan *imap.Message), make(chan error)
 	go func() {
-		done <- es.imap.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope, imap.FetchUid}, imsg)
+		done <- es.imap.Fetch(seqset, items, imsg)
 	}()
 
 	messages := []*Message{}
 	for m := range imsg {
+		r := m.GetBody(section)
+		if r == nil {
+			return []*Message{}, fmt.Errorf("server didn't returned message body")
+		}
+
+		// Create a new mail reader
+		mr, err := mail.CreateReader(r)
+		if err != nil {
+			return []*Message{}, err
+		}
+
+		// Print some info about the message
+		header := mr.Header
+		subject, err := header.Subject()
+		if err != nil {
+			return []*Message{}, err
+		}
+
+		// Process each message's part
+		body := []byte(``)
+		for {
+			p, err := mr.NextPart()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				return []*Message{}, err
+			}
+
+			switch p.Header.(type) {
+			case *mail.InlineHeader:
+				// This is the message's text (can be plain-text or HTML)
+				body, _ = ioutil.ReadAll(p.Body)
+			}
+		}
+
 		messages = append(messages, &Message{
 			Uid:     m.Uid,
 			Folder:  folder,
-			Subject: m.Envelope.Subject,
+			Subject: subject,
+			Body:    string(body),
 		})
 	}
 
@@ -133,7 +175,7 @@ func (es *Email) Messages(folder string) ([]*Message, error) {
 	return messages, nil
 }
 
-func (es *Email) Add(folder, subject, body string) error {
+func (es *Imap) Add(folder, subject, body string) error {
 	msgStr := fmt.Sprintf(`From: todo <process@erikwinter.nl>
 Subject: %s
 
@@ -144,7 +186,7 @@ Subject: %s
 	return es.imap.Append(folder, nil, time.Time{}, imap.Literal(msg))
 }
 
-func (es *Email) Remove(msg *Message) error {
+func (es *Imap) Remove(msg *Message) error {
 	if !msg.Valid() {
 		return ErrInvalidMessage
 	}

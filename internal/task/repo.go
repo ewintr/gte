@@ -30,7 +30,7 @@ func (tr *TaskRepo) FindAll(folder string) ([]*Task, error) {
 	tasks := []*Task{}
 	for _, msg := range msgs {
 		if msg.Valid() {
-			tasks = append(tasks, NewFromMessage(msg))
+			tasks = append(tasks, New(msg))
 		}
 	}
 
@@ -41,12 +41,12 @@ func (tr *TaskRepo) Update(t *Task) error {
 	if !t.Current {
 		return ErrOutdatedTask
 	}
-	if !t.Dirty() {
+	if !t.Dirty {
 		return nil
 	}
 
 	// add new
-	if err := tr.mstore.Add(t.Folder, t.Subject(), t.Body()); err != nil {
+	if err := tr.mstore.Add(t.Folder, t.FormatSubject(), t.FormatBody()); err != nil {
 		return fmt.Errorf("%w: %s", ErrMStoreError, err)
 	}
 

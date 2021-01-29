@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"git.sr.ht/~ewintr/gte/pkg/mstore"
 	"github.com/google/uuid"
@@ -14,79 +13,100 @@ var (
 	ErrOutdatedTask = errors.New("task is outdated")
 )
 
-type Date time.Time
+const (
+	FOLDER_INBOX = "INBOX"
+	FOLDER_NEW   = "New"
 
-func (d *Date) Weekday() Weekday {
-	return d.Weekday()
-}
+	FIELD_SEPARATOR = ":"
+	FIELD_ID        = "id"
+	FIELD_ACTION    = "action"
+)
 
+// Task reperesents a task based on the data stored in a message
 type Task struct {
-	Id         string
-	Folder     string
-	Action     string
-	Due        Date
-	Message    *mstore.Message
-	Current    bool
-	Simplified bool
+
+	// Id is a UUID that gets carried over when a new message is constructed
+	Id string
+
+	// Folder is the same name as the mstore folder
+	Folder string
+
+	Action  string
+	Due     Date
+	Message *mstore.Message
+
+	// Current indicates whether the task represents an existing message in the mstore
+	Current bool
+
+	// Dirty indicates whether the task contains updates not present in the message
+	Dirty bool
 }
 
-func NewFromMessage(msg *mstore.Message) *Task {
-	fmt.Println(msg.Subject)
-	id := FieldFromBody("id", msg.Body)
+// New constructs a Task based on an mstore.Message.
+//
+// The data in the message is stored as key: value pairs, one per line. The line can start with quoting marks.
+// The subject line also contains values in the format "date - project - action".
+// Keys that exist more than once are merged. The one that appears first in the body takes precedence. A value present in the Body takes precedence over one in the subject.
+// This enables updating a task by forwarding a topposted message whith new values for fields that the user wants to update.
+func New(msg *mstore.Message) *Task {
+	dirty := false
+	id := FieldFromBody(FIELD_ID, msg.Body)
 	if id == "" {
 		id = uuid.New().String()
+		dirty = true
 	}
 
-	action := FieldFromBody("action", msg.Body)
+	action := FieldFromBody(FIELD_ACTION, msg.Body)
 	if action == "" {
-		action = FieldFromSubject("action", msg.Subject)
+		action = FieldFromSubject(FIELD_ACTION, msg.Subject)
+		if action != "" {
+			dirty = true
+		}
 	}
 
 	folder := msg.Folder
-	if folder == "INBOX" {
-		folder = "New"
+	if folder == FOLDER_INBOX {
+		folder = FOLDER_NEW
+		dirty = true
 	}
 
 	return &Task{
-		Id:         id,
-		Action:     action,
-		Folder:     folder,
-		Message:    msg,
-		Current:    true,
-		Simplified: false,
+		Id:      id,
+		Action:  action,
+		Folder:  folder,
+		Message: msg,
+		Current: true,
+		Dirty:   dirty,
 	}
 }
 
-// Dirty checks if the task has unsaved changes
-func (t *Task) Dirty() bool {
-	mBody := t.Message.Body
-	mSubject := t.Message.Subject
-
-	if t.Id != FieldFromBody("id", mBody) {
-		return true
-	}
-
-	if t.Folder != t.Message.Folder {
-		return true
-	}
-
-	if t.Action != FieldFromBody("action", mBody) {
-		return true
-	}
-	if t.Action != FieldFromSubject("action", mSubject) {
-		return true
-	}
-
-	return false
-}
-
-func (t *Task) Subject() string {
+func (t *Task) FormatSubject() string {
 	return t.Action
 }
 
-func (t *Task) Body() string {
-	body := fmt.Sprintf("id: %s\n", t.Id)
-	body += fmt.Sprintf("action: %s\n", t.Action)
+func (t *Task) FormatBody() string {
+	body := fmt.Sprintf("\n")
+	order := []string{FIELD_ID, FIELD_ACTION}
+	fields := map[string]string{
+		FIELD_ID:     t.Id,
+		FIELD_ACTION: t.Action,
+	}
+
+	keyLen := 0
+	for _, f := range order {
+		if len(f) > keyLen {
+			keyLen = len(f)
+		}
+	}
+
+	for _, f := range order {
+		key := f + FIELD_SEPARATOR
+		for i := len(key); i <= keyLen; i++ {
+			key += " "
+		}
+		line := strings.TrimSpace(fmt.Sprintf("%s %s", key, fields[f]))
+		body += fmt.Sprintf("%s\n", line)
+	}
 
 	return body
 }
@@ -94,11 +114,11 @@ func (t *Task) Body() string {
 func FieldFromBody(field, body string) string {
 	lines := strings.Split(body, "\n")
 	for _, line := range lines {
-		parts := strings.SplitN(line, ":", 2)
+		parts := strings.SplitN(line, FIELD_SEPARATOR, 2)
 		if len(parts) < 2 {
 			continue
 		}
-		if strings.ToLower(parts[0]) == field {
+		if strings.ToLower(strings.TrimSpace(parts[0])) == field {
 			return strings.TrimSpace(parts[1])
 		}
 	}
@@ -107,7 +127,7 @@ func FieldFromBody(field, body string) string {
 }
 
 func FieldFromSubject(field, subject string) string {
-	if field == "action" {
+	if field == FIELD_ACTION {
 		return strings.ToLower(subject)
 	}
 
