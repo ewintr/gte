@@ -14,7 +14,7 @@ func TestNewFromMessage(t *testing.T) {
 	version := 2
 	action := "some action"
 	project := "project"
-	folder := task.FOLDER_NEW
+	date := task.NewDate(2021, 1, 20)
 
 	for _, tc := range []struct {
 		name       string
@@ -33,9 +33,10 @@ func TestNewFromMessage(t *testing.T) {
 		{
 			name: "id, action, project and folder",
 			message: &mstore.Message{
-				Folder: folder,
+				Folder: task.FOLDER_UNPLANNED,
 				Body: fmt.Sprintf(`
 id: %s
+due: no date
 version: %d
 action: %s
 project: %s
@@ -46,9 +47,30 @@ project: %s
 			exp: &task.Task{
 				Id:      id,
 				Version: version,
-				Folder:  folder,
+				Folder:  task.FOLDER_UNPLANNED,
 				Action:  action,
 				Project: project,
+			},
+		},
+		{
+			name: "with date",
+			message: &mstore.Message{
+				Folder: task.FOLDER_PLANNED,
+				Body: fmt.Sprintf(`
+id: %s
+due: %s
+version: %d
+action: %s
+`, id, date.String(), version, action),
+			},
+			hasId:      true,
+			hasVersion: true,
+			exp: &task.Task{
+				Id:      id,
+				Folder:  task.FOLDER_PLANNED,
+				Action:  action,
+				Version: version,
+				Due:     date,
 			},
 		},
 		{
@@ -56,11 +78,9 @@ project: %s
 			message: &mstore.Message{
 				Folder: task.FOLDER_INBOX,
 				Body: fmt.Sprintf(`
-id: %s
 action: %s
-`, id, action),
+`, action),
 			},
-			hasId: true,
 			exp: &task.Task{
 				Id:     id,
 				Folder: task.FOLDER_NEW,
@@ -69,12 +89,50 @@ action: %s
 			},
 		},
 		{
+			name: "folder inbox gets updated to planned",
+			message: &mstore.Message{
+				Folder: task.FOLDER_INBOX,
+				Body: fmt.Sprintf(`
+id: %s
+due: %s
+action: %s
+`, id, date.String(), action),
+			},
+			hasId: true,
+			exp: &task.Task{
+				Id:     id,
+				Folder: task.FOLDER_PLANNED,
+				Action: action,
+				Due:    date,
+				Dirty:  true,
+			},
+		},
+		{
+			name: "folder new gets updated to unplanned",
+			message: &mstore.Message{
+				Folder: task.FOLDER_INBOX,
+				Body: fmt.Sprintf(`
+id: %s
+due: no date
+action: %s
+`, id, action),
+			},
+			hasId: true,
+			exp: &task.Task{
+				Id:     id,
+				Folder: task.FOLDER_UNPLANNED,
+				Action: action,
+				Dirty:  true,
+			},
+		},
+		{
 			name: "action in subject takes precedence",
 			message: &mstore.Message{
-				Folder:  folder,
+				Folder:  task.FOLDER_PLANNED,
 				Subject: "some other action",
 				Body: fmt.Sprintf(`
 id: %s
+due: no date
 version: %d
 action: %s
 				`, id, version, action),
@@ -84,21 +142,21 @@ action: %s
 			exp: &task.Task{
 				Id:      id,
 				Version: version,
-				Folder:  folder,
+				Folder:  task.FOLDER_PLANNED,
 				Action:  action,
 			},
 		},
 		{
 			name: "action from subject if not present in body",
 			message: &mstore.Message{
-				Folder:  folder,
+				Folder:  task.FOLDER_PLANNED,
 				Subject: action,
 				Body:    fmt.Sprintf(`id: %s`, id),
 			},
 			hasId: true,
 			exp: &task.Task{
 				Id:     id,
-				Folder: folder,
+				Folder: task.FOLDER_PLANNED,
 				Action: action,
 				Dirty:  true,
 			},
@@ -106,7 +164,7 @@ action: %s
 		{
 			name: "quoted fields",
 			message: &mstore.Message{
-				Folder: folder,
+				Folder: task.FOLDER_PLANNED,
 				Body: fmt.Sprintf(`
 action: %s
 
@@ -118,7 +176,7 @@ Forwarded message:
 			hasId: true,
 			exp: &task.Task{
 				Id:     id,
-				Folder: folder,
+				Folder: task.FOLDER_PLANNED,
 				Action: action,
 				Dirty:  true,
 			},
@@ -143,6 +201,7 @@ Forwarded message:
 func TestFormatSubject(t *testing.T) {
 	action := "an action"
 	project := " a project"
+	due := task.NewDate(2021, 1, 30)
 
 	for _, tc := range []struct {
 		name string
@@ -155,18 +214,34 @@ func TestFormatSubject(t *testing.T) {
 		},
 		{
 			name: "action",
-			task: &task.Task{Action: action},
-			exp:  action,
+			task: &task.Task{
+				Action: action,
+			},
+			exp: action,
 		},
 		{
 			name: "project",
-			task: &task.Task{Project: project},
-			exp:  project,
+			task: &task.Task{
+				Project: project,
+			},
+			exp: project,
 		},
 		{
 			name: "action and project",
-			task: &task.Task{Action: action, Project: project},
-			exp:  fmt.Sprintf("%s - %s", project, action),
+			task: &task.Task{
+				Action:  action,
+				Project: project,
+			},
+			exp: fmt.Sprintf("%s - %s", project, action),
+		},
+		{
+			name: "action, date and project",
+			task: &task.Task{
+				Action:  action,
+				Project: project,
+				Due:     due,
+			},
+			exp: fmt.Sprintf("%s - %s - %s", due.String(), project, action),
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -190,10 +265,11 @@ func TestFormatBody(t *testing.T) {
 			name: "empty",
 			task: &task.Task{},
 			exp: `
-id:
-version: 0
-project:
 action:
+due:     no date
+project:
+version: 0
+id:
 `,
 		},
 		{
@@ -203,15 +279,17 @@ action:
 				Version: version,
 				Action:  action,
 				Project: project,
+				Due:     task.NewDate(2021, 1, 30),
 				Message: &mstore.Message{
 					Body: "previous body",
 				},
 			},
 			exp: `
-id:      an id
-version: 6
-project: project
 action:  an action
+due:     2021-01-30 (saturday)
+project: project
+version: 6
+id:      an id
 
 Previous version:
 
@@ -327,6 +405,7 @@ field: valuea
 }
 
 func TestFieldFromSubject(t *testing.T) {
+	action := "action"
 	for _, tc := range []struct {
 		name    string
 		field   string
@@ -335,7 +414,7 @@ func TestFieldFromSubject(t *testing.T) {
 	}{
 		{
 			name:    "empty field",
-			subject: "subject",
+			subject: action,
 		},
 		{
 			name:  "empty subject",
@@ -344,13 +423,25 @@ func TestFieldFromSubject(t *testing.T) {
 		{
 			name:    "unknown field",
 			field:   "unknown",
-			subject: "subject",
+			subject: action,
 		},
 		{
 			name:    "known field",
 			field:   task.FIELD_ACTION,
-			subject: "subject",
-			exp:     "subject",
+			subject: action,
+			exp:     action,
+		},
+		{
+			name:    "with project",
+			field:   task.FIELD_ACTION,
+			subject: fmt.Sprintf("project - %s", action),
+			exp:     action,
+		},
+		{
+			name:    "with due and project",
+			field:   task.FIELD_ACTION,
+			subject: fmt.Sprintf("due - project - %s", action),
+			exp:     action,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

@@ -1,14 +1,31 @@
 package task
 
 import (
+	"strings"
 	"time"
 )
+
+const (
+	DateFormat = "2006-01-02 (Monday)"
+)
+
+var Today Date
+
+func init() {
+	year, month, day := time.Now().Date()
+	Today = NewDate(year, int(month), day)
+}
 
 type Date struct {
 	t time.Time
 }
 
-func NewDate(year, month, day int) *Date {
+func NewDate(year, month, day int) Date {
+
+	if year == 0 && month == 0 && day == 0 {
+		return Date{}
+	}
+
 	var m time.Month
 	switch month {
 	case 1:
@@ -37,15 +54,54 @@ func NewDate(year, month, day int) *Date {
 		m = time.December
 	}
 
-	t := time.Date(year, m, day, 10, 0, 0, 0, time.UTC)
+	t := time.Date(year, m, day, 0, 0, 0, 0, time.UTC)
 
-	if year == 0 && month == 0 && day == 0 {
-		t = time.Time{}
-	}
-
-	return &Date{
+	return Date{
 		t: t,
 	}
+}
+
+func NewDateFromString(date string) Date {
+	date = strings.ToLower(strings.TrimSpace(date))
+
+	if date == "no date" || date == "" {
+		return Date{}
+	}
+
+	t, err := time.Parse(DateFormat, date)
+	if err == nil {
+		return Date{t: t}
+	}
+	t, err = time.Parse("2006-01-02", date)
+	if err == nil {
+		return Date{t: t}
+	}
+
+	weekday := Today.Weekday()
+	var newWeekday time.Weekday
+	switch {
+	case date == "monday" || date == "maandag":
+		newWeekday = time.Monday
+	case date == "tuesday" || date == "dinsdag":
+		newWeekday = time.Tuesday
+	case date == "wednesday" || date == "woensdag":
+		newWeekday = time.Wednesday
+	case date == "thursday" || date == "donderdag":
+		newWeekday = time.Thursday
+	case date == "friday" || date == "vrijdag":
+		newWeekday = time.Friday
+	case date == "saturday" || date == "zaterdag":
+		newWeekday = time.Saturday
+	case date == "sunday" || date == "zondag":
+		newWeekday = time.Sunday
+	}
+
+	daysToAdd := int(newWeekday) - weekday
+	if daysToAdd < 0 {
+		daysToAdd += 7
+	}
+
+	return Today.Add(daysToAdd)
 }
 
 func (d *Date) String() string {
@@ -53,5 +109,18 @@ func (d *Date) String() string {
 		return "no date"
 	}
 
-	return d.t.Format("2006-01-02")
+	return strings.ToLower(d.t.Format(DateFormat))
+}
+
+func (d *Date) IsZero() bool {
+	return d.t.IsZero()
+}
+
+func (d *Date) Weekday() int {
+	return int(d.t.Weekday())
+}
+
+func (d *Date) Add(days int) Date {
+	year, month, day := d.t.Date()
+	return NewDate(year, int(month), day+days)
 }

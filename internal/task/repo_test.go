@@ -201,6 +201,5 @@ version: 3
 	}}
 	actPlanned, err := mem.Messages(folderPlanned)
 	test.OK(t, err)
-	fmt.Printf("act: %+v\n", actPlanned[0])
 	test.Equals(t, expPlanned, actPlanned)
 }

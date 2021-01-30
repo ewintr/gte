@@ -3,6 +3,7 @@ package task
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"git.sr.ht/~ewintr/gte/pkg/mstore"
 )
@@ -67,43 +68,52 @@ func (tr *TaskRepo) Update(t *Task) error {
 
 // Cleanup removes older versions of tasks
 func (tr *TaskRepo) CleanUp() error {
-	// loop through folders, get all tasks
-	taskSet := make(map[string][]*Task)
+	// loop through folders, get all task version info
+	type msgInfo struct {
+		Version int
+		Message *mstore.Message
+	}
+	msgsSet := make(map[string][]msgInfo)
 
 	for _, folder := range knownFolders {
-		tasks, err := tr.FindAll(folder)
+		msgs, err := tr.mstore.Messages(folder)
 		if err != nil {
-			return err
+			return fmt.Errorf("%w: %v", ErrMStoreError, err)
 		}
 
-		for _, t := range tasks {
-			if _, ok := taskSet[t.Id]; !ok {
-				taskSet[t.Id] = []*Task{}
+		for _, msg := range msgs {
+			id, _ := FieldFromBody(FIELD_ID, msg.Body)
+			versionStr, _ := FieldFromBody(FIELD_VERSION, msg.Body)
+			version, _ := strconv.Atoi(versionStr)
+			if _, ok := msgsSet[id]; !ok {
+				msgsSet[id] = []msgInfo{}
 			}
-			taskSet[t.Id] = append(taskSet[t.Id], t)
+			msgsSet[id] = append(msgsSet[id], msgInfo{
+				Version: version,
+				Message: msg,
+			})
 		}
 	}
 
 	// determine which ones need to be gone
-	var tobeRemoved []*Task
-	for _, tasks := range taskSet {
+	var tobeRemoved []*mstore.Message
+	for _, mInfos := range msgsSet {
 		maxVersion := 0
-		for _, t := range tasks {
-			if t.Version > maxVersion {
-				maxVersion = t.Version
+		for _, mInfo := range mInfos {
+			if mInfo.Version > maxVersion {
+				maxVersion = mInfo.Version
 			}
 		}
-
-		for _, t := range tasks {
-			if t.Version < maxVersion {
-				tobeRemoved = append(tobeRemoved, t)
+		for _, mInfo := range mInfos {
+			if mInfo.Version < maxVersion {
+				tobeRemoved = append(tobeRemoved, mInfo.Message)
 			}
 		}
 	}
 
 	// remove them
-	for _, t := range tobeRemoved {
-		if err := tr.mstore.Remove(t.Message); err != nil {
+	for _, msg := range tobeRemoved {
+		if err := tr.mstore.Remove(msg); err != nil {
 			return err
 		}
 	}

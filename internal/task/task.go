@@ -78,10 +78,12 @@ type Task struct {
 func New(msg *mstore.Message) *Task {
 	// Id
 	dirty := false
+	newId := false
 	id, d := FieldFromBody(FIELD_ID, msg.Body)
 	if id == "" {
 		id = uuid.New().String()
 		dirty = true
+		newId = true
 	}
 	if d {
 		dirty = true
@@ -106,10 +108,27 @@ func New(msg *mstore.Message) *Task {
 		dirty = true
 	}
 
+	// Due
+	dueStr, d := FieldFromBody(FIELD_DUE, msg.Body)
+	if dueStr == "" || d {
+		dirty = true
+	}
+	due := NewDateFromString(dueStr)
+
 	// Folder
-	folder := msg.Folder
-	if folder == FOLDER_INBOX {
-		folder = FOLDER_NEW
+	folderOld := msg.Folder
+	folderNew := folderOld
+	if folderOld == FOLDER_INBOX {
+		switch {
+		case newId:
+			folderNew = FOLDER_NEW
+		case !newId && due.IsZero():
+			folderNew = FOLDER_UNPLANNED
+		case !newId && !due.IsZero():
+			folderNew = FOLDER_PLANNED
+		}
+	}
+	if folderOld != folderNew {
 		dirty = true
 	}
 
@@ -126,8 +145,9 @@ func New(msg *mstore.Message) *Task {
 	return &Task{
 		Id:      id,
 		Version: version,
-		Folder:  folder,
+		Folder:  folderNew,
 		Action:  action,
+		Due:     due,
 		Project: project,
 		Message: msg,
 		Current: true,
@@ -136,10 +156,16 @@ func New(msg *mstore.Message) *Task {
 }
 
 func (t *Task) FormatSubject() string {
-	order := []string{FIELD_PROJECT, FIELD_ACTION}
+	var order []string
+	if !t.Due.IsZero() {
+		order = append(order, FIELD_DUE)
+	}
+	order = append(order, FIELD_PROJECT, FIELD_ACTION)
+
 	fields := map[string]string{
 		FIELD_PROJECT: t.Project,
 		FIELD_ACTION:  t.Action,
+		FIELD_DUE:     t.Due.String(),
 	}
 
 	parts := []string{}
@@ -154,12 +180,13 @@ func (t *Task) FormatSubject() string {
 
 func (t *Task) FormatBody() string {
 	body := fmt.Sprintf("\n")
-	order := []string{FIELD_ID, FIELD_VERSION, FIELD_PROJECT, FIELD_ACTION}
+	order := []string{FIELD_ACTION, FIELD_DUE, FIELD_PROJECT, FIELD_VERSION, FIELD_ID}
 	fields := map[string]string{
 		FIELD_ID:      t.Id,
 		FIELD_VERSION: strconv.Itoa(t.Version),
 		FIELD_PROJECT: t.Project,
 		FIELD_ACTION:  t.Action,
+		FIELD_DUE:     t.Due.String(),
 	}
 
 	keyLen := 0
@@ -215,15 +242,11 @@ func FieldFromBody(field, body string) (string, bool) {
 }
 
 func FieldFromSubject(field, subject string) string {
-	if field == FIELD_ACTION {
-		return strings.ToLower(subject)
+	if field != FIELD_ACTION {
+		return ""
 	}
 
-	return ""
-}
+	terms := strings.Split(subject, SUBJECT_SEPARATOR)
 
-func increment(s string) string {
-	i, _ := strconv.Atoi(s)
-	i++
-	return strconv.Itoa(i)
+	return terms[len(terms)-1]
 }
