@@ -67,58 +67,41 @@ func TestMemoryFolders(t *testing.T) {
 	}
 }
 
-func TestMemorySelect(t *testing.T) {
-	mem, err := mstore.NewMemory([]string{"one", "two", "three"})
-	test.OK(t, err)
-	for _, tc := range []struct {
-		name   string
-		folder string
-		exp    error
-	}{
-		{
-			name: "empty",
-			exp:  mstore.ErrFolderDoesNotExist,
-		},
-		{
-			name:   "not present",
-			folder: "four",
-			exp:    mstore.ErrFolderDoesNotExist,
-		},
-		{
-			name:   "present",
-			folder: "two",
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			test.Equals(t, tc.exp, mem.Select(tc.folder))
-			if tc.exp == nil {
-				test.Equals(t, tc.folder, mem.Selected)
-			}
-		})
-	}
-}
-
 func TestMemoryAdd(t *testing.T) {
 	folder := "folder"
+	subject := "subject"
 
 	for _, tc := range []struct {
 		name    string
+		folder  string
 		subject string
-		exp     error
+		expMsgs []*mstore.Message
+		expErr  error
 	}{
 		{
-			name: "empty",
-			exp:  mstore.ErrInvalidMessage,
+			name:   "empty",
+			folder: folder,
+			expErr: mstore.ErrInvalidMessage,
+		},
+		{
+			name:    "invalid folder",
+			folder:  "not there",
+			subject: subject,
+			expErr:  mstore.ErrFolderDoesNotExist,
 		},
 		{
 			name:    "valid",
-			subject: "subject",
+			folder:  folder,
+			subject: subject,
+			expMsgs: []*mstore.Message{
+				{Uid: 1, Folder: folder, Subject: subject},
+			},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			mem, err := mstore.NewMemory([]string{folder})
 			test.OK(t, err)
-			test.Equals(t, tc.exp, mem.Add(folder, tc.subject, ""))
+			test.Equals(t, tc.expErr, mem.Add(tc.folder, tc.subject, ""))
 		})
 	}
 }
@@ -127,19 +110,17 @@ func TestMemoryMessages(t *testing.T) {
 	folderA := "folderA"
 	folderB := "folderB"
 
-	t.Run("no folder selected", func(t *testing.T) {
-		mem, err := mstore.NewMemory([]string{folderA})
-		test.OK(t, err)
-		_, err = mem.Messages()
-		test.Equals(t, mstore.ErrNoFolderSelected, err)
-	})
-
 	for _, tc := range []struct {
 		name   string
 		folder string
 		amount int
 		expErr error
 	}{
+		{
+			name:   "unknown folder",
+			folder: "not there",
+			expErr: mstore.ErrFolderDoesNotExist,
+		},
 		{
 			name:   "empty folder",
 			folder: folderB,
@@ -164,6 +145,7 @@ func TestMemoryMessages(t *testing.T) {
 			for i := 1; i <= tc.amount; i++ {
 				m := &mstore.Message{
 					Uid:     uint32(i),
+					Folder:  folderA,
 					Subject: fmt.Sprintf("subject-%d", i),
 					Body:    fmt.Sprintf("body-%d", i),
 				}
@@ -173,8 +155,7 @@ func TestMemoryMessages(t *testing.T) {
 				test.OK(t, mem.Add(folderA, m.Subject, m.Body))
 			}
 
-			test.OK(t, mem.Select(tc.folder))
-			actMessages, err := mem.Messages()
+			actMessages, err := mem.Messages(tc.folder)
 			test.Equals(t, tc.expErr, err)
 			test.Equals(t, expMessages, actMessages)
 		})
@@ -183,12 +164,7 @@ func TestMemoryMessages(t *testing.T) {
 
 func TestMemoryRemove(t *testing.T) {
 	folderA, folderB := "folderA", "folderB"
-
-	t.Run("no folder selected", func(t *testing.T) {
-		mem, err := mstore.NewMemory([]string{folderA})
-		test.OK(t, err)
-		test.Equals(t, mstore.ErrNoFolderSelected, mem.Remove(uint32(3)))
-	})
+	subject := "subject"
 
 	mem, err := mstore.NewMemory([]string{folderA, folderB})
 	test.OK(t, err)
@@ -197,38 +173,49 @@ func TestMemoryRemove(t *testing.T) {
 	}
 	for _, tc := range []struct {
 		name    string
-		folder  string
-		uid     uint32
+		msg     *mstore.Message
 		expUids []uint32
 		expErr  error
 	}{
 		{
-			name:   "invalid uid",
-			folder: folderA,
-			uid:    uint32(0),
-			expErr: mstore.ErrInvalidUid,
-		},
-		{
-			name:   "empty",
-			folder: folderB,
-			uid:    uint32(1),
+			name: "empty",
+			msg: &mstore.Message{
+				Uid:     1,
+				Folder:  folderB,
+				Subject: subject,
+			},
 			expErr: mstore.ErrMessageDoesNotExist,
 		},
 		{
-			name:    "valid",
-			folder:  folderA,
-			uid:     uint32(2),
+			name:   "nil message",
+			expErr: mstore.ErrInvalidMessage,
+		},
+		{
+			name: "unknown folder",
+			msg: &mstore.Message{
+				Uid:     1,
+				Folder:  "unknown",
+				Subject: subject,
+			},
+			expErr: mstore.ErrFolderDoesNotExist,
+		},
+		{
+			name: "valid",
+			msg: &mstore.Message{
+				Uid:     2,
+				Folder:  folderA,
+				Subject: subject,
+			},
 			expUids: []uint32{1, 3},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			test.OK(t, mem.Select(tc.folder))
-			test.Equals(t, tc.expErr, mem.Remove(tc.uid))
+			test.Equals(t, tc.expErr, mem.Remove(tc.msg))
 			if tc.expErr != nil {
 				return
 			}
 			actUids := []uint32{}
-			actMsgs, err := mem.Messages()
+			actMsgs, err := mem.Messages(tc.msg.Folder)
 			test.OK(t, err)
 			for _, m := range actMsgs {
 				actUids = append(actUids, m.Uid)

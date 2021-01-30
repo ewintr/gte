@@ -11,15 +11,17 @@ import (
 
 func TestNewFromMessage(t *testing.T) {
 	id := "an id"
+	version := 2
 	action := "some action"
 	project := "project"
 	folder := task.FOLDER_NEW
 
 	for _, tc := range []struct {
-		name    string
-		message *mstore.Message
-		hasId   bool
-		exp     *task.Task
+		name       string
+		message    *mstore.Message
+		hasId      bool
+		hasVersion bool
+		exp        *task.Task
 	}{
 		{
 			name:    "empty",
@@ -34,13 +36,16 @@ func TestNewFromMessage(t *testing.T) {
 				Folder: folder,
 				Body: fmt.Sprintf(`
 id: %s
+version: %d
 action: %s
 project: %s
-`, id, action, project),
+`, id, version, action, project),
 			},
-			hasId: true,
+			hasId:      true,
+			hasVersion: true,
 			exp: &task.Task{
 				Id:      id,
+				Version: version,
 				Folder:  folder,
 				Action:  action,
 				Project: project,
@@ -70,14 +75,17 @@ action: %s
 				Subject: "some other action",
 				Body: fmt.Sprintf(`
 id: %s
+version: %d
 action: %s
-				`, id, action),
+				`, id, version, action),
 			},
-			hasId: true,
+			hasId:      true,
+			hasVersion: true,
 			exp: &task.Task{
-				Id:     id,
-				Folder: folder,
-				Action: action,
+				Id:      id,
+				Version: version,
+				Folder:  folder,
+				Action:  action,
 			},
 		},
 		{
@@ -121,6 +129,9 @@ Forwarded message:
 			if !tc.hasId {
 				test.Equals(t, false, "" == act.Id)
 				tc.exp.Id = act.Id
+			}
+			if !tc.hasVersion {
+				tc.exp.Version = 1
 			}
 			tc.exp.Message = tc.message
 			tc.exp.Current = true
@@ -166,6 +177,7 @@ func TestFormatSubject(t *testing.T) {
 
 func TestFormatBody(t *testing.T) {
 	id := "an id"
+	version := 6
 	action := "an action"
 	project := "project"
 
@@ -179,6 +191,7 @@ func TestFormatBody(t *testing.T) {
 			task: &task.Task{},
 			exp: `
 id:
+version: 0
 project:
 action:
 `,
@@ -187,6 +200,7 @@ action:
 			name: "filled",
 			task: &task.Task{
 				Id:      id,
+				Version: version,
 				Action:  action,
 				Project: project,
 				Message: &mstore.Message{
@@ -195,6 +209,7 @@ action:
 			},
 			exp: `
 id:      an id
+version: 6
 project: project
 action:  an action
 

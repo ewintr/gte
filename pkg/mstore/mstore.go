@@ -1,6 +1,8 @@
 package mstore
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	ErrFolderDoesNotExist  = errors.New("folder does not exist")

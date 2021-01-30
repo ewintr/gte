@@ -11,8 +11,8 @@ var (
 )
 
 type Memory struct {
-	Selected string
 	nextUid  uint32
+	folders  []string
 	messages map[string][]*Message
 }
 
@@ -20,6 +20,7 @@ func NewMemory(folders []string) (*Memory, error) {
 	if len(folders) == 0 {
 		return &Memory{}, ErrInvalidFolderSet
 	}
+	sort.Strings(folders)
 
 	msg := make(map[string][]*Message)
 	for _, f := range folders {
@@ -31,29 +32,13 @@ func NewMemory(folders []string) (*Memory, error) {
 
 	return &Memory{
 		messages: msg,
+		folders:  folders,
 		nextUid:  uint32(1),
 	}, nil
 }
 
 func (mem *Memory) Folders() ([]string, error) {
-	folders := []string{}
-	for f := range mem.messages {
-		folders = append(folders, f)
-	}
-
-	sort.Strings(folders)
-
-	return folders, nil
-}
-
-func (mem *Memory) Select(folder string) error {
-	if _, ok := mem.messages[folder]; !ok {
-		return ErrFolderDoesNotExist
-	}
-
-	mem.Selected = folder
-
-	return nil
+	return mem.folders, nil
 }
 
 func (mem *Memory) Add(folder, subject, body string) error {
@@ -66,6 +51,7 @@ func (mem *Memory) Add(folder, subject, body string) error {
 
 	mem.messages[folder] = append(mem.messages[folder], &Message{
 		Uid:     mem.nextUid,
+		Folder:  folder,
 		Subject: subject,
 		Body:    body,
 	})
@@ -74,28 +60,29 @@ func (mem *Memory) Add(folder, subject, body string) error {
 	return nil
 }
 
-func (mem *Memory) Messages() ([]*Message, error) {
-	if mem.Selected == "" {
-		return []*Message{}, ErrNoFolderSelected
+func (mem *Memory) Messages(folder string) ([]*Message, error) {
+	if _, ok := mem.messages[folder]; !ok {
+		return []*Message{}, ErrFolderDoesNotExist
 	}
 
-	return mem.messages[mem.Selected], nil
+	return mem.messages[folder], nil
 }
 
-func (mem *Memory) Remove(uid uint32) error {
-	if uid == uint32(0) {
-		return ErrInvalidUid
+func (mem *Memory) Remove(msg *Message) error {
+	if msg == nil || !msg.Valid() {
+		return ErrInvalidMessage
 	}
-	if mem.Selected == "" {
-		return ErrNoFolderSelected
+	if _, ok := mem.messages[msg.Folder]; !ok {
+		return ErrFolderDoesNotExist
 	}
 
-	for i, m := range mem.messages[mem.Selected] {
-		if m.Uid == uid {
-			mem.messages[mem.Selected] = append(mem.messages[mem.Selected][:i], mem.messages[mem.Selected][i+1:]...)
+	for i, m := range mem.messages[msg.Folder] {
+		if m.Uid == msg.Uid {
+			mem.messages[msg.Folder] = append(mem.messages[msg.Folder][:i], mem.messages[msg.Folder][i+1:]...)
 
 			return nil
 		}
 	}
+
 	return ErrMessageDoesNotExist
 }

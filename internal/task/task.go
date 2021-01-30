@@ -3,6 +3,7 @@ package task
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"git.sr.ht/~ewintr/gte/pkg/mstore"
@@ -14,8 +15,11 @@ var (
 )
 
 const (
-	FOLDER_INBOX = "INBOX"
-	FOLDER_NEW   = "New"
+	FOLDER_INBOX     = "INBOX"
+	FOLDER_NEW       = "New"
+	FOLDER_RECURRING = "Recurring"
+	FOLDER_PLANNED   = "Planned"
+	FOLDER_UNPLANNED = "Unplanned"
 
 	QUOTE_PREFIX       = ">"
 	PREVIOUS_SEPARATOR = "Previous version:"
@@ -24,13 +28,20 @@ const (
 	SUBJECT_SEPARATOR = " - "
 
 	FIELD_ID      = "id"
+	FIELD_VERSION = "version"
 	FIELD_ACTION  = "action"
 	FIELD_PROJECT = "project"
-	FIELD_DUE     = "date"
+	FIELD_DUE     = "due"
 )
 
 var (
-	knownFolders = []string{FOLDER_INBOX, FOLDER_NEW}
+	knownFolders = []string{
+		FOLDER_INBOX,
+		FOLDER_NEW,
+		FOLDER_RECURRING,
+		FOLDER_PLANNED,
+		FOLDER_UNPLANNED,
+	}
 )
 
 // Task reperesents a task based on the data stored in a message
@@ -38,6 +49,8 @@ type Task struct {
 
 	// Id is a UUID that gets carried over when a new message is constructed
 	Id string
+	// Version is a method to determine the latest version for cleanup
+	Version int
 
 	// Folder is the same name as the mstore folder
 	Folder string
@@ -74,6 +87,13 @@ func New(msg *mstore.Message) *Task {
 		dirty = true
 	}
 
+	// Version, cannot manually be incremented from body
+	versionStr, _ := FieldFromBody(FIELD_VERSION, msg.Body)
+	version, _ := strconv.Atoi(versionStr)
+	if version == 0 {
+		dirty = true
+	}
+
 	// Action
 	action, d := FieldFromBody(FIELD_ACTION, msg.Body)
 	if action == "" {
@@ -99,8 +119,13 @@ func New(msg *mstore.Message) *Task {
 		dirty = true
 	}
 
+	if dirty {
+		version++
+	}
+
 	return &Task{
 		Id:      id,
+		Version: version,
 		Folder:  folder,
 		Action:  action,
 		Project: project,
@@ -129,9 +154,10 @@ func (t *Task) FormatSubject() string {
 
 func (t *Task) FormatBody() string {
 	body := fmt.Sprintf("\n")
-	order := []string{FIELD_ID, FIELD_PROJECT, FIELD_ACTION}
+	order := []string{FIELD_ID, FIELD_VERSION, FIELD_PROJECT, FIELD_ACTION}
 	fields := map[string]string{
 		FIELD_ID:      t.Id,
+		FIELD_VERSION: strconv.Itoa(t.Version),
 		FIELD_PROJECT: t.Project,
 		FIELD_ACTION:  t.Action,
 	}
@@ -194,4 +220,10 @@ func FieldFromSubject(field, subject string) string {
 	}
 
 	return ""
+}
+
+func increment(s string) string {
+	i, _ := strconv.Atoi(s)
+	i++
+	return strconv.Itoa(i)
 }

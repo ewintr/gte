@@ -187,7 +187,7 @@ Subject: %s
 }
 
 func (es *Imap) Remove(msg *Message) error {
-	if !msg.Valid() {
+	if msg == nil || !msg.Valid() {
 		return ErrInvalidMessage
 	}
 

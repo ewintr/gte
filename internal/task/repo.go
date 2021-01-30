@@ -8,7 +8,9 @@ import (
 )
 
 var (
-	ErrMStoreError = errors.New("mstore gave error response")
+	ErrMStoreError    = errors.New("mstore gave error response")
+	ErrInvalidTask    = errors.New("invalid task")
+	ErrInvalidMessage = errors.New("task contains invalid message")
 )
 
 type TaskRepo struct {
@@ -24,7 +26,7 @@ func NewRepository(ms mstore.MStorer) *TaskRepo {
 func (tr *TaskRepo) FindAll(folder string) ([]*Task, error) {
 	msgs, err := tr.mstore.Messages(folder)
 	if err != nil {
-		return []*Task{}, err
+		return []*Task{}, fmt.Errorf("%w: %v", ErrMStoreError, err)
 	}
 
 	tasks := []*Task{}
@@ -38,6 +40,9 @@ func (tr *TaskRepo) FindAll(folder string) ([]*Task, error) {
 }
 
 func (tr *TaskRepo) Update(t *Task) error {
+	if t == nil {
+		return ErrInvalidTask
+	}
 	if !t.Current {
 		return ErrOutdatedTask
 	}
@@ -82,21 +87,19 @@ func (tr *TaskRepo) CleanUp() error {
 	// determine which ones need to be gone
 	var tobeRemoved []*Task
 	for _, tasks := range taskSet {
-		maxUid := uint32(0)
+		maxVersion := 0
 		for _, t := range tasks {
-			if t.Message.Uid > maxUid {
-				maxUid = t.Message.Uid
+			if t.Version > maxVersion {
+				maxVersion = t.Version
 			}
 		}
 
 		for _, t := range tasks {
-			if t.Message.Uid < maxUid {
+			if t.Version < maxVersion {
 				tobeRemoved = append(tobeRemoved, t)
 			}
 		}
 	}
-
-	//fmt.Printf("removing: %+v\n", tobeRemoved)
 
 	// remove them
 	for _, t := range tobeRemoved {
