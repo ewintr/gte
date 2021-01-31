@@ -195,13 +195,6 @@ func (t *Task) FormatSubject() string {
 		FIELD_DUE:     t.Due.String(),
 	}
 
-	if fields[FIELD_DUE] != "" && fields[FIELD_PROJECT] == "" {
-		fields[FIELD_PROJECT] = " "
-	}
-	if fields[FIELD_PROJECT] != "" && fields[FIELD_ACTION] == "" {
-		fields[FIELD_ACTION] = " "
-	}
-
 	parts := []string{}
 	for _, f := range order {
 		if fields[f] != "" {
@@ -260,12 +253,11 @@ func (t *Task) RecursToday() bool {
 	if !t.IsRecurrer() {
 		return false
 	}
-	return true
 
 	return t.Recur.RecursOn(Today)
 }
 
-func (t *Task) CreateNextMessage(date Date) (string, string, error) {
+func (t *Task) CreateDueMessage(date Date) (string, string, error) {
 	if !t.IsRecurrer() {
 		return "", "", ErrTaskIsNotRecurring
 	}
@@ -275,7 +267,7 @@ func (t *Task) CreateNextMessage(date Date) (string, string, error) {
 		Version: 1,
 		Action:  t.Action,
 		Project: t.Project,
-		Due:     t.Recur.FirstAfter(date),
+		Due:     date,
 	}
 
 	return tempTask.FormatSubject(), tempTask.FormatBody(), nil
@@ -313,6 +305,7 @@ func FieldFromBody(field, body string) (string, bool) {
 
 func FieldFromSubject(field, subject string) string {
 
+	// TODO there are also subjects with date and without project
 	terms := strings.Split(subject, SUBJECT_SEPARATOR)
 	switch field {
 	case FIELD_ACTION:

@@ -1,6 +1,7 @@
 package task
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -68,11 +69,7 @@ func NewDateFromString(date string) Date {
 		return Date{}
 	}
 
-	t, err := time.Parse(DateFormat, date)
-	if err == nil {
-		return Date{t: t}
-	}
-	t, err = time.Parse("2006-01-02", date)
+	t, err := time.Parse("2006-01-02", fmt.Sprintf("%.10s", date))
 	if err == nil {
 		return Date{t: t}
 	}
@@ -129,6 +126,56 @@ func (d *Date) Add(days int) Date {
 	return NewDate(year, int(month), day+days)
 }
 
+func (d *Date) Equal(ud Date) bool {
+	return d.t.Equal(ud.Time())
+}
+
+// After reports whether d is after ud
 func (d *Date) After(ud Date) bool {
 	return d.t.After(ud.Time())
+}
+
+func (d *Date) AddDays(amount int) Date {
+	year, month, date := d.t.Date()
+
+	return NewDate(year, int(month), date+amount)
+}
+
+func ParseWeekday(wd string) (time.Weekday, bool) {
+	switch lowerAndTrim(wd) {
+	case "monday":
+		return time.Monday, true
+	case "tuesday":
+		return time.Tuesday, true
+	case "wednesday":
+		return time.Wednesday, true
+	case "thursday":
+		return time.Thursday, true
+	case "friday":
+		return time.Friday, true
+	case "saturday":
+		return time.Saturday, true
+	case "sunday":
+		return time.Sunday, true
+	case "maandag":
+		return time.Monday, true
+	case "dinsdag":
+		return time.Tuesday, true
+	case "woensdag":
+		return time.Wednesday, true
+	case "donderdag":
+		return time.Thursday, true
+	case "vrijdag":
+		return time.Friday, true
+	case "zaterdag":
+		return time.Saturday, true
+	case "zondag":
+		return time.Sunday, true
+	}
+
+	return time.Monday, false
+}
+
+func lowerAndTrim(str string) string {
+	return strings.TrimSpace(strings.ToLower(str))
 }

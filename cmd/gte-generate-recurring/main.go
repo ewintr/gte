@@ -31,7 +31,7 @@ func main() {
 	}
 	for _, t := range tasks {
 		if t.RecursToday() {
-			subject, body, err := t.CreateNextMessage(task.Today)
+			subject, body, err := t.CreateDueMessage(task.Today)
 			if err != nil {
 				log.Fatal(err)
 			}

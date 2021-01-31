@@ -82,3 +82,30 @@ func TestDateString(t *testing.T) {
 		})
 	}
 }
+
+func TestDateAfter(t *testing.T) {
+	day := task.NewDate(2021, 1, 31)
+	for _, tc := range []struct {
+		name string
+		tDay task.Date
+		exp  bool
+	}{
+		{
+			name: "after",
+			tDay: task.NewDate(2021, 1, 30),
+			exp:  true,
+		},
+		{
+			name: "on",
+			tDay: day,
+		},
+		{
+			name: "before",
+			tDay: task.NewDate(2021, 2, 1),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			test.Equals(t, tc.exp, day.After(tc.tDay))
+		})
+	}
+}
