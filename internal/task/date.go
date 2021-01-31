@@ -96,7 +96,7 @@ func NewDateFromString(date string) Date {
 		newWeekday = time.Sunday
 	}
 
-	daysToAdd := int(newWeekday) - weekday
+	daysToAdd := int(newWeekday) - int(weekday)
 	if daysToAdd <= 0 {
 		daysToAdd += 7
 	}
@@ -116,11 +116,19 @@ func (d *Date) IsZero() bool {
 	return d.t.IsZero()
 }
 
-func (d *Date) Weekday() int {
-	return int(d.t.Weekday())
+func (d *Date) Time() time.Time {
+	return d.t
+}
+
+func (d *Date) Weekday() time.Weekday {
+	return d.t.Weekday()
 }
 
 func (d *Date) Add(days int) Date {
 	year, month, day := d.t.Date()
 	return NewDate(year, int(month), day+days)
+}
+
+func (d *Date) After(ud Date) bool {
+	return d.t.After(ud.Time())
 }

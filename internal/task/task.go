@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	ErrOutdatedTask = errors.New("task is outdated")
+	ErrOutdatedTask       = errors.New("task is outdated")
+	ErrTaskIsNotRecurring = errors.New("task is not recurring")
 )
 
 const (
@@ -124,6 +125,13 @@ func New(msg *mstore.Message) *Task {
 	}
 	due := NewDateFromString(dueStr)
 
+	// Recurrer
+	recurStr, d := FieldFromBody(FIELD_RECUR, msg.Body)
+	if d {
+		dirty = true
+	}
+	recur := NewRecurrer(recurStr)
+
 	// Folder
 	folderOld := msg.Folder
 	folderNew := folderOld
@@ -131,11 +139,14 @@ func New(msg *mstore.Message) *Task {
 		switch {
 		case newId:
 			folderNew = FOLDER_NEW
-		case !newId && due.IsZero():
+		case !newId && recur != nil:
+			folderNew = FOLDER_RECURRING
+		case !newId && recur == nil && due.IsZero():
 			folderNew = FOLDER_UNPLANNED
-		case !newId && !due.IsZero():
+		case !newId && recur == nil && !due.IsZero():
 			folderNew = FOLDER_PLANNED
 		}
+
 	}
 	if folderOld != folderNew {
 		dirty = true
@@ -163,6 +174,7 @@ func New(msg *mstore.Message) *Task {
 		Folder:  folderNew,
 		Action:  action,
 		Due:     due,
+		Recur:   recur,
 		Project: project,
 		Message: msg,
 		Current: true,
@@ -183,6 +195,13 @@ func (t *Task) FormatSubject() string {
 		FIELD_DUE:     t.Due.String(),
 	}
 
+	if fields[FIELD_DUE] != "" && fields[FIELD_PROJECT] == "" {
+		fields[FIELD_PROJECT] = " "
+	}
+	if fields[FIELD_PROJECT] != "" && fields[FIELD_ACTION] == "" {
+		fields[FIELD_ACTION] = " "
+	}
+
 	parts := []string{}
 	for _, f := range order {
 		if fields[f] != "" {
@@ -194,15 +213,21 @@ func (t *Task) FormatSubject() string {
 }
 
 func (t *Task) FormatBody() string {
-	body := fmt.Sprintf("\n")
-	order := []string{FIELD_ACTION, FIELD_DUE, FIELD_PROJECT, FIELD_VERSION, FIELD_ID}
+	order := []string{FIELD_ACTION}
 	fields := map[string]string{
 		FIELD_ID:      t.Id,
 		FIELD_VERSION: strconv.Itoa(t.Version),
 		FIELD_PROJECT: t.Project,
 		FIELD_ACTION:  t.Action,
-		FIELD_DUE:     t.Due.String(),
 	}
+	if t.IsRecurrer() {
+		order = append(order, FIELD_RECUR)
+		fields[FIELD_RECUR] = t.Recur.String()
+	} else {
+		order = append(order, FIELD_DUE)
+		fields[FIELD_DUE] = t.Due.String()
+	}
+	order = append(order, []string{FIELD_PROJECT, FIELD_VERSION, FIELD_ID}...)
 
 	keyLen := 0
 	for _, f := range order {
@@ -211,6 +236,7 @@ func (t *Task) FormatBody() string {
 		}
 	}
 
+	body := fmt.Sprintf("\n")
 	for _, f := range order {
 		key := f + FIELD_SEPARATOR
 		for i := len(key); i <= keyLen; i++ {
@@ -224,6 +250,35 @@ func (t *Task) FormatBody() string {
 		body += fmt.Sprintf("\nPrevious version:\n\n%s\n", t.Message.Body)
 	}
 	return body
+}
+
+func (t *Task) IsRecurrer() bool {
+	return t.Recur != nil
+}
+
+func (t *Task) RecursToday() bool {
+	if !t.IsRecurrer() {
+		return false
+	}
+	return true
+
+	return t.Recur.RecursOn(Today)
+}
+
+func (t *Task) CreateNextMessage(date Date) (string, string, error) {
+	if !t.IsRecurrer() {
+		return "", "", ErrTaskIsNotRecurring
+	}
+
+	tempTask := &Task{
+		Id:      uuid.New().String(),
+		Version: 1,
+		Action:  t.Action,
+		Project: t.Project,
+		Due:     t.Recur.FirstAfter(date),
+	}
+
+	return tempTask.FormatSubject(), tempTask.FormatBody(), nil
 }
 
 func FieldFromBody(field, body string) (string, bool) {
