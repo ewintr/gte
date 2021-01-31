@@ -32,6 +32,7 @@ const (
 	FIELD_ACTION  = "action"
 	FIELD_PROJECT = "project"
 	FIELD_DUE     = "due"
+	FIELD_RECUR   = "recur"
 )
 
 var (
@@ -59,7 +60,9 @@ type Task struct {
 	Action  string
 	Project string
 	Due     Date
+	Recur   Recurrer
 
+	//Message is the underlying message
 	Message *mstore.Message
 
 	// Current indicates whether the task represents an existing message in the mstore
@@ -110,7 +113,13 @@ func New(msg *mstore.Message) *Task {
 
 	// Due
 	dueStr, d := FieldFromBody(FIELD_DUE, msg.Body)
-	if dueStr == "" || d {
+	if dueStr == "" {
+		dueStr = FieldFromSubject(FIELD_DUE, msg.Subject)
+		if dueStr != "" {
+			dirty = true
+		}
+	}
+	if d {
 		dirty = true
 	}
 	due := NewDateFromString(dueStr)
@@ -134,6 +143,12 @@ func New(msg *mstore.Message) *Task {
 
 	// Project
 	project, d := FieldFromBody(FIELD_PROJECT, msg.Body)
+	if project == "" {
+		project = FieldFromSubject(FIELD_PROJECT, msg.Subject)
+		if project != "" {
+			dirty = true
+		}
+	}
 	if d {
 		dirty = true
 	}
@@ -242,11 +257,22 @@ func FieldFromBody(field, body string) (string, bool) {
 }
 
 func FieldFromSubject(field, subject string) string {
-	if field != FIELD_ACTION {
-		return ""
-	}
 
 	terms := strings.Split(subject, SUBJECT_SEPARATOR)
+	switch field {
+	case FIELD_ACTION:
+		return terms[len(terms)-1]
+	case FIELD_PROJECT:
+		if len(terms) < 2 {
+			return ""
+		}
+		return terms[len(terms)-2]
+	case FIELD_DUE:
+		if len(terms) < 3 {
+			return ""
+		}
+		return terms[len(terms)-3]
+	}
 
-	return terms[len(terms)-1]
+	return ""
 }

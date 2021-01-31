@@ -126,7 +126,7 @@ action: %s
 			},
 		},
 		{
-			name: "action in subject takes precedence",
+			name: "action in body takes precedence",
 			message: &mstore.Message{
 				Folder:  task.FOLDER_PLANNED,
 				Subject: "some other action",
@@ -159,6 +159,45 @@ action: %s
 				Folder: task.FOLDER_PLANNED,
 				Action: action,
 				Dirty:  true,
+			},
+		},
+		{
+			name: "project in body takes precedence",
+			message: &mstore.Message{
+				Folder:  task.FOLDER_PLANNED,
+				Subject: fmt.Sprintf("old project - %s", action),
+				Body: fmt.Sprintf(`
+id: %s
+due: no date
+version: %d
+action: %s
+project: %s
+				`, id, version, action, project),
+			},
+			hasId:      true,
+			hasVersion: true,
+			exp: &task.Task{
+				Id:      id,
+				Version: version,
+				Folder:  task.FOLDER_PLANNED,
+				Action:  action,
+				Project: project,
+			},
+		},
+		{
+			name: "project from subject if not present in body",
+			message: &mstore.Message{
+				Folder:  task.FOLDER_PLANNED,
+				Subject: fmt.Sprintf("%s - %s", project, action),
+				Body:    fmt.Sprintf(`id: %s`, id),
+			},
+			hasId: true,
+			exp: &task.Task{
+				Id:      id,
+				Folder:  task.FOLDER_PLANNED,
+				Action:  action,
+				Project: project,
+				Dirty:   true,
 			},
 		},
 		{
@@ -406,6 +445,12 @@ field: valuea
 
 func TestFieldFromSubject(t *testing.T) {
 	action := "action"
+	project := "project"
+	due := "due"
+	subjectOne := fmt.Sprintf("%s", action)
+	subjectTwo := fmt.Sprintf("%s - %s", project, action)
+	subjectThree := fmt.Sprintf("%s - %s - %s", due, project, action)
+
 	for _, tc := range []struct {
 		name    string
 		field   string
@@ -423,25 +468,58 @@ func TestFieldFromSubject(t *testing.T) {
 		{
 			name:    "unknown field",
 			field:   "unknown",
-			subject: action,
+			subject: subjectOne,
 		},
 		{
-			name:    "known field",
+			name:    "action with one",
 			field:   task.FIELD_ACTION,
-			subject: action,
+			subject: subjectOne,
 			exp:     action,
 		},
 		{
-			name:    "with project",
+			name:    "action with with two",
 			field:   task.FIELD_ACTION,
-			subject: fmt.Sprintf("project - %s", action),
+			subject: subjectTwo,
 			exp:     action,
 		},
 		{
-			name:    "with due and project",
+			name:    "action with three",
 			field:   task.FIELD_ACTION,
-			subject: fmt.Sprintf("due - project - %s", action),
+			subject: subjectThree,
 			exp:     action,
+		},
+		{
+			name:    "project with one",
+			field:   task.FIELD_PROJECT,
+			subject: subjectOne,
+		},
+		{
+			name:    "project with with two",
+			field:   task.FIELD_PROJECT,
+			subject: subjectTwo,
+			exp:     project,
+		},
+		{
+			name:    "project with three",
+			field:   task.FIELD_PROJECT,
+			subject: subjectThree,
+			exp:     project,
+		},
+		{
+			name:    "due with one",
+			field:   task.FIELD_DUE,
+			subject: subjectOne,
+		},
+		{
+			name:    "due with with two",
+			field:   task.FIELD_DUE,
+			subject: subjectTwo,
+		},
+		{
+			name:    "due with three",
+			field:   task.FIELD_DUE,
+			subject: subjectThree,
+			exp:     due,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

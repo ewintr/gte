@@ -97,7 +97,7 @@ func NewDateFromString(date string) Date {
 	}
 
 	daysToAdd := int(newWeekday) - weekday
-	if daysToAdd < 0 {
+	if daysToAdd <= 0 {
 		daysToAdd += 7
 	}
 
