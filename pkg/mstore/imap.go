@@ -176,10 +176,11 @@ func (es *Imap) Messages(folder string) ([]*Message, error) {
 }
 
 func (es *Imap) Add(folder, subject, body string) error {
-	msgStr := fmt.Sprintf(`From: todo <process@erikwinter.nl>
+	msgStr := fmt.Sprintf(`From: todo <mstore@erikwinter.nl>
+Date: %s
 Subject: %s
 
-%s`, subject, body)
+%s`, time.Now().Format(time.RFC822), subject, body)
 
 	msg := NewBody(msgStr)
 

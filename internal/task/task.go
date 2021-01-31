@@ -293,7 +293,7 @@ func FieldFromBody(field, body string) (string, bool) {
 		fieldName := strings.ToLower(strings.TrimSpace(parts[0]))
 		if fieldName == field {
 			if value == "" {
-				value = strings.TrimSpace(parts[1])
+				value = lowerAndTrim(parts[1])
 			} else {
 				dirty = true
 			}
@@ -309,17 +309,17 @@ func FieldFromSubject(field, subject string) string {
 	terms := strings.Split(subject, SUBJECT_SEPARATOR)
 	switch field {
 	case FIELD_ACTION:
-		return terms[len(terms)-1]
+		return lowerAndTrim(terms[len(terms)-1])
 	case FIELD_PROJECT:
 		if len(terms) < 2 {
 			return ""
 		}
-		return terms[len(terms)-2]
+		return lowerAndTrim(terms[len(terms)-2])
 	case FIELD_DUE:
 		if len(terms) < 3 {
 			return ""
 		}
-		return terms[len(terms)-3]
+		return lowerAndTrim(terms[len(terms)-3])
 	}
 
 	return ""
