@@ -180,7 +180,7 @@ func (es *Imap) Add(folder, subject, body string) error {
 Date: %s
 Subject: %s
 
-%s`, time.Now().Format(time.RFC822), subject, body)
+%s`, time.Now().Format(time.RFC822Z), subject, body)
 
 	msg := NewBody(msgStr)
 
