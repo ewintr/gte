@@ -185,22 +185,6 @@ project: %s
 			},
 		},
 		{
-			name: "project from subject if not present in body",
-			message: &mstore.Message{
-				Folder:  task.FOLDER_PLANNED,
-				Subject: fmt.Sprintf("%s - %s", project, action),
-				Body:    fmt.Sprintf(`id: %s`, id),
-			},
-			hasId: true,
-			exp: &task.Task{
-				Id:      id,
-				Folder:  task.FOLDER_PLANNED,
-				Action:  action,
-				Project: project,
-				Dirty:   true,
-			},
-		},
-		{
 			name: "quoted fields",
 			message: &mstore.Message{
 				Folder: task.FOLDER_PLANNED,
@@ -487,39 +471,6 @@ func TestFieldFromSubject(t *testing.T) {
 			field:   task.FIELD_ACTION,
 			subject: subjectThree,
 			exp:     action,
-		},
-		{
-			name:    "project with one",
-			field:   task.FIELD_PROJECT,
-			subject: subjectOne,
-		},
-		{
-			name:    "project with with two",
-			field:   task.FIELD_PROJECT,
-			subject: subjectTwo,
-			exp:     project,
-		},
-		{
-			name:    "project with three",
-			field:   task.FIELD_PROJECT,
-			subject: subjectThree,
-			exp:     project,
-		},
-		{
-			name:    "due with one",
-			field:   task.FIELD_DUE,
-			subject: subjectOne,
-		},
-		{
-			name:    "due with with two",
-			field:   task.FIELD_DUE,
-			subject: subjectTwo,
-		},
-		{
-			name:    "due with three",
-			field:   task.FIELD_DUE,
-			subject: subjectThree,
-			exp:     due,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

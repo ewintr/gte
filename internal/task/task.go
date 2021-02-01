@@ -305,22 +305,11 @@ func FieldFromBody(field, body string) (string, bool) {
 
 func FieldFromSubject(field, subject string) string {
 
-	// TODO there are also subjects with date and without project
-	terms := strings.Split(subject, SUBJECT_SEPARATOR)
-	switch field {
-	case FIELD_ACTION:
-		return lowerAndTrim(terms[len(terms)-1])
-	case FIELD_PROJECT:
-		if len(terms) < 2 {
-			return ""
-		}
-		return lowerAndTrim(terms[len(terms)-2])
-	case FIELD_DUE:
-		if len(terms) < 3 {
-			return ""
-		}
-		return lowerAndTrim(terms[len(terms)-3])
+	if field != FIELD_ACTION {
+		return ""
 	}
 
-	return ""
+	terms := strings.Split(subject, SUBJECT_SEPARATOR)
+
+	return lowerAndTrim(terms[len(terms)-1])
 }
