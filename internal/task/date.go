@@ -65,16 +65,50 @@ func NewDate(year, month, day int) Date {
 func NewDateFromString(date string) Date {
 	date = strings.ToLower(strings.TrimSpace(date))
 
-	if date == "no date" || date == "" {
+	switch date {
+	case "":
+		fallthrough
+	case "no date":
 		return Date{}
-	}
 
-	if date == "today" || date == "vandaag" {
+	case "today":
+		fallthrough
+	case "vandaag":
 		return Today
-	}
 
-	if date == "tomorrow" || date == "morgen" {
+	case "tomorrow":
+		fallthrough
+	case "morgen":
 		return Today.AddDays(1)
+
+	case "day after tomorrow":
+		fallthrough
+	case "overmorgen":
+		return Today.AddDays(2)
+
+	case "this week":
+		fallthrough
+	case "deze week":
+		daysToAdd := findDaysToWeekday(Today.Weekday(), time.Friday)
+		return Today.Add(daysToAdd)
+
+	case "next week":
+		fallthrough
+	case "volgende week":
+		daysToAdd := findDaysToWeekday(Today.Weekday(), time.Friday) + 7
+		return Today.Add(daysToAdd)
+
+	case "this sprint":
+		fallthrough
+	case "deze sprint":
+		aSprintStart := NewDate(2021, 1, 29)
+		daysToAdd := findDaysToWeekday(Today.Weekday(), time.Thursday)
+		diff := aSprintStart.DaysBetween(Today.AddDays(daysToAdd))
+		if diff%14 != 0 {
+			daysToAdd += 7
+		}
+
+		return Today.AddDays(daysToAdd)
 	}
 
 	t, err := time.Parse("2006-01-02", fmt.Sprintf("%.10s", date))
@@ -82,20 +116,42 @@ func NewDateFromString(date string) Date {
 		return Date{t: t}
 	}
 
-	weekday := Today.Weekday()
 	newWeekday, ok := ParseWeekday(date)
 	if !ok {
 		return Date{}
 	}
-	daysToAdd := int(newWeekday) - int(weekday)
-	if daysToAdd <= 0 {
-		daysToAdd += 7
-	}
+	daysToAdd := findDaysToWeekday(Today.Weekday(), newWeekday)
 
 	return Today.Add(daysToAdd)
 }
 
-func (d *Date) String() string {
+func findDaysToWeekday(current, wanted time.Weekday) int {
+	daysToAdd := int(wanted) - int(current)
+	if daysToAdd <= 0 {
+		daysToAdd += 7
+	}
+
+	return daysToAdd
+}
+
+func (d Date) DaysBetween(d2 Date) int {
+	tDate := d2
+	end := d
+	if !end.After(tDate) {
+		end = d2
+		tDate = d
+	}
+
+	days := 0
+	for {
+		if tDate.Add(days).Equal(end) {
+			return days
+		}
+		days++
+	}
+}
+
+func (d Date) String() string {
 	if d.t.IsZero() {
 		return "no date"
 	}
@@ -103,33 +159,33 @@ func (d *Date) String() string {
 	return strings.ToLower(d.t.Format(DateFormat))
 }
 
-func (d *Date) IsZero() bool {
+func (d Date) IsZero() bool {
 	return d.t.IsZero()
 }
 
-func (d *Date) Time() time.Time {
+func (d Date) Time() time.Time {
 	return d.t
 }
 
-func (d *Date) Weekday() time.Weekday {
+func (d Date) Weekday() time.Weekday {
 	return d.t.Weekday()
 }
 
-func (d *Date) Add(days int) Date {
+func (d Date) Add(days int) Date {
 	year, month, day := d.t.Date()
 	return NewDate(year, int(month), day+days)
 }
 
-func (d *Date) Equal(ud Date) bool {
+func (d Date) Equal(ud Date) bool {
 	return d.t.Equal(ud.Time())
 }
 
 // After reports whether d is after ud
-func (d *Date) After(ud Date) bool {
+func (d Date) After(ud Date) bool {
 	return d.t.After(ud.Time())
 }
 
-func (d *Date) AddDays(amount int) Date {
+func (d Date) AddDays(amount int) Date {
 	year, month, date := d.t.Date()
 
 	return NewDate(year, int(month), date+amount)

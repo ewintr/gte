@@ -44,7 +44,7 @@ func TestNewDateFromString(t *testing.T) {
 			exp:   task.NewDate(2021, 2, 1),
 		},
 		{
-			name:  "ducth dayname lowercase",
+			name:  "dutch dayname lowercase",
 			input: "maandag",
 			exp:   task.NewDate(2021, 2, 1),
 		},
@@ -67,6 +67,46 @@ func TestNewDateFromString(t *testing.T) {
 			name:  "tomorrow dutch",
 			input: "morgen",
 			exp:   task.NewDate(2021, 1, 31),
+		},
+		{
+			name:  "day after tomorrow english",
+			input: "day after tomorrow",
+			exp:   task.NewDate(2021, 2, 1),
+		},
+		{
+			name:  "day after tomorrow dutch",
+			input: "overmorgen",
+			exp:   task.NewDate(2021, 2, 1),
+		},
+		{
+			name:  "this week english",
+			input: "this week",
+			exp:   task.NewDate(2021, 2, 5),
+		},
+		{
+			name:  "this week dutch",
+			input: "deze week",
+			exp:   task.NewDate(2021, 2, 5),
+		},
+		{
+			name:  "next week english",
+			input: "next week",
+			exp:   task.NewDate(2021, 2, 12),
+		},
+		{
+			name:  "next week dutch",
+			input: "volgende week",
+			exp:   task.NewDate(2021, 2, 12),
+		},
+		{
+			name:  "this sprint english",
+			input: "this sprint",
+			exp:   task.NewDate(2021, 2, 11),
+		},
+		{
+			name:  "this sprint dutch",
+			input: "deze sprint",
+			exp:   task.NewDate(2021, 2, 11),
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
