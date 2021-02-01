@@ -48,6 +48,26 @@ func TestNewDateFromString(t *testing.T) {
 			input: "maandag",
 			exp:   task.NewDate(2021, 2, 1),
 		},
+		{
+			name:  "today english",
+			input: "today",
+			exp:   task.NewDate(2021, 1, 30),
+		},
+		{
+			name:  "today dutch",
+			input: "vandaag",
+			exp:   task.NewDate(2021, 1, 30),
+		},
+		{
+			name:  "tomorrow english",
+			input: "tomorrow",
+			exp:   task.NewDate(2021, 1, 31),
+		},
+		{
+			name:  "tomorrow dutch",
+			input: "morgen",
+			exp:   task.NewDate(2021, 1, 31),
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			test.Equals(t, tc.exp, task.NewDateFromString(tc.input))

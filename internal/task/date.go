@@ -69,30 +69,24 @@ func NewDateFromString(date string) Date {
 		return Date{}
 	}
 
+	if date == "today" || date == "vandaag" {
+		return Today
+	}
+
+	if date == "tomorrow" || date == "morgen" {
+		return Today.AddDays(1)
+	}
+
 	t, err := time.Parse("2006-01-02", fmt.Sprintf("%.10s", date))
 	if err == nil {
 		return Date{t: t}
 	}
 
 	weekday := Today.Weekday()
-	var newWeekday time.Weekday
-	switch {
-	case date == "monday" || date == "maandag":
-		newWeekday = time.Monday
-	case date == "tuesday" || date == "dinsdag":
-		newWeekday = time.Tuesday
-	case date == "wednesday" || date == "woensdag":
-		newWeekday = time.Wednesday
-	case date == "thursday" || date == "donderdag":
-		newWeekday = time.Thursday
-	case date == "friday" || date == "vrijdag":
-		newWeekday = time.Friday
-	case date == "saturday" || date == "zaterdag":
-		newWeekday = time.Saturday
-	case date == "sunday" || date == "zondag":
-		newWeekday = time.Sunday
+	newWeekday, ok := ParseWeekday(date)
+	if !ok {
+		return Date{}
 	}
-
 	daysToAdd := int(newWeekday) - int(weekday)
 	if daysToAdd <= 0 {
 		daysToAdd += 7
