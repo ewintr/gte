@@ -1,11 +1,78 @@
 package task_test
 
 import (
+	"sort"
 	"testing"
+	"time"
 
 	"git.sr.ht/~ewintr/go-kit/test"
 	"git.sr.ht/~ewintr/gte/internal/task"
 )
+
+func TestWeekdaysSort(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		input task.Weekdays
+		exp   task.Weekdays
+	}{
+		{
+			name: "empty",
+		},
+		{
+			name:  "one",
+			input: task.Weekdays{time.Tuesday},
+			exp:   task.Weekdays{time.Tuesday},
+		},
+		{
+			name:  "multiple",
+			input: task.Weekdays{time.Wednesday, time.Tuesday, time.Monday},
+			exp:   task.Weekdays{time.Monday, time.Tuesday, time.Wednesday},
+		},
+		{
+			name:  "sunday is last",
+			input: task.Weekdays{time.Saturday, time.Sunday, time.Monday},
+			exp:   task.Weekdays{time.Monday, time.Saturday, time.Sunday},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sort.Sort(tc.input)
+			test.Equals(t, tc.exp, tc.input)
+		})
+	}
+}
+
+func TestWeekdaysUnique(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		input task.Weekdays
+		exp   task.Weekdays
+	}{
+		{
+			name:  "empty",
+			input: task.Weekdays{},
+			exp:   task.Weekdays{},
+		},
+		{
+			name:  "single",
+			input: task.Weekdays{time.Monday},
+			exp:   task.Weekdays{time.Monday},
+		},
+		{
+			name:  "no doubles",
+			input: task.Weekdays{time.Monday, time.Tuesday, time.Wednesday},
+			exp:   task.Weekdays{time.Monday, time.Tuesday, time.Wednesday},
+		},
+		{
+			name:  "doubles",
+			input: task.Weekdays{time.Monday, time.Monday, time.Wednesday, time.Monday},
+			exp:   task.Weekdays{time.Monday, time.Wednesday},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			test.Equals(t, tc.exp, tc.input.Unique())
+		})
+	}
+}
 
 func TestNewDateFromString(t *testing.T) {
 	task.Today = task.NewDate(2021, 1, 30)

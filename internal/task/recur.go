@@ -64,11 +64,11 @@ func (d Daily) String() string {
 }
 
 type Weekly struct {
-	Start   Date
-	Weekday time.Weekday
+	Start    Date
+	Weekdays Weekdays
 }
 
-// yyyy-mm-dd, weekly, wednesday
+// yyyy-mm-dd, weekly, wednesday & saturday & sunday
 func ParseWeekly(start Date, terms []string) (Recurrer, bool) {
 	if len(terms) < 2 {
 		return nil, false
@@ -78,14 +78,21 @@ func ParseWeekly(start Date, terms []string) (Recurrer, bool) {
 		return nil, false
 	}
 
-	wd, ok := ParseWeekday(terms[1])
-	if !ok {
+	wds := Weekdays{}
+	for _, wdStr := range strings.Split(terms[1], "&") {
+		wd, ok := ParseWeekday(wdStr)
+		if !ok {
+			continue
+		}
+		wds = append(wds, wd)
+	}
+	if len(wds) == 0 {
 		return nil, false
 	}
 
 	return Weekly{
-		Start:   start,
-		Weekday: wd,
+		Start:    start,
+		Weekdays: wds.Unique(),
 	}, true
 }
 
@@ -94,11 +101,23 @@ func (w Weekly) RecursOn(date Date) bool {
 		return false
 	}
 
-	return w.Weekday == date.Weekday()
+	for _, wd := range w.Weekdays {
+		if wd == date.Weekday() {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (w Weekly) String() string {
-	return fmt.Sprintf("%s, weekly, %s", w.Start.String(), strings.ToLower(w.Weekday.String()))
+	weekdayStrs := []string{}
+	for _, wd := range w.Weekdays {
+		weekdayStrs = append(weekdayStrs, wd.String())
+	}
+	weekdayStr := strings.Join(weekdayStrs, " & ")
+
+	return fmt.Sprintf("%s, weekly, %s", w.Start.String(), strings.ToLower(weekdayStr))
 }
 
 type Biweekly struct {

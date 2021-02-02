@@ -50,12 +50,110 @@ func TestDaily(t *testing.T) {
 	})
 }
 
+func TestParseWeekly(t *testing.T) {
+	start := task.NewDate(2021, 2, 7)
+	for _, tc := range []struct {
+		name      string
+		input     []string
+		expOk     bool
+		expWeekly task.Weekly
+	}{
+		{
+			name: "empty",
+		},
+		{
+			name:  "wrong type",
+			input: []string{"daily"},
+		},
+		{
+			name:  "wrong count",
+			input: []string{"weeekly"},
+		},
+		{
+			name:  "unknown day",
+			input: []string{"weekly", "festivus"},
+		},
+		{
+			name:  "one day",
+			input: []string{"weekly", "monday"},
+			expOk: true,
+			expWeekly: task.Weekly{
+				Start: start,
+				Weekdays: task.Weekdays{
+					time.Monday,
+				},
+			},
+		},
+		{
+			name:  "multiple days",
+			input: []string{"weekly", "monday & thursday & saturday"},
+			expOk: true,
+			expWeekly: task.Weekly{
+				Start: start,
+				Weekdays: task.Weekdays{
+					time.Monday,
+					time.Thursday,
+					time.Saturday,
+				},
+			},
+		},
+		{
+			name:  "wrong order",
+			input: []string{"weekly", "sunday & thursday & wednesday"},
+			expOk: true,
+			expWeekly: task.Weekly{
+				Start: start,
+				Weekdays: task.Weekdays{
+					time.Wednesday,
+					time.Thursday,
+					time.Sunday,
+				},
+			},
+		},
+		{
+			name:  "doubles",
+			input: []string{"weekly", "sunday & sunday & monday"},
+			expOk: true,
+			expWeekly: task.Weekly{
+				Start: start,
+				Weekdays: task.Weekdays{
+					time.Monday,
+					time.Sunday,
+				},
+			},
+		},
+		{
+			name:  "one unknown",
+			input: []string{"weekly", "sunday & someday"},
+			expOk: true,
+			expWeekly: task.Weekly{
+				Start: start,
+				Weekdays: task.Weekdays{
+					time.Sunday,
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			weekly, ok := task.ParseWeekly(start, tc.input)
+			test.Equals(t, tc.expOk, ok)
+			if tc.expOk {
+				test.Equals(t, tc.expWeekly, weekly)
+			}
+		})
+	}
+}
+
 func TestWeekly(t *testing.T) {
 	weekly := task.Weekly{
-		Start:   task.NewDate(2021, 1, 31), // a sunday
-		Weekday: time.Wednesday,
+		Start: task.NewDate(2021, 1, 31), // a sunday
+		Weekdays: task.Weekdays{
+			time.Monday,
+			time.Wednesday,
+			time.Thursday,
+		},
 	}
-	weeklyStr := "2021-01-31 (sunday), weekly, wednesday"
+	weeklyStr := "2021-01-31 (sunday), weekly, monday & wednesday & thursday"
 
 	t.Run("parse", func(t *testing.T) {
 		test.Equals(t, weekly, task.NewRecurrer(weeklyStr))
@@ -76,13 +174,18 @@ func TestWeekly(t *testing.T) {
 				date: task.NewDate(2021, 1, 27), // a wednesday
 			},
 			{
-				name: "wrong weekday",
+				name: "right weekday",
 				date: task.NewDate(2021, 2, 1), // a monday
+				exp:  true,
 			},
 			{
-				name: "right day",
+				name: "another right day",
 				date: task.NewDate(2021, 2, 3), // a wednesday
 				exp:  true,
+			},
+			{
+				name: "wrong weekday",
+				date: task.NewDate(2021, 2, 5), // a friday
 			},
 		} {
 			t.Run(tc.name, func(t *testing.T) {

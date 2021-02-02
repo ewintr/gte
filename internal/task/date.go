@@ -2,6 +2,7 @@ package task
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 )
@@ -15,6 +16,35 @@ var Today Date
 func init() {
 	year, month, day := time.Now().Date()
 	Today = NewDate(year, int(month), day)
+}
+
+type Weekdays []time.Weekday
+
+func (wds Weekdays) Len() int      { return len(wds) }
+func (wds Weekdays) Swap(i, j int) { wds[j], wds[i] = wds[i], wds[j] }
+func (wds Weekdays) Less(i, j int) bool {
+	if wds[i] == time.Sunday {
+		return false
+	}
+	if wds[j] == time.Sunday {
+		return true
+	}
+
+	return int(wds[i]) < int(wds[j])
+}
+
+func (wds Weekdays) Unique() Weekdays {
+	mwds := map[time.Weekday]bool{}
+	for _, wd := range wds {
+		mwds[wd] = true
+	}
+	newWds := Weekdays{}
+	for wd := range mwds {
+		newWds = append(newWds, wd)
+	}
+	sort.Sort(newWds)
+
+	return newWds
 }
 
 type Date struct {
