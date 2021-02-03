@@ -201,6 +201,10 @@ func (d Date) Weekday() time.Weekday {
 	return d.t.Weekday()
 }
 
+func (d Date) Day() int {
+	return d.t.Day()
+}
+
 func (d Date) Add(days int) Date {
 	year, month, day := d.t.Date()
 	return NewDate(year, int(month), day+days)

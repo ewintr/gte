@@ -300,3 +300,50 @@ func TestEveryNWeeks(t *testing.T) {
 		}
 	})
 }
+
+func TestEveryNMonths(t *testing.T) {
+	everyNMonths := task.EveryNMonths{
+		Start: task.NewDate(2021, 2, 3),
+		N:     3,
+	}
+	everyNMonthsStr := "2021-02-03 (wednesday), every 3 months"
+
+	t.Run("parse", func(t *testing.T) {
+		test.Equals(t, everyNMonths, task.NewRecurrer(everyNMonthsStr))
+	})
+
+	t.Run("string", func(t *testing.T) {
+		test.Equals(t, everyNMonthsStr, everyNMonths.String())
+	})
+
+	t.Run("recurs on", func(t *testing.T) {
+		for _, tc := range []struct {
+			name string
+			date task.Date
+			exp  bool
+		}{
+			{
+				name: "before start",
+				date: task.NewDate(2021, 1, 27),
+			},
+			{
+				name: "on start",
+				date: task.NewDate(2021, 2, 3),
+				exp:  true,
+			},
+			{
+				name: "8 weeks after",
+				date: task.NewDate(2021, 3, 31),
+			},
+			{
+				name: "one month",
+				date: task.NewDate(2021, 3, 3),
+				exp:  true,
+			},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				test.Equals(t, tc.exp, everyNMonths.RecursOn(tc.date))
+			})
+		}
+	})
+}

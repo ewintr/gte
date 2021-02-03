@@ -37,6 +37,9 @@ func NewRecurrer(recurStr string) Recurrer {
 	if recur, ok := ParseEveryNWeeks(start, terms); ok {
 		return recur
 	}
+	if recur, ok := ParseEveryNMonths(start, terms); ok {
+		return recur
+	}
 
 	return nil
 }
@@ -191,7 +194,7 @@ type EveryNWeeks struct {
 
 // yyyy-mm-dd, every 3 weeks
 func ParseEveryNWeeks(start Date, terms []string) (Recurrer, bool) {
-	if len(terms) < 1 || len(terms) > 1 {
+	if len(terms) != 1 {
 		return nil, false
 	}
 
@@ -224,4 +227,42 @@ func (enw EveryNWeeks) RecursOn(date Date) bool {
 
 func (enw EveryNWeeks) String() string {
 	return fmt.Sprintf("%s, every %d weeks", enw.Start.String(), enw.N)
+}
+
+type EveryNMonths struct {
+	Start Date
+	N     int
+}
+
+// yyyy-mm-dd, every 3 months
+func ParseEveryNMonths(start Date, terms []string) (Recurrer, bool) {
+	if len(terms) != 1 {
+		return nil, false
+	}
+
+	terms = strings.Split(terms[0], " ")
+	if len(terms) != 3 || terms[0] != "every" || terms[2] != "months" {
+		return nil, false
+	}
+	n, err := strconv.Atoi(terms[1])
+	if err != nil {
+		return nil, false
+	}
+
+	return EveryNMonths{
+		Start: start,
+		N:     n,
+	}, true
+}
+
+func (enm EveryNMonths) RecursOn(date Date) bool {
+	if enm.Start.After(date) {
+		return false
+	}
+
+	return enm.Start.Day() == date.Day()
+}
+
+func (enm EveryNMonths) String() string {
+	return fmt.Sprintf("%s, every %d months", enm.Start.String(), enm.N)
 }

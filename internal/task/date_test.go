@@ -195,13 +195,13 @@ func TestDateString(t *testing.T) {
 		},
 		{
 			name: "normal",
-			date: task.NewDate(2021, 1, 30),
-			exp:  "2021-01-30 (saturday)",
+			date: task.NewDate(2021, 5, 30),
+			exp:  "2021-05-30 (sunday)",
 		},
 		{
 			name: "normalize",
-			date: task.NewDate(2021, 1, 32),
-			exp:  "2021-02-01 (monday)",
+			date: task.NewDate(2021, 5, 32),
+			exp:  "2021-06-01 (tuesday)",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
