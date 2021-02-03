@@ -2,6 +2,7 @@ package task
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -31,6 +32,9 @@ func NewRecurrer(recurStr string) Recurrer {
 		return recur
 	}
 	if recur, ok := ParseBiweekly(start, terms); ok {
+		return recur
+	}
+	if recur, ok := ParseEveryNWeeks(start, terms); ok {
 		return recur
 	}
 
@@ -178,4 +182,46 @@ func (b Biweekly) RecursOn(date Date) bool {
 
 func (b Biweekly) String() string {
 	return fmt.Sprintf("%s, biweekly, %s", b.Start.String(), strings.ToLower(b.Weekday.String()))
+}
+
+type EveryNWeeks struct {
+	Start Date
+	N     int
+}
+
+// yyyy-mm-dd, every 3 weeks
+func ParseEveryNWeeks(start Date, terms []string) (Recurrer, bool) {
+	if len(terms) < 1 || len(terms) > 1 {
+		return nil, false
+	}
+
+	terms = strings.Split(terms[0], " ")
+	if len(terms) != 3 || terms[0] != "every" || terms[2] != "weeks" {
+		return nil, false
+	}
+	n, err := strconv.Atoi(terms[1])
+	if err != nil || n < 1 {
+		return nil, false
+	}
+
+	return EveryNWeeks{
+		Start: start,
+		N:     n,
+	}, true
+}
+
+func (enw EveryNWeeks) RecursOn(date Date) bool {
+	if enw.Start.After(date) {
+		return false
+	}
+	if enw.Start.Equal(date) {
+		return true
+	}
+
+	intervalDays := enw.N * 7
+	return enw.Start.DaysBetween(date)%intervalDays == 0
+}
+
+func (enw EveryNWeeks) String() string {
+	return fmt.Sprintf("%s, every %d weeks", enw.Start.String(), enw.N)
 }

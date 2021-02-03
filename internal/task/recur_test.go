@@ -240,3 +240,63 @@ func TestBiweekly(t *testing.T) {
 		}
 	})
 }
+
+func TestEveryNWeeks(t *testing.T) {
+	everyNWeeks := task.EveryNWeeks{
+		Start: task.NewDate(2021, 2, 3),
+		N:     3,
+	}
+	everyNWeeksStr := "2021-02-03 (wednesday), every 3 weeks"
+
+	t.Run("parse", func(t *testing.T) {
+		test.Equals(t, everyNWeeks, task.NewRecurrer(everyNWeeksStr))
+	})
+
+	t.Run("string", func(t *testing.T) {
+		test.Equals(t, everyNWeeksStr, everyNWeeks.String())
+	})
+
+	t.Run("recurs on", func(t *testing.T) {
+		for _, tc := range []struct {
+			name string
+			date task.Date
+			exp  bool
+		}{
+			{
+				name: "before start",
+				date: task.NewDate(2021, 1, 27),
+			},
+			{
+				name: "on start",
+				date: task.NewDate(2021, 2, 3),
+				exp:  true,
+			},
+			{
+				name: "wrong day",
+				date: task.NewDate(2021, 2, 4),
+			},
+			{
+				name: "one week after",
+				date: task.NewDate(2021, 2, 10),
+			},
+			{
+				name: "first interval",
+				date: task.NewDate(2021, 2, 24),
+				exp:  true,
+			},
+			{
+				name: "second interval",
+				date: task.NewDate(2021, 3, 17),
+				exp:  true,
+			},
+			{
+				name: "second interval plus one week",
+				date: task.NewDate(2021, 3, 24),
+			},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				test.Equals(t, tc.exp, everyNWeeks.RecursOn(tc.date))
+			})
+		}
+	})
+}
