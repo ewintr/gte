@@ -260,7 +260,18 @@ func (enm EveryNMonths) RecursOn(date Date) bool {
 		return false
 	}
 
-	return enm.Start.Day() == date.Day()
+	tDate := enm.Start
+	for {
+		if tDate.Equal(date) {
+			return true
+		}
+		if tDate.After(date) {
+			return false
+		}
+		tYear, tMonth, tDay := tDate.Time().Date()
+		tDate = NewDate(tYear, int(tMonth)+enm.N, tDay)
+	}
+
 }
 
 func (enm EveryNMonths) String() string {

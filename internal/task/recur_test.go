@@ -338,6 +338,19 @@ func TestEveryNMonths(t *testing.T) {
 			{
 				name: "one month",
 				date: task.NewDate(2021, 3, 3),
+			},
+			{
+				name: "3 months",
+				date: task.NewDate(2021, 5, 3),
+				exp:  true,
+			},
+			{
+				name: "4 months",
+				date: task.NewDate(2021, 6, 3),
+			},
+			{
+				name: "6 months",
+				date: task.NewDate(2021, 8, 3),
 				exp:  true,
 			},
 		} {
