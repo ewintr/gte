@@ -250,11 +250,15 @@ func (t *Task) IsRecurrer() bool {
 }
 
 func (t *Task) RecursToday() bool {
+	return t.RecursOn(Today)
+}
+
+func (t *Task) RecursOn(date Date) bool {
 	if !t.IsRecurrer() {
 		return false
 	}
 
-	return t.Recur.RecursOn(Today)
+	return t.Recur.RecursOn(date)
 }
 
 func (t *Task) CreateDueMessage(date Date) (string, string, error) {

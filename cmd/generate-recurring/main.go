@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"git.sr.ht/~ewintr/gte/internal/task"
 	"git.sr.ht/~ewintr/gte/pkg/mstore"
@@ -17,6 +18,10 @@ func main() {
 	if !config.Valid() {
 		log.Fatal("please set IMAP_USER, IMAP_PASSWORD, etc environment variables")
 	}
+	daysAhead, err := strconv.Atoi(os.Getenv("GTE_DAYS_AHEAD"))
+	if err != nil {
+		daysAhead = 0
+	}
 
 	mailStore, err := mstore.ImapConnect(config)
 	if err != nil {
@@ -29,9 +34,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	rDate := task.Today.AddDays(daysAhead)
 	for _, t := range tasks {
-		if t.RecursToday() {
-			subject, body, err := t.CreateDueMessage(task.Today)
+		if t.RecursOn(rDate) {
+			subject, body, err := t.CreateDueMessage(rDate)
 			if err != nil {
 				log.Fatal(err)
 			}
