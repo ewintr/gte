@@ -29,14 +29,18 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	var cleanupNeeded bool
 	for _, t := range tasks {
 		if t.Dirty {
 			if err := taskRepo.Update(t); err != nil {
 				log.Fatal(err)
 			}
+			cleanupNeeded = true
 		}
 	}
-	if err := taskRepo.CleanUp(); err != nil {
-		log.Fatal(err)
+	if cleanupNeeded {
+		if err := taskRepo.CleanUp(); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
