@@ -131,14 +131,13 @@ func NewDateFromString(date string) Date {
 	case "this sprint":
 		fallthrough
 	case "deze sprint":
-		aSprintStart := NewDate(2021, 1, 29)
-		daysToAdd := findDaysToWeekday(Today.Weekday(), time.Thursday)
-		diff := aSprintStart.DaysBetween(Today.AddDays(daysToAdd))
-		if diff%14 != 0 {
-			daysToAdd += 7
+		tDate := NewDate(2021, 1, 28) // a sprint end
+		for {
+			if tDate.After(Today) {
+				return tDate
+			}
+			tDate = tDate.AddDays(14)
 		}
-
-		return Today.AddDays(daysToAdd)
 	}
 
 	t, err := time.Parse("2006-01-02", fmt.Sprintf("%.10s", date))
