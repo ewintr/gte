@@ -268,8 +268,7 @@ func (enm EveryNMonths) RecursOn(date Date) bool {
 		if tDate.After(date) {
 			return false
 		}
-		tYear, tMonth, tDay := tDate.Time().Date()
-		tDate = NewDate(tYear, int(tMonth)+enm.N, tDay)
+		tDate = tDate.AddMonths(enm.N)
 	}
 
 }

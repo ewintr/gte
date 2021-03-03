@@ -53,7 +53,7 @@ type Date struct {
 
 func NewDate(year, month, day int) Date {
 
-	if year == 0 && month == 0 && day == 0 {
+	if year == 0 || month == 0 || month > 12 || day == 0 {
 		return Date{}
 	}
 
@@ -207,6 +207,14 @@ func (d Date) Day() int {
 func (d Date) Add(days int) Date {
 	year, month, day := d.t.Date()
 	return NewDate(year, int(month), day+days)
+}
+
+func (d Date) AddMonths(addMonths int) Date {
+	year, month, day := d.t.Date()
+	addYears := int((int(month) + addMonths) / 12)
+	newMonth := (int(month) + addMonths) % 12
+
+	return NewDate(year+addYears, newMonth, day)
 }
 
 func (d Date) Equal(ud Date) bool {
