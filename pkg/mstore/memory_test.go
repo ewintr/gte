@@ -5,8 +5,8 @@ import (
 	"sort"
 	"testing"
 
-	"git.sr.ht/~ewintr/go-kit/test"
-	"git.sr.ht/~ewintr/gte/pkg/mstore"
+	"git.ewintr.nl/go-kit/test"
+	"git.ewintr.nl/gte/pkg/mstore"
 )
 
 func TestNewMemory(t *testing.T) {

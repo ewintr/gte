@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"git.sr.ht/~ewintr/gte/pkg/mstore"
+	"git.ewintr.nl/gte/pkg/mstore"
 )
 
 var (

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"git.sr.ht/~ewintr/go-kit/test"
-	"git.sr.ht/~ewintr/gte/internal/task"
-	"git.sr.ht/~ewintr/gte/pkg/mstore"
+	"git.ewintr.nl/go-kit/test"
+	"git.ewintr.nl/gte/internal/task"
+	"git.ewintr.nl/gte/pkg/mstore"
 )
 
 func TestRepoFindAll(t *testing.T) {

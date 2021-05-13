@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"git.sr.ht/~ewintr/gte/internal/task"
-	"git.sr.ht/~ewintr/gte/pkg/mstore"
+	"git.ewintr.nl/gte/internal/task"
+	"git.ewintr.nl/gte/pkg/mstore"
 )
 
 func main() {

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"git.sr.ht/~ewintr/gte/pkg/mstore"
+	"git.ewintr.nl/gte/pkg/mstore"
 	"github.com/google/uuid"
 )
 

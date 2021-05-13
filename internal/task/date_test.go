@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"git.sr.ht/~ewintr/go-kit/test"
-	"git.sr.ht/~ewintr/gte/internal/task"
+	"git.ewintr.nl/go-kit/test"
+	"git.ewintr.nl/gte/internal/task"
 )
 
 func TestWeekdaysSort(t *testing.T) {

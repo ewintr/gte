@@ -1,11 +1,10 @@
-module git.sr.ht/~ewintr/gte
+module git.ewintr.nl/gte
 
 go 1.14
 
 require (
-	git.sr.ht/~ewintr/go-kit v0.0.0-20201229104230-4d7958f8de04
-	github.com/emersion/go-imap v1.0.6
-	github.com/emersion/go-message v0.11.1
-	github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21 // indirect
+	git.ewintr.nl/go-kit v0.0.0-20210509123609-19e474005502
+	github.com/emersion/go-imap v1.1.0
+	github.com/emersion/go-message v0.14.1
 	github.com/google/uuid v1.2.0
 )
