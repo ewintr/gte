@@ -1,6 +1,7 @@
 package mstore
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,71 +13,97 @@ import (
 	"github.com/emersion/go-message/mail"
 )
 
-type Body struct {
+var (
+	ErrIMAPInvalidConfig = errors.New("invalid imap configuration")
+	ErrIMAPConnFailure   = errors.New("could not connect with imap")
+	ErrIMAPNotConnected  = errors.New("unable to perform, not connected to imap")
+	ErrIMAPServerProblem = errors.New("imap server was unable to perform operation")
+)
+
+type IMAPBody struct {
 	reader io.Reader
 	length int
 }
 
-func NewBody(msg string) *Body {
-
-	return &Body{
+func NewIMAPBody(msg string) *IMAPBody {
+	return &IMAPBody{
 		reader: strings.NewReader(msg),
 		length: len([]byte(msg)),
 	}
 }
 
-func (b *Body) Read(p []byte) (int, error) {
+func (b *IMAPBody) Read(p []byte) (int, error) {
 	return b.reader.Read(p)
 }
 
-func (b *Body) Len() int {
+func (b *IMAPBody) Len() int {
 	return b.length
 }
 
-type ImapConfiguration struct {
-	ImapUrl      string
-	ImapUsername string
-	ImapPassword string
+type IMAPConfig struct {
+	IMAPURL      string
+	IMAPUsername string
+	IMAPPassword string
 }
 
-func (esc *ImapConfiguration) Valid() bool {
-	if esc.ImapUrl == "" {
+func (esc *IMAPConfig) Valid() bool {
+	if esc.IMAPURL == "" {
 		return false
 	}
-	if esc.ImapUsername == "" || esc.ImapPassword == "" {
+	if esc.IMAPUsername == "" || esc.IMAPPassword == "" {
 		return false
 	}
 
 	return true
 }
 
-type Imap struct {
-	imap       *client.Client
+type IMAP struct {
+	config     *IMAPConfig
+	connected  bool
+	client     *client.Client
 	mboxStatus *imap.MailboxStatus
 }
 
-func ImapConnect(conf *ImapConfiguration) (*Imap, error) {
-	imap, err := client.DialTLS(conf.ImapUrl, nil)
+func NewIMAP(config *IMAPConfig) *IMAP {
+	return &IMAP{
+		config: config,
+	}
+}
+
+func (im *IMAP) Connect() error {
+	if !im.config.Valid() {
+		return ErrIMAPInvalidConfig
+	}
+	if im.connected {
+		return nil
+	}
+
+	cl, err := client.DialTLS(im.config.IMAPURL, nil)
 	if err != nil {
-		return &Imap{}, err
+		return fmt.Errorf("%w: %v", ErrIMAPConnFailure, err)
 	}
-	if err := imap.Login(conf.ImapUsername, conf.ImapPassword); err != nil {
-		return &Imap{}, err
+	if err := cl.Login(im.config.IMAPUsername, im.config.IMAPPassword); err != nil {
+		return fmt.Errorf("%w: %v", ErrIMAPConnFailure, err)
 	}
 
-	return &Imap{
-		imap: imap,
-	}, nil
+	im.client = cl
+	im.connected = true
+
+	return nil
 }
 
-func (es *Imap) Disconnect() {
-	es.imap.Logout()
+func (im *IMAP) Close() {
+	im.client.Logout()
+	im.connected = false
 }
 
-func (es *Imap) Folders() ([]string, error) {
+func (im *IMAP) Folders() ([]string, error) {
+	im.Connect()
+	defer im.Close()
+
 	boxes, done := make(chan *imap.MailboxInfo), make(chan error)
 	go func() {
-		done <- es.imap.List("", "*", boxes)
+		done <- im.client.List("", "*", boxes)
 	}()
 
 	folders := []string{}
@@ -91,28 +118,35 @@ func (es *Imap) Folders() ([]string, error) {
 	return folders, nil
 }
 
-func (es *Imap) selectFolder(folder string) error {
-	status, err := es.imap.Select(folder, false)
-	if err != nil {
-		return err
+func (im *IMAP) selectFolder(folder string) error {
+	if !im.connected {
+		return ErrIMAPNotConnected
 	}
 
-	es.mboxStatus = status
+	status, err := im.client.Select(folder, false)
+	if err != nil {
+		return fmt.Errorf("%w, %v", ErrIMAPServerProblem, err)
+	}
+
+	im.mboxStatus = status
 
 	return nil
 }
 
-func (es *Imap) Messages(folder string) ([]*Message, error) {
-	if err := es.selectFolder(folder); err != nil {
+func (im *IMAP) Messages(folder string) ([]*Message, error) {
+	im.Connect()
+	defer im.Close()
+
+	if err := im.selectFolder(folder); err != nil {
 		return []*Message{}, err
 	}
 
-	if es.mboxStatus.Messages == 0 {
+	if im.mboxStatus.Messages == 0 {
 		return []*Message{}, nil
 	}
 
 	seqset := new(imap.SeqSet)
-	seqset.AddRange(uint32(1), es.mboxStatus.Messages)
+	seqset.AddRange(uint32(1), im.mboxStatus.Messages)
 
 	// Get the whole message body
 	section := &imap.BodySectionName{}
@@ -120,7 +154,7 @@ func (es *Imap) Messages(folder string) ([]*Message, error) {
 
 	imsg, done := make(chan *imap.Message), make(chan error)
 	go func() {
-		done <- es.imap.Fetch(seqset, items, imsg)
+		done <- im.client.Fetch(seqset, items, imsg)
 	}()
 
 	messages := []*Message{}
@@ -169,30 +203,39 @@ func (es *Imap) Messages(folder string) ([]*Message, error) {
 	}
 
 	if err := <-done; err != nil {
-		return []*Message{}, err
+		return []*Message{}, fmt.Errorf("%w: %v", ErrIMAPServerProblem, err)
 	}
 
 	return messages, nil
 }
 
-func (es *Imap) Add(folder, subject, body string) error {
+func (im *IMAP) Add(folder, subject, body string) error {
+	im.Connect()
+	defer im.Close()
+
 	msgStr := fmt.Sprintf(`From: todo <mstore@erikwinter.nl>
 Date: %s
 Subject: %s
 
 %s`, time.Now().Format(time.RFC822Z), subject, body)
 
-	msg := NewBody(msgStr)
+	msg := NewIMAPBody(msgStr)
 
-	return es.imap.Append(folder, nil, time.Time{}, imap.Literal(msg))
+	if err := im.client.Append(folder, nil, time.Time{}, imap.Literal(msg)); err != nil {
+		return fmt.Errorf("%w: %v", ErrIMAPServerProblem, err)
+	}
+
+	return nil
 }
 
-func (es *Imap) Remove(msg *Message) error {
+func (im *IMAP) Remove(msg *Message) error {
 	if msg == nil || !msg.Valid() {
 		return ErrInvalidMessage
 	}
+	im.Connect()
+	defer im.Close()
 
-	if err := es.selectFolder(msg.Folder); err != nil {
+	if err := im.selectFolder(msg.Folder); err != nil {
 		return err
 	}
 
@@ -200,14 +243,14 @@ func (es *Imap) Remove(msg *Message) error {
 	seqset := new(imap.SeqSet)
 	seqset.AddRange(msg.Uid, msg.Uid)
 	storeItem := imap.FormatFlagsOp(imap.SetFlags, true)
-	err := es.imap.UidStore(seqset, storeItem, imap.FormatStringList([]string{imap.DeletedFlag}), nil)
+	err := im.client.UidStore(seqset, storeItem, imap.FormatStringList([]string{imap.DeletedFlag}), nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %v", ErrIMAPServerProblem, err)
 	}
 
 	// expunge box
-	if err := es.imap.Expunge(nil); err != nil {
-		return err
+	if err := im.client.Expunge(nil); err != nil {
+		return fmt.Errorf("%w: %v", ErrIMAPServerProblem, err)
 	}
 
 	return nil

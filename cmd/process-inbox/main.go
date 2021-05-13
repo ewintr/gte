@@ -1,46 +1,28 @@
 package main
 
 import (
-	"log"
 	"os"
 
+	"git.ewintr.nl/go-kit/log"
+	"git.ewintr.nl/gte/internal/process"
 	"git.ewintr.nl/gte/internal/task"
 	"git.ewintr.nl/gte/pkg/mstore"
 )
 
 func main() {
-	config := &mstore.ImapConfiguration{
-		ImapUrl:      os.Getenv("IMAP_URL"),
-		ImapUsername: os.Getenv("IMAP_USERNAME"),
-		ImapPassword: os.Getenv("IMAP_PASSWORD"),
+	logger := log.New(os.Stdout).WithField("cmd", "process-inbox")
+	config := &mstore.IMAPConfig{
+		IMAPURL:      os.Getenv("IMAP_URL"),
+		IMAPUsername: os.Getenv("IMAP_USERNAME"),
+		IMAPPassword: os.Getenv("IMAP_PASSWORD"),
 	}
-	if !config.Valid() {
-		log.Fatal("please set IMAP_USER, IMAP_PASSWORD, etc environment variables")
-	}
+	msgStore := mstore.NewIMAP(config)
 
-	mailStore, err := mstore.ImapConnect(config)
+	inboxProcessor := process.NewInbox(task.NewRepository(msgStore))
+	result, err := inboxProcessor.Process()
 	if err != nil {
-		log.Fatal(err)
+		logger.WithErr(err).Error("unable to process inbox")
+		os.Exit(1)
 	}
-	defer mailStore.Disconnect()
-
-	taskRepo := task.NewRepository(mailStore)
-	tasks, err := taskRepo.FindAll(task.FOLDER_INBOX)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var cleanupNeeded bool
-	for _, t := range tasks {
-		if t.Dirty {
-			if err := taskRepo.Update(t); err != nil {
-				log.Fatal(err)
-			}
-			cleanupNeeded = true
-		}
-	}
-	if cleanupNeeded {
-		if err := taskRepo.CleanUp(); err != nil {
-			log.Fatal(err)
-		}
-	}
+	logger.WithField("count", result.Count).Info("finished processing inbox")
 }

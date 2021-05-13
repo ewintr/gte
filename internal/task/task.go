@@ -261,20 +261,18 @@ func (t *Task) RecursOn(date Date) bool {
 	return t.Recur.RecursOn(date)
 }
 
-func (t *Task) CreateDueMessage(date Date) (string, string, error) {
-	if !t.IsRecurrer() {
-		return "", "", ErrTaskIsNotRecurring
+func (t *Task) GenerateFromRecurrer(date Date) (*Task, error) {
+	if !t.IsRecurrer() || !t.RecursOn(date) {
+		return &Task{}, ErrTaskIsNotRecurring
 	}
 
-	tempTask := &Task{
+	return &Task{
 		Id:      uuid.New().String(),
 		Version: 1,
 		Action:  t.Action,
 		Project: t.Project,
 		Due:     date,
-	}
-
-	return tempTask.FormatSubject(), tempTask.FormatBody(), nil
+	}, nil
 }
 
 func FieldFromBody(field, body string) (string, bool) {

@@ -52,8 +52,8 @@ func (tr *TaskRepo) Update(t *Task) error {
 	}
 
 	// add new
-	if err := tr.mstore.Add(t.Folder, t.FormatSubject(), t.FormatBody()); err != nil {
-		return fmt.Errorf("%w: %s", ErrMStoreError, err)
+	if err := tr.Add(t); err != nil {
+		return err
 	}
 
 	// remove old
@@ -62,6 +62,18 @@ func (tr *TaskRepo) Update(t *Task) error {
 	}
 
 	t.Current = false
+
+	return nil
+}
+
+func (tr *TaskRepo) Add(t *Task) error {
+	if t == nil {
+		return ErrInvalidTask
+	}
+
+	if err := tr.mstore.Add(t.Folder, t.FormatSubject(), t.FormatBody()); err != nil {
+		return fmt.Errorf("%w: %v", ErrMStoreError, err)
+	}
 
 	return nil
 }
