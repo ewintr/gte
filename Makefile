@@ -1,7 +1,10 @@
 test:
 	go test ./...
 
-deploy: test
-	go build -o gte-process-inbox ./cmd/process-inbox/main.go
-	go build -o gte-generate-recurring ./cmd/generate-recurring/main.go
-	scp gte-* zerocontent.org:bin/
+deploy-service: test
+	go build -o gte-daemon ./cmd/daemon/service.go
+	scp gte-daemon zerocontent.org:/home/erik/gte
+	ssh zerocontent.org sudo /bin/chown gte:gte /home/erik/gte
+	ssh zerocontent.org sudo /usr/sbin/service gte-daemon stop
+	ssh zerocontent.org sudo /bin/mv /home/erik/gte /usr/local/bin/gte
+	ssh zerocontent.org sudo /usr/sbin/service gte-daemon start
