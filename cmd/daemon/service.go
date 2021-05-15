@@ -1,11 +1,13 @@
 package main
 
 import (
+	"flag"
 	"os"
 	"os/signal"
 	"time"
 
 	"git.ewintr.nl/go-kit/log"
+	"git.ewintr.nl/gte/internal/configuration"
 	"git.ewintr.nl/gte/internal/process"
 	"git.ewintr.nl/gte/internal/task"
 	"git.ewintr.nl/gte/pkg/msend"
@@ -14,25 +16,30 @@ import (
 
 func main() {
 	logger := log.New(os.Stdout)
-	logger.Info("started")
 
-	msgStore := mstore.NewIMAP(&mstore.IMAPConfig{
-		IMAPURL:      os.Getenv("IMAP_URL"),
-		IMAPUsername: os.Getenv("IMAP_USERNAME"),
-		IMAPPassword: os.Getenv("IMAP_PASSWORD"),
-	})
-	msgSender := msend.NewSSLSMTP(&msend.SSLSMTPConfig{
-		URL:      os.Getenv("SMTP_URL"),
-		Username: os.Getenv("SMTP_USERNAME"),
-		Password: os.Getenv("SMTP_PASSWORD"),
-		From:     os.Getenv("SMTP_FROM"),
-		To:       os.Getenv("SMTP_TO"),
-	})
+	configPath := flag.String("c", "~/.config/gte/gte.conf", "path to configuration file")
+	daysAhead := flag.Int("d", 6, "generate for this amount of days from now")
+	flag.Parse()
+
+	logger.With(log.Fields{
+		"config":    *configPath,
+		"daysAhead": *daysAhead,
+	}).Info("started")
+
+	configFile, err := os.Open(*configPath)
+	if err != nil {
+		logger.WithErr(err).Error("could not open config file")
+		os.Exit(1)
+	}
+	config := configuration.New(configFile)
+
+	msgStore := mstore.NewIMAP(config.IMAP())
+	mailSend := msend.NewSSLSMTP(config.SMTP())
 	repo := task.NewRepository(msgStore)
-	disp := task.NewDispatcher(msgSender)
+	disp := task.NewDispatcher(mailSend)
 
 	inboxProc := process.NewInbox(repo)
-	recurProc := process.NewRecur(repo, disp, 6)
+	recurProc := process.NewRecur(repo, disp, *daysAhead)
 
 	go Run(inboxProc, recurProc, logger)
 
@@ -44,7 +51,7 @@ func main() {
 
 func Run(inboxProc *process.Inbox, recurProc *process.Recur, logger log.Logger) {
 	logger = logger.WithField("func", "run")
-	inboxTicker := time.NewTicker(10 * time.Second)
+	inboxTicker := time.NewTicker(30 * time.Second)
 	recurTicker := time.NewTicker(time.Hour)
 	oldToday := task.Today
 

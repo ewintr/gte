@@ -98,7 +98,9 @@ func (im *IMAP) Close() {
 }
 
 func (im *IMAP) Folders() ([]string, error) {
-	im.Connect()
+	if err := im.Connect(); err != nil {
+		return []string{}, err
+	}
 	defer im.Close()
 
 	boxes, done := make(chan *imap.MailboxInfo), make(chan error)
@@ -134,7 +136,9 @@ func (im *IMAP) selectFolder(folder string) error {
 }
 
 func (im *IMAP) Messages(folder string) ([]*Message, error) {
-	im.Connect()
+	if err := im.Connect(); err != nil {
+		return []*Message{}, err
+	}
 	defer im.Close()
 
 	if err := im.selectFolder(folder); err != nil {
@@ -210,7 +214,9 @@ func (im *IMAP) Messages(folder string) ([]*Message, error) {
 }
 
 func (im *IMAP) Add(folder, subject, body string) error {
-	im.Connect()
+	if err := im.Connect(); err != nil {
+		return err
+	}
 	defer im.Close()
 
 	msgStr := fmt.Sprintf(`From: todo <mstore@erikwinter.nl>
@@ -232,7 +238,10 @@ func (im *IMAP) Remove(msg *Message) error {
 	if msg == nil || !msg.Valid() {
 		return ErrInvalidMessage
 	}
-	im.Connect()
+
+	if err := im.Connect(); err != nil {
+		return err
+	}
 	defer im.Close()
 
 	if err := im.selectFolder(msg.Folder); err != nil {

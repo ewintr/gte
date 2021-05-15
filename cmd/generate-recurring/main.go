@@ -1,10 +1,11 @@
 package main
 
 import (
+	"flag"
 	"os"
-	"strconv"
 
 	"git.ewintr.nl/go-kit/log"
+	"git.ewintr.nl/gte/internal/configuration"
 	"git.ewintr.nl/gte/internal/process"
 	"git.ewintr.nl/gte/internal/task"
 	"git.ewintr.nl/gte/pkg/msend"
@@ -13,35 +14,24 @@ import (
 
 func main() {
 	logger := log.New(os.Stdout).WithField("cmd", "generate-recurring")
-	IMAPConfig := &mstore.IMAPConfig{
-		IMAPURL:      os.Getenv("IMAP_URL"),
-		IMAPUsername: os.Getenv("IMAP_USERNAME"),
-		IMAPPassword: os.Getenv("IMAP_PASSWORD"),
-	}
-	msgStore := mstore.NewIMAP(IMAPConfig)
 
-	SMTPConfig := &msend.SSLSMTPConfig{
-		URL:      os.Getenv("SMTP_URL"),
-		Username: os.Getenv("SMTP_USERNAME"),
-		Password: os.Getenv("SMTP_PASSWORD"),
-		From:     os.Getenv("SMTP_FROM"),
-		To:       os.Getenv("SMTP_TO"),
-	}
-	if !SMTPConfig.Valid() {
-		logger.Error("please set SMTP_URL, SMTP_USERNAME, etc environment variables")
+	configPath := flag.String("c", "~/.config/gte/gte.conf", "path to configuration file")
+	daysAhead := flag.Int("d", 6, "generate for this amount of days from now")
+	flag.Parse()
+
+	configFile, err := os.Open(*configPath)
+	if err != nil {
+		logger.WithErr(err).Error("could not open config file")
 		os.Exit(1)
 	}
-	mailSend := msend.NewSSLSMTP(SMTPConfig)
+	config := configuration.New(configFile)
 
-	daysAhead, err := strconv.Atoi(os.Getenv("GTE_DAYS_AHEAD"))
-	if err != nil {
-		daysAhead = 0
-	}
-
+	msgStore := mstore.NewIMAP(config.IMAP())
+	mailSend := msend.NewSSLSMTP(config.SMTP())
 	taskRepo := task.NewRepository(msgStore)
 	taskDisp := task.NewDispatcher(mailSend)
+	recur := process.NewRecur(taskRepo, taskDisp, *daysAhead)
 
-	recur := process.NewRecur(taskRepo, taskDisp, daysAhead)
 	result, err := recur.Process()
 	if err != nil {
 		logger.WithErr(err).Error("unable to process recurring")
