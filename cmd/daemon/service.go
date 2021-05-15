@@ -69,13 +69,13 @@ func Run(inboxProc *process.Inbox, recurProc *process.Recur, logger log.Logger) 
 			}
 		case <-recurTicker.C:
 			year, month, day := time.Now().Date()
-			newToday := task.NewDate(year, int(month), day)
-			if oldToday.Equal(newToday) {
+			task.Today = task.NewDate(year, int(month), day)
+			if oldToday.Equal(task.Today) {
 
 				continue
 			}
 
-			oldToday = newToday
+			oldToday = task.NewDate(year, int(month), day)
 			result, err := recurProc.Process()
 			if err != nil {
 				logger.WithErr(err).Error("failed generating recurring tasks")
