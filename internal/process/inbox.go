@@ -3,12 +3,16 @@ package process
 import (
 	"errors"
 	"fmt"
+	"sync"
+	"time"
 
 	"git.ewintr.nl/gte/internal/task"
 )
 
 var (
 	ErrInboxProcess = errors.New("could not process inbox")
+
+	inboxLock sync.Mutex
 )
 
 type Inbox struct {
@@ -16,7 +20,8 @@ type Inbox struct {
 }
 
 type InboxResult struct {
-	Count int
+	Duration string `json:"duration"`
+	Count    int    `json:"count"`
 }
 
 func NewInbox(repo *task.TaskRepo) *Inbox {
@@ -26,6 +31,11 @@ func NewInbox(repo *task.TaskRepo) *Inbox {
 }
 
 func (inbox *Inbox) Process() (*InboxResult, error) {
+	inboxLock.Lock()
+	defer inboxLock.Unlock()
+
+	start := time.Now()
+
 	tasks, err := inbox.taskRepo.FindAll(task.FOLDER_INBOX)
 	if err != nil {
 		return &InboxResult{}, fmt.Errorf("%w: %v", ErrInboxProcess, err)
@@ -47,6 +57,7 @@ func (inbox *Inbox) Process() (*InboxResult, error) {
 	}
 
 	return &InboxResult{
-		Count: len(tasks),
+		Duration: time.Since(start).String(),
+		Count:    len(tasks),
 	}, nil
 }

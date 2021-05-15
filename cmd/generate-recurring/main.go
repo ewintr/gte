@@ -38,5 +38,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.WithField("count", result.Count).Info("finished generating recurring tasks")
+	logger.WithField("result", result).Info("finished generating recurring tasks")
 }

@@ -51,7 +51,7 @@ func main() {
 
 func Run(inboxProc *process.Inbox, recurProc *process.Recur, logger log.Logger) {
 	logger = logger.WithField("func", "run")
-	inboxTicker := time.NewTicker(30 * time.Second)
+	inboxTicker := time.NewTicker(10 * time.Second)
 	recurTicker := time.NewTicker(time.Hour)
 	oldToday := task.Today
 
@@ -64,7 +64,9 @@ func Run(inboxProc *process.Inbox, recurProc *process.Recur, logger log.Logger) 
 
 				continue
 			}
-			logger.WithField("count", result.Count).Info("finished processing inbox")
+			if result.Count > 0 {
+				logger.WithField("result", result).Info("finished processing inbox")
+			}
 		case <-recurTicker.C:
 			year, month, day := time.Now().Date()
 			newToday := task.NewDate(year, int(month), day)
@@ -80,7 +82,9 @@ func Run(inboxProc *process.Inbox, recurProc *process.Recur, logger log.Logger) 
 
 				continue
 			}
-			logger.WithField("count", result.Count).Info("finished generating recurring tasks")
+			if result.Count > 0 {
+				logger.WithField("result", result).Info("finished generating recurring tasks")
+			}
 		}
 	}
 }

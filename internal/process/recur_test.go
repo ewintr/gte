@@ -15,13 +15,12 @@ func TestRecurProcess(t *testing.T) {
 	for _, tc := range []struct {
 		name      string
 		recurMsgs []*mstore.Message
-		expResult *process.RecurResult
+		expCount  int
 		expMsgs   []*msend.Message
 	}{
 		{
-			name:      "empty",
-			expResult: &process.RecurResult{},
-			expMsgs:   []*msend.Message{},
+			name:    "empty",
+			expMsgs: []*msend.Message{},
 		},
 		{
 			name: "one of two recurring",
@@ -35,9 +34,7 @@ func TestRecurProcess(t *testing.T) {
 					Body:    "recur: 2021-05-10, daily\nid: xxx-xxx\nversion: 1",
 				},
 			},
-			expResult: &process.RecurResult{
-				Count: 1,
-			},
+			expCount: 1,
 			expMsgs: []*msend.Message{
 				{Subject: "2021-05-15 (saturday) - recurring"},
 			},
@@ -60,7 +57,7 @@ func TestRecurProcess(t *testing.T) {
 			recurProc := process.NewRecur(task.NewRepository(mstorer), task.NewDispatcher(msender), 1)
 			actResult, err := recurProc.Process()
 			test.OK(t, err)
-			test.Equals(t, tc.expResult, actResult)
+			test.Equals(t, tc.expCount, actResult.Count)
 			for i, expMsg := range tc.expMsgs {
 				test.Equals(t, expMsg.Subject, msender.Messages[i].Subject)
 			}

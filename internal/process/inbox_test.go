@@ -11,17 +11,16 @@ import (
 
 func TestInboxProcess(t *testing.T) {
 	for _, tc := range []struct {
-		name      string
-		messages  map[string][]*mstore.Message
-		expResult *process.InboxResult
-		expMsgs   map[string][]*mstore.Message
+		name     string
+		messages map[string][]*mstore.Message
+		expCount int
+		expMsgs  map[string][]*mstore.Message
 	}{
 		{
 			name: "empty",
 			messages: map[string][]*mstore.Message{
 				task.FOLDER_INBOX: {},
 			},
-			expResult: &process.InboxResult{},
 			expMsgs: map[string][]*mstore.Message{
 				task.FOLDER_INBOX: {},
 			},
@@ -47,9 +46,7 @@ func TestInboxProcess(t *testing.T) {
 					},
 				},
 			},
-			expResult: &process.InboxResult{
-				Count: 4,
-			},
+			expCount: 4,
 			expMsgs: map[string][]*mstore.Message{
 				task.FOLDER_INBOX:     {},
 				task.FOLDER_NEW:       {{Subject: "to new"}},
@@ -70,9 +67,7 @@ func TestInboxProcess(t *testing.T) {
 					Body:    "id: xxx-xxx\nversion: 3",
 				}},
 			},
-			expResult: &process.InboxResult{
-				Count: 1,
-			},
+			expCount: 1,
 			expMsgs: map[string][]*mstore.Message{
 				task.FOLDER_INBOX:     {},
 				task.FOLDER_UNPLANNED: {{Subject: "new version"}},
@@ -90,9 +85,7 @@ func TestInboxProcess(t *testing.T) {
 					Body:    "id: xxx-xxx\nversion: 5",
 				}},
 			},
-			expResult: &process.InboxResult{
-				Count: 1,
-			},
+			expCount: 1,
 			expMsgs: map[string][]*mstore.Message{
 				task.FOLDER_INBOX:     {},
 				task.FOLDER_UNPLANNED: {{Subject: "not really old version"}},
@@ -118,7 +111,7 @@ func TestInboxProcess(t *testing.T) {
 			actResult, err := inboxProc.Process()
 
 			test.OK(t, err)
-			test.Equals(t, tc.expResult, actResult)
+			test.Equals(t, tc.expCount, actResult.Count)
 			for folder, expMessages := range tc.expMsgs {
 				actMessages, err := mstorer.Messages(folder)
 				test.OK(t, err)

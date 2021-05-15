@@ -3,12 +3,16 @@ package process
 import (
 	"errors"
 	"fmt"
+	"sync"
+	"time"
 
 	"git.ewintr.nl/gte/internal/task"
 )
 
 var (
 	ErrRecurProcess = errors.New("could not generate tasks from recurrer")
+
+	recurLock sync.Mutex
 )
 
 type Recur struct {
@@ -18,7 +22,8 @@ type Recur struct {
 }
 
 type RecurResult struct {
-	Count int
+	Duration string `json:"duration"`
+	Count    int    `json:"count"`
 }
 
 func NewRecur(repo *task.TaskRepo, disp *task.Dispatcher, daysAhead int) *Recur {
@@ -30,6 +35,11 @@ func NewRecur(repo *task.TaskRepo, disp *task.Dispatcher, daysAhead int) *Recur 
 }
 
 func (recur *Recur) Process() (*RecurResult, error) {
+	recurLock.Lock()
+	defer recurLock.Unlock()
+
+	start := time.Now()
+
 	tasks, err := recur.taskRepo.FindAll(task.FOLDER_RECURRING)
 	if err != nil {
 		return &RecurResult{}, fmt.Errorf("%w: %v", ErrRecurProcess, err)
@@ -51,6 +61,7 @@ func (recur *Recur) Process() (*RecurResult, error) {
 	}
 
 	return &RecurResult{
-		Count: count,
+		Duration: time.Since(start).String(),
+		Count:    count,
 	}, nil
 }

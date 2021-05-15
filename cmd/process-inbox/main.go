@@ -31,5 +31,5 @@ func main() {
 		logger.WithErr(err).Error("unable to process inbox")
 		os.Exit(1)
 	}
-	logger.WithField("count", result.Count).Info("finished processing inbox")
+	logger.WithField("result", result).Info("finished processing inbox")
 }
