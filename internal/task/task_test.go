@@ -15,6 +15,7 @@ func TestNewFromMessage(t *testing.T) {
 	action := "some action"
 	project := "project"
 	date := task.NewDate(2021, 1, 20)
+	recurs := "2021-06-04, daily"
 
 	for _, tc := range []struct {
 		name       string
@@ -202,6 +203,31 @@ Forwarded message:
 				Folder: task.FOLDER_PLANNED,
 				Action: action,
 				Dirty:  true,
+			},
+		},
+		{
+			name: "recur takes precedence over date",
+			message: &mstore.Message{
+				Folder: task.FOLDER_INBOX,
+				Body: fmt.Sprintf(`
+action: %s
+due: no date
+recur: %s
+project: %s
+id :%s
+version: %d
+`, action, recurs, project, id, version),
+			},
+			hasId:      true,
+			hasVersion: true,
+			exp: &task.Task{
+				Id:      id,
+				Version: version + 1,
+				Folder:  task.FOLDER_RECURRING,
+				Action:  action,
+				Project: project,
+				Recur:   task.Daily{Start: task.NewDate(2021, 6, 4)},
+				Dirty:   true,
 			},
 		},
 	} {
