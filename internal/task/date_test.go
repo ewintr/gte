@@ -75,7 +75,6 @@ func TestWeekdaysUnique(t *testing.T) {
 }
 
 func TestNewDateFromString(t *testing.T) {
-
 	t.Run("no date", func(t *testing.T) {
 		task.Today = task.NewDate(2021, 1, 30)
 		for _, tc := range []struct {
@@ -249,6 +248,49 @@ func TestNewDateFromString(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestDateDaysBetween(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		d1   task.Date
+		d2   task.Date
+		exp  int
+	}{
+		{
+			name: "same",
+			d1:   task.NewDate(2021, 6, 23),
+			d2:   task.NewDate(2021, 6, 23),
+		},
+		{
+			name: "one",
+			d1:   task.NewDate(2021, 6, 23),
+			d2:   task.NewDate(2021, 6, 24),
+			exp:  1,
+		},
+		{
+			name: "many",
+			d1:   task.NewDate(2021, 6, 23),
+			d2:   task.NewDate(2024, 3, 7),
+			exp:  988,
+		},
+		{
+			name: "edge",
+			d1:   task.NewDate(2020, 12, 30),
+			d2:   task.NewDate(2021, 1, 3),
+			exp:  4,
+		},
+		{
+			name: "reverse",
+			d1:   task.NewDate(2021, 6, 23),
+			d2:   task.NewDate(2021, 5, 23),
+			exp:  31,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			test.Equals(t, tc.exp, tc.d1.DaysBetween(tc.d2))
+		})
+	}
 }
 
 func TestDateString(t *testing.T) {

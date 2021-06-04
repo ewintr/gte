@@ -18,18 +18,15 @@ func TestNewFromMessage(t *testing.T) {
 	recurs := "2021-06-04, daily"
 
 	for _, tc := range []struct {
-		name       string
-		message    *mstore.Message
-		hasId      bool
-		hasVersion bool
-		exp        *task.Task
+		name    string
+		message *mstore.Message
+		hasId   bool
+		exp     *task.Task
 	}{
 		{
 			name:    "empty",
 			message: &mstore.Message{},
-			exp: &task.Task{
-				Dirty: true,
-			},
+			exp:     &task.Task{},
 		},
 		{
 			name: "id, action, project and folder",
@@ -43,8 +40,7 @@ action: %s
 project: %s
 `, id, version, action, project),
 			},
-			hasId:      true,
-			hasVersion: true,
+			hasId: true,
 			exp: &task.Task{
 				Id:      id,
 				Version: version,
@@ -64,66 +60,13 @@ version: %d
 action: %s
 `, id, date.String(), version, action),
 			},
-			hasId:      true,
-			hasVersion: true,
+			hasId: true,
 			exp: &task.Task{
 				Id:      id,
 				Folder:  task.FOLDER_PLANNED,
 				Action:  action,
 				Version: version,
 				Due:     date,
-			},
-		},
-		{
-			name: "folder inbox get updated to new",
-			message: &mstore.Message{
-				Folder: task.FOLDER_INBOX,
-				Body: fmt.Sprintf(`
-action: %s
-`, action),
-			},
-			exp: &task.Task{
-				Id:     id,
-				Folder: task.FOLDER_NEW,
-				Action: action,
-				Dirty:  true,
-			},
-		},
-		{
-			name: "folder inbox gets updated to planned",
-			message: &mstore.Message{
-				Folder: task.FOLDER_INBOX,
-				Body: fmt.Sprintf(`
-id: %s
-due: %s
-action: %s
-`, id, date.String(), action),
-			},
-			hasId: true,
-			exp: &task.Task{
-				Id:     id,
-				Folder: task.FOLDER_PLANNED,
-				Action: action,
-				Due:    date,
-				Dirty:  true,
-			},
-		},
-		{
-			name: "folder new gets updated to unplanned",
-			message: &mstore.Message{
-				Folder: task.FOLDER_INBOX,
-				Body: fmt.Sprintf(`
-id: %s
-due: no date
-action: %s
-`, id, action),
-			},
-			hasId: true,
-			exp: &task.Task{
-				Id:     id,
-				Folder: task.FOLDER_UNPLANNED,
-				Action: action,
-				Dirty:  true,
 			},
 		},
 		{
@@ -138,8 +81,7 @@ version: %d
 action: %s
 				`, id, version, action),
 			},
-			hasId:      true,
-			hasVersion: true,
+			hasId: true,
 			exp: &task.Task{
 				Id:      id,
 				Version: version,
@@ -159,7 +101,6 @@ action: %s
 				Id:     id,
 				Folder: task.FOLDER_PLANNED,
 				Action: action,
-				Dirty:  true,
 			},
 		},
 		{
@@ -175,8 +116,7 @@ action: %s
 project: %s
 				`, id, version, action, project),
 			},
-			hasId:      true,
-			hasVersion: true,
+			hasId: true,
 			exp: &task.Task{
 				Id:      id,
 				Version: version,
@@ -202,11 +142,10 @@ Forwarded message:
 				Id:     id,
 				Folder: task.FOLDER_PLANNED,
 				Action: action,
-				Dirty:  true,
 			},
 		},
 		{
-			name: "recur takes precedence over date",
+			name: "recur",
 			message: &mstore.Message{
 				Folder: task.FOLDER_INBOX,
 				Body: fmt.Sprintf(`
@@ -218,31 +157,119 @@ id :%s
 version: %d
 `, action, recurs, project, id, version),
 			},
-			hasId:      true,
-			hasVersion: true,
+			hasId: true,
 			exp: &task.Task{
 				Id:      id,
-				Version: version + 1,
-				Folder:  task.FOLDER_RECURRING,
+				Version: version,
+				Folder:  task.FOLDER_INBOX,
 				Action:  action,
 				Project: project,
 				Recur:   task.Daily{Start: task.NewDate(2021, 6, 4)},
-				Dirty:   true,
 			},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			act := task.New(tc.message)
+			act := task.NewFromMessage(tc.message)
 			if !tc.hasId {
 				test.Equals(t, false, "" == act.Id)
 				tc.exp.Id = act.Id
 			}
-			if !tc.hasVersion {
-				tc.exp.Version = 1
-			}
 			tc.exp.Message = tc.message
-			tc.exp.Current = true
 			test.Equals(t, tc.exp, act)
+		})
+	}
+}
+
+func TestTaskTargetFolder(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		tsk       *task.Task
+		expFolder string
+	}{
+		{
+			name:      "new",
+			tsk:       &task.Task{},
+			expFolder: task.FOLDER_NEW,
+		},
+		{
+			name: "recurring",
+			tsk: &task.Task{
+				Id:      "id",
+				Version: 2,
+				Recur:   task.Daily{Start: task.NewDate(2021, 06, 21)},
+			},
+			expFolder: task.FOLDER_RECURRING,
+		},
+		{
+			name: "planned",
+			tsk: &task.Task{
+				Id:      "id",
+				Version: 2,
+				Due:     task.NewDate(2021, 06, 21),
+			},
+			expFolder: task.FOLDER_PLANNED,
+		},
+		{
+			name: "unplanned",
+			tsk: &task.Task{
+				Id:      "id",
+				Version: 2,
+			},
+			expFolder: task.FOLDER_UNPLANNED,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			test.Equals(t, tc.tsk.TargetFolder(), tc.expFolder)
+		})
+	}
+}
+
+func TestTaskNextMessage(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		tsk        *task.Task
+		expMessage *mstore.Message
+	}{
+		{
+			name: "empty",
+			tsk:  &task.Task{},
+			expMessage: &mstore.Message{
+				Folder:  task.FOLDER_NEW,
+				Subject: "",
+				Body: `
+action:
+due:     no date
+project:
+version: 1
+id:
+`,
+			},
+		},
+		{
+			name: "normal",
+			tsk: &task.Task{
+				Id:      "id",
+				Version: 3,
+				Folder:  task.FOLDER_INBOX,
+				Action:  "action",
+				Project: "project",
+				Due:     task.NewDate(2021, 06, 22),
+			},
+			expMessage: &mstore.Message{
+				Folder:  task.FOLDER_PLANNED,
+				Subject: "2021-06-22 (tuesday) - project - action",
+				Body: `
+action:  action
+due:     2021-06-22 (tuesday)
+project: project
+version: 4
+id:      id
+`,
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			test.Equals(t, tc.expMessage, tc.tsk.NextMessage())
 		})
 	}
 }

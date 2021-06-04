@@ -44,141 +44,93 @@ var (
 		FOLDER_PLANNED,
 		FOLDER_UNPLANNED,
 	}
+
+	subjectFieldNames = []string{FIELD_ACTION}
+	bodyFieldNames    = []string{
+		FIELD_ID,
+		FIELD_VERSION,
+		FIELD_ACTION,
+		FIELD_PROJECT,
+		FIELD_DUE,
+		FIELD_RECUR,
+	}
 )
 
-// Task reperesents a task based on the data stored in a message
 type Task struct {
+	Message *mstore.Message
 
-	// Id is a UUID that gets carried over when a new message is constructed
-	Id string
-	// Version is a method to determine the latest version for cleanup
+	Id      string
 	Version int
+	Folder  string
 
-	// Folder is the same name as the mstore folder
-	Folder string
-
-	// Ordinary task attributes
 	Action  string
 	Project string
 	Due     Date
 	Recur   Recurrer
-
-	//Message is the underlying message
-	Message *mstore.Message
-
-	// Current indicates whether the task represents an existing message in the mstore
-	Current bool
-
-	// Dirty indicates whether the task contains updates not present in the message
-	Dirty bool
 }
 
-// New constructs a Task based on an mstore.Message.
-//
-// The data in the message is stored as key: value pairs, one per line. The line can start with quoting marks.
-// The subject line also contains values in the format "date - project - action".
-// Keys that exist more than once are merged. The one that appears first in the body takes precedence. A value present in the Body takes precedence over one in the subject.
-// This enables updating a task by forwarding a topposted message whith new values for fields that the user wants to update.
-func New(msg *mstore.Message) *Task {
-	// Id
-	dirty := false
-	newId := false
-	id, d := FieldFromBody(FIELD_ID, msg.Body)
+func NewFromMessage(msg *mstore.Message) *Task {
+	t := &Task{
+		Folder:  msg.Folder,
+		Message: msg,
+	}
+
+	// parse fields from message
+	subjectFields := map[string]string{}
+	for _, f := range subjectFieldNames {
+		subjectFields[f] = FieldFromSubject(f, msg.Subject)
+	}
+
+	bodyFields := map[string]string{}
+	for _, f := range bodyFieldNames {
+		value, _ := FieldFromBody(f, msg.Body)
+		bodyFields[f] = value
+	}
+
+	// apply precedence rules
+	version, _ := strconv.Atoi(bodyFields[FIELD_VERSION])
+	id := bodyFields[FIELD_ID]
 	if id == "" {
 		id = uuid.New().String()
-		dirty = true
-		newId = true
+		version = 0
 	}
-	if d {
-		dirty = true
+	t.Id = id
+	t.Version = version
+
+	t.Action = bodyFields[FIELD_ACTION]
+	if t.Action == "" {
+		t.Action = subjectFields[FIELD_ACTION]
 	}
 
-	// Version, cannot manually be incremented from body
-	versionStr, _ := FieldFromBody(FIELD_VERSION, msg.Body)
-	version, _ := strconv.Atoi(versionStr)
-	if version == 0 {
-		dirty = true
-	}
+	t.Project = bodyFields[FIELD_PROJECT]
+	t.Due = NewDateFromString(bodyFields[FIELD_DUE])
+	t.Recur = NewRecurrer(bodyFields[FIELD_RECUR])
 
-	// Action
-	action, d := FieldFromBody(FIELD_ACTION, msg.Body)
-	if action == "" {
-		action = FieldFromSubject(FIELD_ACTION, msg.Subject)
-		if action != "" {
-			dirty = true
-		}
-	}
-	if d {
-		dirty = true
-	}
+	return t
+}
 
-	// Due
-	dueStr, d := FieldFromBody(FIELD_DUE, msg.Body)
-	if dueStr == "" {
-		dueStr = FieldFromSubject(FIELD_DUE, msg.Subject)
-		if dueStr != "" {
-			dirty = true
-		}
+func (t *Task) TargetFolder() string {
+	switch {
+	case t.Version == 0:
+		return FOLDER_NEW
+	case t.IsRecurrer():
+		return FOLDER_RECURRING
+	case !t.Due.IsZero():
+		return FOLDER_PLANNED
+	default:
+		return FOLDER_UNPLANNED
 	}
-	if d {
-		dirty = true
-	}
-	due := NewDateFromString(dueStr)
+}
 
-	// Recurrer
-	recurStr, d := FieldFromBody(FIELD_RECUR, msg.Body)
-	if d {
-		dirty = true
-	}
-	recur := NewRecurrer(recurStr)
+func (t *Task) NextMessage() *mstore.Message {
+	tNew := t
+	tNew.Folder = t.TargetFolder()
+	tNew.Version++
 
-	// Folder
-	folderOld := msg.Folder
-	folderNew := folderOld
-	if folderOld == FOLDER_INBOX {
-		switch {
-		case newId:
-			folderNew = FOLDER_NEW
-		case !newId && recur != nil:
-			folderNew = FOLDER_RECURRING
-		case !newId && recur == nil && due.IsZero():
-			folderNew = FOLDER_UNPLANNED
-		case !newId && recur == nil && !due.IsZero():
-			folderNew = FOLDER_PLANNED
-		}
-
-	}
-	if folderOld != folderNew {
-		dirty = true
-	}
-
-	// Project
-	project, d := FieldFromBody(FIELD_PROJECT, msg.Body)
-	if project == "" {
-		project = FieldFromSubject(FIELD_PROJECT, msg.Subject)
-		if project != "" {
-			dirty = true
-		}
-	}
-	if d {
-		dirty = true
-	}
-
-	if dirty {
-		version++
-	}
-
-	return &Task{
-		Id:      id,
-		Version: version,
-		Folder:  folderNew,
-		Action:  action,
-		Due:     due,
-		Recur:   recur,
-		Project: project,
-		Message: msg,
-		Current: true,
-		Dirty:   dirty,
+	return &mstore.Message{
+		Folder:  tNew.Folder,
+		Subject: tNew.FormatSubject(),
+		Body:    tNew.FormatBody(),
 	}
 }
 

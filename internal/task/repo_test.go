@@ -67,8 +67,8 @@ func TestRepoFindAll(t *testing.T) {
 
 func TestRepoUpdate(t *testing.T) {
 	id := "id"
-	oldFolder := "old folder"
-	folder := "folder"
+	oldFolder := task.FOLDER_INBOX
+	folder := task.FOLDER_NEW
 	action := "action"
 
 	oldMsg := &mstore.Message{
@@ -91,44 +91,18 @@ func TestRepoUpdate(t *testing.T) {
 		{
 			name: "task without message",
 			task: &task.Task{
-				Id:      id,
-				Folder:  folder,
-				Action:  action,
-				Current: true,
-				Dirty:   true,
-			},
-			expErr: task.ErrMStoreError,
-		},
-		{
-			name: "outdated task",
-			task: &task.Task{
 				Id:     id,
 				Folder: folder,
 				Action: action,
-				Dirty:  true,
 			},
-			expErr: task.ErrOutdatedTask,
+			expErr: task.ErrMStoreError,
 		},
-		/*
-			{
-				name: "unchanged task",
-				task: &task.Task{
-					Id:      id,
-					Folder:  folder,
-					Action:  action,
-					Current: true,
-				},
-				expMsgs: []*mstore.Message{},
-			},
-		*/
 		{
 			name: "changed task",
 			task: &task.Task{
 				Id:      id,
 				Folder:  folder,
 				Action:  action,
-				Current: true,
-				Dirty:   true,
 				Message: oldMsg,
 			},
 			expMsgs: []*mstore.Message{

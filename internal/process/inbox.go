@@ -43,12 +43,10 @@ func (inbox *Inbox) Process() (*InboxResult, error) {
 
 	var cleanupNeeded bool
 	for _, t := range tasks {
-		if t.Dirty {
-			if err := inbox.taskRepo.Update(t); err != nil {
-				return &InboxResult{}, fmt.Errorf("%w: %v", ErrInboxProcess, err)
-			}
-			cleanupNeeded = true
+		if err := inbox.taskRepo.Update(t); err != nil {
+			return &InboxResult{}, fmt.Errorf("%w: %v", ErrInboxProcess, err)
 		}
+		cleanupNeeded = true
 	}
 	if cleanupNeeded {
 		if err := inbox.taskRepo.CleanUp(); err != nil {
