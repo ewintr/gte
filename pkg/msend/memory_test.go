@@ -1,6 +1,7 @@
 package msend_test
 
 import (
+	"fmt"
 	"testing"
 
 	"git.ewintr.nl/go-kit/test"
@@ -18,4 +19,9 @@ func TestMemorySend(t *testing.T) {
 	msg2 := &msend.Message{Subject: "sub2", Body: "body2"}
 	test.OK(t, mem.Send(msg2))
 	test.Equals(t, []*msend.Message{msg1, msg2}, mem.Messages)
+
+	expErr := fmt.Errorf("oh no")
+	mem.Err = expErr
+	actErr := mem.Send(msg1)
+	test.Equals(t, expErr, actErr)
 }

@@ -248,6 +248,10 @@ func TestNewDateFromString(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("empty", func(t *testing.T) {
+		test.Equals(t, task.Date{}, task.NewDateFromString("test"))
+	})
 }
 
 func TestDateDaysBetween(t *testing.T) {
@@ -319,6 +323,11 @@ func TestDateString(t *testing.T) {
 			test.Equals(t, tc.exp, tc.date.String())
 		})
 	}
+}
+
+func TestDateIsZero(t *testing.T) {
+	test.Equals(t, true, task.Date{}.IsZero())
+	test.Equals(t, false, task.NewDate(2021, 6, 24).IsZero())
 }
 
 func TestDateAfter(t *testing.T) {
