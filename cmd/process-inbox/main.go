@@ -24,7 +24,7 @@ func main() {
 	}
 	config := configuration.New(configFile)
 	msgStore := mstore.NewIMAP(config.IMAP())
-	inboxProcessor := process.NewInbox(task.NewRepository(msgStore))
+	inboxProcessor := process.NewInbox(task.NewRemoteRepository(msgStore))
 
 	result, err := inboxProcessor.Process()
 	if err != nil {

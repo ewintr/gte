@@ -35,7 +35,7 @@ func main() {
 
 	msgStore := mstore.NewIMAP(config.IMAP())
 	mailSend := msend.NewSSLSMTP(config.SMTP())
-	repo := task.NewRepository(msgStore)
+	repo := task.NewRemoteRepository(msgStore)
 	disp := task.NewDispatcher(mailSend)
 
 	inboxProc := process.NewInbox(repo)

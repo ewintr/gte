@@ -107,7 +107,7 @@ func TestInboxProcess(t *testing.T) {
 				}
 			}
 
-			inboxProc := process.NewInbox(task.NewRepository(mstorer))
+			inboxProc := process.NewInbox(task.NewRemoteRepository(mstorer))
 			actResult, err := inboxProc.Process()
 
 			test.OK(t, err)

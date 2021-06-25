@@ -28,7 +28,7 @@ func main() {
 
 	msgStore := mstore.NewIMAP(config.IMAP())
 	mailSend := msend.NewSSLSMTP(config.SMTP())
-	taskRepo := task.NewRepository(msgStore)
+	taskRepo := task.NewRemoteRepository(msgStore)
 	taskDisp := task.NewDispatcher(mailSend)
 	recur := process.NewRecur(taskRepo, taskDisp, *daysAhead)
 

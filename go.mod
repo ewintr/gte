@@ -7,4 +7,5 @@ require (
 	github.com/emersion/go-imap v1.1.0
 	github.com/emersion/go-message v0.14.1
 	github.com/google/uuid v1.2.0
+	modernc.org/sqlite v1.11.1 // indirect
 )

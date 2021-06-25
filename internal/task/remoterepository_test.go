@@ -53,7 +53,7 @@ func TestRepoFindAll(t *testing.T) {
 			for _, task := range tc.tasks {
 				test.OK(t, store.Add(task.Folder, task.Subject, "body"))
 			}
-			repo := task.NewRepository(store)
+			repo := task.NewRemoteRepository(store)
 			actTasks, err := repo.FindAll(tc.folder)
 			test.Equals(t, true, errors.Is(err, tc.expErr))
 			if err != nil {
@@ -115,7 +115,7 @@ func TestRepoUpdate(t *testing.T) {
 			test.OK(t, err)
 			test.OK(t, mem.Add(oldMsg.Folder, oldMsg.Subject, oldMsg.Body))
 
-			repo := task.NewRepository(mem)
+			repo := task.NewRemoteRepository(mem)
 
 			actErr := repo.Update(tc.task)
 			test.Equals(t, true, errors.Is(actErr, tc.expErr))
@@ -157,7 +157,7 @@ version: %d
 		test.OK(t, mem.Add(folder, subject, body))
 	}
 
-	repo := task.NewRepository(mem)
+	repo := task.NewRemoteRepository(mem)
 	test.OK(t, repo.CleanUp())
 
 	expNew := []*mstore.Message{}

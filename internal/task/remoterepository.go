@@ -18,7 +18,7 @@ type RemoteRepository struct {
 	mstore mstore.MStorer
 }
 
-func NewRepository(ms mstore.MStorer) *RemoteRepository {
+func NewRemoteRepository(ms mstore.MStorer) *RemoteRepository {
 	return &RemoteRepository{
 		mstore: ms,
 	}

@@ -54,7 +54,7 @@ func TestRecurProcess(t *testing.T) {
 			}
 			msender := msend.NewMemory()
 
-			recurProc := process.NewRecur(task.NewRepository(mstorer), task.NewDispatcher(msender), 1)
+			recurProc := process.NewRecur(task.NewRemoteRepository(mstorer), task.NewDispatcher(msender), 1)
 			actResult, err := recurProc.Process()
 			test.OK(t, err)
 			test.Equals(t, tc.expCount, actResult.Count)
