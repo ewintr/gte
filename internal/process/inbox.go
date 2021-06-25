@@ -16,7 +16,7 @@ var (
 )
 
 type Inbox struct {
-	taskRepo *task.TaskRepo
+	taskRepo *task.RemoteRepository
 }
 
 type InboxResult struct {
@@ -24,7 +24,7 @@ type InboxResult struct {
 	Count    int    `json:"count"`
 }
 
-func NewInbox(repo *task.TaskRepo) *Inbox {
+func NewInbox(repo *task.RemoteRepository) *Inbox {
 	return &Inbox{
 		taskRepo: repo,
 	}

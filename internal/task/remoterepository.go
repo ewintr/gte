@@ -14,18 +14,18 @@ var (
 	ErrInvalidMessage = errors.New("task contains invalid message")
 )
 
-type TaskRepo struct {
+type RemoteRepository struct {
 	mstore mstore.MStorer
 }
 
-func NewRepository(ms mstore.MStorer) *TaskRepo {
-	return &TaskRepo{
+func NewRepository(ms mstore.MStorer) *RemoteRepository {
+	return &RemoteRepository{
 		mstore: ms,
 	}
 }
 
-func (tr *TaskRepo) FindAll(folder string) ([]*Task, error) {
-	msgs, err := tr.mstore.Messages(folder)
+func (rr *RemoteRepository) FindAll(folder string) ([]*Task, error) {
+	msgs, err := rr.mstore.Messages(folder)
 	if err != nil {
 		return []*Task{}, fmt.Errorf("%w: %v", ErrMStoreError, err)
 	}
@@ -40,31 +40,31 @@ func (tr *TaskRepo) FindAll(folder string) ([]*Task, error) {
 	return tasks, nil
 }
 
-func (tr *TaskRepo) Update(t *Task) error {
+func (rr *RemoteRepository) Update(t *Task) error {
 	if t == nil {
 		return ErrInvalidTask
 	}
 
 	// add new
-	if err := tr.Add(t); err != nil {
+	if err := rr.Add(t); err != nil {
 		return err
 	}
 
 	// remove old
-	if err := tr.mstore.Remove(t.Message); err != nil {
+	if err := rr.mstore.Remove(t.Message); err != nil {
 		return fmt.Errorf("%w: %s", ErrMStoreError, err)
 	}
 
 	return nil
 }
 
-func (tr *TaskRepo) Add(t *Task) error {
+func (rr *RemoteRepository) Add(t *Task) error {
 	if t == nil {
 		return ErrInvalidTask
 	}
 
 	msg := t.NextMessage()
-	if err := tr.mstore.Add(msg.Folder, msg.Subject, msg.Body); err != nil {
+	if err := rr.mstore.Add(msg.Folder, msg.Subject, msg.Body); err != nil {
 		return fmt.Errorf("%w: %v", ErrMStoreError, err)
 	}
 
@@ -72,7 +72,7 @@ func (tr *TaskRepo) Add(t *Task) error {
 }
 
 // Cleanup removes older versions of tasks
-func (tr *TaskRepo) CleanUp() error {
+func (rr *RemoteRepository) CleanUp() error {
 	// loop through folders, get all task version info
 	type msgInfo struct {
 		Version int
@@ -81,7 +81,7 @@ func (tr *TaskRepo) CleanUp() error {
 	msgsSet := make(map[string][]msgInfo)
 
 	for _, folder := range knownFolders {
-		msgs, err := tr.mstore.Messages(folder)
+		msgs, err := rr.mstore.Messages(folder)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrMStoreError, err)
 		}
@@ -118,7 +118,7 @@ func (tr *TaskRepo) CleanUp() error {
 
 	// remove them
 	for _, msg := range tobeRemoved {
-		if err := tr.mstore.Remove(msg); err != nil {
+		if err := rr.mstore.Remove(msg); err != nil {
 			return err
 		}
 	}

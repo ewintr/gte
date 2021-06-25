@@ -16,7 +16,7 @@ var (
 )
 
 type Recur struct {
-	taskRepo       *task.TaskRepo
+	taskRepo       *task.RemoteRepository
 	taskDispatcher *task.Dispatcher
 	daysAhead      int
 }
@@ -26,7 +26,7 @@ type RecurResult struct {
 	Count    int    `json:"count"`
 }
 
-func NewRecur(repo *task.TaskRepo, disp *task.Dispatcher, daysAhead int) *Recur {
+func NewRecur(repo *task.RemoteRepository, disp *task.Dispatcher, daysAhead int) *Recur {
 	return &Recur{
 		taskRepo:       repo,
 		taskDispatcher: disp,
