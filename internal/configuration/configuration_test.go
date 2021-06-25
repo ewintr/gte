@@ -6,6 +6,7 @@ import (
 
 	"git.ewintr.nl/go-kit/test"
 	"git.ewintr.nl/gte/internal/configuration"
+	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/pkg/msend"
 	"git.ewintr.nl/gte/pkg/mstore"
 )
@@ -67,6 +68,13 @@ func TestNew(t *testing.T) {
 				FromAddress: "from_address",
 			},
 		},
+		{
+			name:   "local",
+			source: "local_db_path=path",
+			exp: &configuration.Configuration{
+				LocalDBPath: "path",
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			test.Equals(t, tc.exp, configuration.New(strings.NewReader(tc.source)))
@@ -86,6 +94,7 @@ func TestConfigs(t *testing.T) {
 		ToAddress:    "to_address",
 		FromName:     "from_name",
 		FromAddress:  "from_address",
+		LocalDBPath:  "db_path",
 	}
 
 	t.Run("imap", func(t *testing.T) {
@@ -107,5 +116,12 @@ func TestConfigs(t *testing.T) {
 			From:     "from_address",
 		}
 		test.Equals(t, exp, conf.SMTP())
+	})
+
+	t.Run("sqlite", func(t *testing.T) {
+		exp := &storage.SqliteConfig{
+			DBPath: "db_path",
+		}
+		test.Equals(t, exp, conf.Sqlite())
 	})
 }

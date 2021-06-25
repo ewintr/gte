@@ -1,4 +1,4 @@
-package task_test
+package storage_test
 
 import (
 	"errors"
@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"git.ewintr.nl/go-kit/test"
+	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/internal/task"
 	"git.ewintr.nl/gte/pkg/mstore"
 )
@@ -33,7 +34,7 @@ func TestRepoFindAll(t *testing.T) {
 		{
 			name:   "unknown folder",
 			folder: "unknown",
-			expErr: task.ErrMStoreError,
+			expErr: storage.ErrMStoreError,
 		},
 		{
 			name:   "not empty",
@@ -53,7 +54,7 @@ func TestRepoFindAll(t *testing.T) {
 			for _, task := range tc.tasks {
 				test.OK(t, store.Add(task.Folder, task.Subject, "body"))
 			}
-			repo := task.NewRemoteRepository(store)
+			repo := storage.NewRemoteRepository(store)
 			actTasks, err := repo.FindAll(tc.folder)
 			test.Equals(t, true, errors.Is(err, tc.expErr))
 			if err != nil {
@@ -86,7 +87,7 @@ func TestRepoUpdate(t *testing.T) {
 	}{
 		{
 			name:   "nil task",
-			expErr: task.ErrInvalidTask,
+			expErr: storage.ErrInvalidTask,
 		},
 		{
 			name: "task without message",
@@ -95,7 +96,7 @@ func TestRepoUpdate(t *testing.T) {
 				Folder: folder,
 				Action: action,
 			},
-			expErr: task.ErrMStoreError,
+			expErr: storage.ErrMStoreError,
 		},
 		{
 			name: "changed task",
@@ -115,7 +116,7 @@ func TestRepoUpdate(t *testing.T) {
 			test.OK(t, err)
 			test.OK(t, mem.Add(oldMsg.Folder, oldMsg.Subject, oldMsg.Body))
 
-			repo := task.NewRemoteRepository(mem)
+			repo := storage.NewRemoteRepository(mem)
 
 			actErr := repo.Update(tc.task)
 			test.Equals(t, true, errors.Is(actErr, tc.expErr))
@@ -157,7 +158,7 @@ version: %d
 		test.OK(t, mem.Add(folder, subject, body))
 	}
 
-	repo := task.NewRemoteRepository(mem)
+	repo := storage.NewRemoteRepository(mem)
 	test.OK(t, repo.CleanUp())
 
 	expNew := []*mstore.Message{}

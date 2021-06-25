@@ -7,7 +7,7 @@ import (
 	"git.ewintr.nl/go-kit/log"
 	"git.ewintr.nl/gte/internal/configuration"
 	"git.ewintr.nl/gte/internal/process"
-	"git.ewintr.nl/gte/internal/task"
+	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/pkg/mstore"
 )
 
@@ -24,7 +24,7 @@ func main() {
 	}
 	config := configuration.New(configFile)
 	msgStore := mstore.NewIMAP(config.IMAP())
-	inboxProcessor := process.NewInbox(task.NewRemoteRepository(msgStore))
+	inboxProcessor := process.NewInbox(storage.NewRemoteRepository(msgStore))
 
 	result, err := inboxProcessor.Process()
 	if err != nil {

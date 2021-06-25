@@ -1,6 +1,9 @@
-package task
+package storage
 
-import "git.ewintr.nl/gte/pkg/msend"
+import (
+	"git.ewintr.nl/gte/internal/task"
+	"git.ewintr.nl/gte/pkg/msend"
+)
 
 type Dispatcher struct {
 	msender msend.MSender
@@ -12,7 +15,7 @@ func NewDispatcher(msender msend.MSender) *Dispatcher {
 	}
 }
 
-func (d *Dispatcher) Dispatch(t *Task) error {
+func (d *Dispatcher) Dispatch(t *task.Task) error {
 	return d.msender.Send(&msend.Message{
 		Subject: t.FormatSubject(),
 		Body:    t.FormatBody(),

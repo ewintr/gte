@@ -37,7 +37,7 @@ const (
 )
 
 var (
-	knownFolders = []string{
+	KnownFolders = []string{
 		FOLDER_INBOX,
 		FOLDER_NEW,
 		FOLDER_RECURRING,
@@ -57,6 +57,9 @@ var (
 )
 
 type Task struct {
+	// Message is the underlying message from which the task was created
+	// It only has meaning for remote repositories and will be nil in
+	// local situations. It will be filtered out in LocalRepository.SetTasks()
 	Message *mstore.Message
 
 	Id      string

@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/internal/task"
 )
 
@@ -15,8 +16,9 @@ var (
 	inboxLock sync.Mutex
 )
 
+// Inbox processes all messages in INBOX in a remote repository
 type Inbox struct {
-	taskRepo *task.RemoteRepository
+	taskRepo *storage.RemoteRepository
 }
 
 type InboxResult struct {
@@ -24,7 +26,7 @@ type InboxResult struct {
 	Count    int    `json:"count"`
 }
 
-func NewInbox(repo *task.RemoteRepository) *Inbox {
+func NewInbox(repo *storage.RemoteRepository) *Inbox {
 	return &Inbox{
 		taskRepo: repo,
 	}

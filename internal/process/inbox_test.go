@@ -5,6 +5,7 @@ import (
 
 	"git.ewintr.nl/go-kit/test"
 	"git.ewintr.nl/gte/internal/process"
+	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/internal/task"
 	"git.ewintr.nl/gte/pkg/mstore"
 )
@@ -107,7 +108,7 @@ func TestInboxProcess(t *testing.T) {
 				}
 			}
 
-			inboxProc := process.NewInbox(task.NewRemoteRepository(mstorer))
+			inboxProc := process.NewInbox(storage.NewRemoteRepository(mstorer))
 			actResult, err := inboxProc.Process()
 
 			test.OK(t, err)

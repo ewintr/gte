@@ -5,7 +5,9 @@ import (
 	"errors"
 	"io"
 	"strings"
+	"time"
 
+	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/pkg/msend"
 	"git.ewintr.nl/gte/pkg/mstore"
 )
@@ -28,6 +30,12 @@ type Configuration struct {
 
 	ToName    string
 	ToAddress string
+
+	LocalDBPath string
+}
+
+type LocalConfiguration struct {
+	MinSyncInterval time.Duration
 }
 
 func New(src io.Reader) *Configuration {
@@ -62,6 +70,8 @@ func New(src io.Reader) *Configuration {
 			conf.FromName = value
 		case "from_address":
 			conf.FromAddress = value
+		case "local_db_path":
+			conf.LocalDBPath = value
 		}
 	}
 
@@ -83,5 +93,11 @@ func (c *Configuration) SMTP() *msend.SSLSMTPConfig {
 		Password: c.SMTPPassword,
 		From:     c.FromAddress,
 		To:       c.ToAddress,
+	}
+}
+
+func (c *Configuration) Sqlite() *storage.SqliteConfig {
+	return &storage.SqliteConfig{
+		DBPath: c.LocalDBPath,
 	}
 }

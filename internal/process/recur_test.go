@@ -5,6 +5,7 @@ import (
 
 	"git.ewintr.nl/go-kit/test"
 	"git.ewintr.nl/gte/internal/process"
+	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/internal/task"
 	"git.ewintr.nl/gte/pkg/msend"
 	"git.ewintr.nl/gte/pkg/mstore"
@@ -54,7 +55,7 @@ func TestRecurProcess(t *testing.T) {
 			}
 			msender := msend.NewMemory()
 
-			recurProc := process.NewRecur(task.NewRemoteRepository(mstorer), task.NewDispatcher(msender), 1)
+			recurProc := process.NewRecur(storage.NewRemoteRepository(mstorer), storage.NewDispatcher(msender), 1)
 			actResult, err := recurProc.Process()
 			test.OK(t, err)
 			test.Equals(t, tc.expCount, actResult.Count)

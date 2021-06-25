@@ -1,10 +1,11 @@
-package task
+package storage
 
 import (
 	"errors"
 	"fmt"
 	"strconv"
 
+	"git.ewintr.nl/gte/internal/task"
 	"git.ewintr.nl/gte/pkg/mstore"
 )
 
@@ -24,23 +25,23 @@ func NewRemoteRepository(ms mstore.MStorer) *RemoteRepository {
 	}
 }
 
-func (rr *RemoteRepository) FindAll(folder string) ([]*Task, error) {
+func (rr *RemoteRepository) FindAll(folder string) ([]*task.Task, error) {
 	msgs, err := rr.mstore.Messages(folder)
 	if err != nil {
-		return []*Task{}, fmt.Errorf("%w: %v", ErrMStoreError, err)
+		return []*task.Task{}, fmt.Errorf("%w: %v", ErrMStoreError, err)
 	}
 
-	tasks := []*Task{}
+	tasks := []*task.Task{}
 	for _, msg := range msgs {
 		if msg.Valid() {
-			tasks = append(tasks, NewFromMessage(msg))
+			tasks = append(tasks, task.NewFromMessage(msg))
 		}
 	}
 
 	return tasks, nil
 }
 
-func (rr *RemoteRepository) Update(t *Task) error {
+func (rr *RemoteRepository) Update(t *task.Task) error {
 	if t == nil {
 		return ErrInvalidTask
 	}
@@ -58,7 +59,7 @@ func (rr *RemoteRepository) Update(t *Task) error {
 	return nil
 }
 
-func (rr *RemoteRepository) Add(t *Task) error {
+func (rr *RemoteRepository) Add(t *task.Task) error {
 	if t == nil {
 		return ErrInvalidTask
 	}
@@ -80,15 +81,15 @@ func (rr *RemoteRepository) CleanUp() error {
 	}
 	msgsSet := make(map[string][]msgInfo)
 
-	for _, folder := range knownFolders {
+	for _, folder := range task.KnownFolders {
 		msgs, err := rr.mstore.Messages(folder)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrMStoreError, err)
 		}
 
 		for _, msg := range msgs {
-			id, _ := FieldFromBody(FIELD_ID, msg.Body)
-			versionStr, _ := FieldFromBody(FIELD_VERSION, msg.Body)
+			id, _ := task.FieldFromBody(task.FIELD_ID, msg.Body)
+			versionStr, _ := task.FieldFromBody(task.FIELD_VERSION, msg.Body)
 			version, _ := strconv.Atoi(versionStr)
 			if _, ok := msgsSet[id]; !ok {
 				msgsSet[id] = []msgInfo{}

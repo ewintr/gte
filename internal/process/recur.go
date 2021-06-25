@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/internal/task"
 )
 
@@ -15,9 +16,10 @@ var (
 	recurLock sync.Mutex
 )
 
+// Recur generates new tasks from a recurring task for a given day
 type Recur struct {
-	taskRepo       *task.RemoteRepository
-	taskDispatcher *task.Dispatcher
+	taskRepo       *storage.RemoteRepository
+	taskDispatcher *storage.Dispatcher
 	daysAhead      int
 }
 
@@ -26,7 +28,7 @@ type RecurResult struct {
 	Count    int    `json:"count"`
 }
 
-func NewRecur(repo *task.RemoteRepository, disp *task.Dispatcher, daysAhead int) *Recur {
+func NewRecur(repo *storage.RemoteRepository, disp *storage.Dispatcher, daysAhead int) *Recur {
 	return &Recur{
 		taskRepo:       repo,
 		taskDispatcher: disp,

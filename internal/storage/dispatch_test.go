@@ -1,17 +1,18 @@
-package task_test
+package storage_test
 
 import (
 	"fmt"
 	"testing"
 
 	"git.ewintr.nl/go-kit/test"
+	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/internal/task"
 	"git.ewintr.nl/gte/pkg/msend"
 )
 
 func TestDispatcherDispatch(t *testing.T) {
 	mem := msend.NewMemory()
-	disp := task.NewDispatcher(mem)
+	disp := storage.NewDispatcher(mem)
 	tsk := &task.Task{
 		Id:      "id",
 		Version: 3,

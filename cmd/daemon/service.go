@@ -9,6 +9,7 @@ import (
 	"git.ewintr.nl/go-kit/log"
 	"git.ewintr.nl/gte/internal/configuration"
 	"git.ewintr.nl/gte/internal/process"
+	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/internal/task"
 	"git.ewintr.nl/gte/pkg/msend"
 	"git.ewintr.nl/gte/pkg/mstore"
@@ -35,8 +36,8 @@ func main() {
 
 	msgStore := mstore.NewIMAP(config.IMAP())
 	mailSend := msend.NewSSLSMTP(config.SMTP())
-	repo := task.NewRemoteRepository(msgStore)
-	disp := task.NewDispatcher(mailSend)
+	repo := storage.NewRemoteRepository(msgStore)
+	disp := storage.NewDispatcher(mailSend)
 
 	inboxProc := process.NewInbox(repo)
 	recurProc := process.NewRecur(repo, disp, *daysAhead)
