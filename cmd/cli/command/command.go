@@ -21,6 +21,8 @@ func Parse(args []string, conf *configuration.Configuration) (Command, error) {
 		return NewSync(conf)
 	case "today":
 		return NewToday(conf)
+	case "tomorrow":
+		return NewTomorrow(conf)
 	default:
 		return NewEmpty()
 	}

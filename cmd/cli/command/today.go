@@ -9,6 +9,7 @@ import (
 	"git.ewintr.nl/gte/internal/task"
 )
 
+// Today lists all task that are due today or past their due date
 type Today struct {
 	todayer *process.List
 }
