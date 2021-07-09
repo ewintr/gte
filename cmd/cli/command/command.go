@@ -1,9 +1,14 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 
 	"git.ewintr.nl/gte/internal/configuration"
+)
+
+var (
+	ErrInvalidAmountOfArgs = errors.New("invalid amount of args")
 )
 
 type Command interface {
@@ -15,7 +20,7 @@ func Parse(args []string, conf *configuration.Configuration) (Command, error) {
 		return NewEmpty()
 	}
 
-	cmd, _ := args[0], args[1:]
+	cmd, cmdArgs := args[0], args[1:]
 	switch cmd {
 	case "sync":
 		return NewSync(conf)
@@ -23,6 +28,8 @@ func Parse(args []string, conf *configuration.Configuration) (Command, error) {
 		return NewToday(conf)
 	case "tomorrow":
 		return NewTomorrow(conf)
+	case "new":
+		return NewNew(conf, cmdArgs)
 	default:
 		return NewEmpty()
 	}
