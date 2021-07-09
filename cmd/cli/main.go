@@ -25,10 +25,5 @@ func main() {
 		fmt.Println(err, "could not initialize command")
 		os.Exit(1)
 	}
-	result, err := cmd.Do()
-	if err != nil {
-		fmt.Println(err, "could not perform command")
-		os.Exit(1)
-	}
-	fmt.Printf("%s\n", result.Message)
+	fmt.Printf("%s\n", cmd.Do())
 }
