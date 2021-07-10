@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 
+	"git.ewintr.nl/gte/cmd/cli/format"
 	"git.ewintr.nl/gte/internal/configuration"
 	"git.ewintr.nl/gte/internal/process"
 	"git.ewintr.nl/gte/internal/storage"
@@ -30,7 +31,7 @@ func NewSync(conf *configuration.Configuration) (*Sync, error) {
 func (s *Sync) Do() string {
 	result, err := s.syncer.Process()
 	if err != nil {
-		return FormatError(err)
+		return format.FormatError(err)
 	}
 
 	return fmt.Sprintf("synced %d tasks\n", result.Count)

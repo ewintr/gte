@@ -1,6 +1,7 @@
 package command
 
 import (
+	"git.ewintr.nl/gte/cmd/cli/format"
 	"git.ewintr.nl/gte/internal/configuration"
 	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/internal/task"
@@ -28,7 +29,7 @@ func NewNew(conf *configuration.Configuration, cmdArgs []string) (*New, error) {
 
 func (n *New) Do() string {
 	if err := n.disp.Dispatch(&task.Task{Action: n.action}); err != nil {
-		return FormatError(err)
+		return format.FormatError(err)
 	}
 
 	return "message sent\n"

@@ -2,7 +2,6 @@ package command
 
 import (
 	"errors"
-	"fmt"
 
 	"git.ewintr.nl/gte/internal/configuration"
 )
@@ -33,8 +32,4 @@ func Parse(args []string, conf *configuration.Configuration) (Command, error) {
 	default:
 		return NewEmpty()
 	}
-}
-
-func FormatError(err error) string {
-	return fmt.Sprintf("could not perform command.\n\nerror: %s\n", err.Error())
 }

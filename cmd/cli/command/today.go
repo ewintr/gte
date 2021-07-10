@@ -1,8 +1,7 @@
 package command
 
 import (
-	"fmt"
-
+	"git.ewintr.nl/gte/cmd/cli/format"
 	"git.ewintr.nl/gte/internal/configuration"
 	"git.ewintr.nl/gte/internal/process"
 	"git.ewintr.nl/gte/internal/storage"
@@ -33,16 +32,11 @@ func NewToday(conf *configuration.Configuration) (*Today, error) {
 func (t *Today) Do() string {
 	res, err := t.todayer.Process()
 	if err != nil {
-		return FormatError(err)
+		return format.FormatError(err)
 	}
 	if len(res.Tasks) == 0 {
 		return "nothing left\n"
 	}
 
-	var msg string
-	for _, t := range res.Tasks {
-		msg += fmt.Sprintf("%s - %s\n", t.Project, t.Action)
-	}
-
-	return msg
+	return format.FormatTaskTable(res.Tasks)
 }
