@@ -122,6 +122,29 @@ WHERE project = ?`, project)
 	return tasksFromRows(rows)
 }
 
+func (s *Sqlite) FindById(id string) (*task.Task, error) {
+	var folder, action, project, due, recur string
+	var version int
+	row := s.db.QueryRow(`
+SELECT version, folder, action, project, due, recur
+FROM task
+WHERE id = ?
+LIMIT 1`, id)
+	if err := row.Scan(&version, &folder, &action, &project, &due, &recur); err != nil {
+		return &task.Task{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+	}
+
+	return &task.Task{
+		Id:      id,
+		Version: version,
+		Folder:  folder,
+		Action:  action,
+		Project: project,
+		Due:     task.NewDateFromString(due),
+		Recur:   task.NewRecurrer(recur),
+	}, nil
+}
+
 func tasksFromRows(rows *sql.Rows) ([]*task.Task, error) {
 	tasks := []*task.Task{}
 

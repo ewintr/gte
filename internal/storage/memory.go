@@ -56,3 +56,14 @@ func (m *Memory) FindAllInProject(project string) ([]*task.Task, error) {
 
 	return tasks, nil
 }
+
+func (m *Memory) FindById(id string) (*task.Task, error) {
+	for _, t := range m.tasks {
+		if t.Id == id {
+			return t, nil
+		}
+
+	}
+
+	return &task.Task{}, ErrTaskNotFound
+}

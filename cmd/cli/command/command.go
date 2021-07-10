@@ -29,6 +29,8 @@ func Parse(args []string, conf *configuration.Configuration) (Command, error) {
 		return NewTomorrow(conf)
 	case "new":
 		return NewNew(conf, cmdArgs)
+	case "done":
+		return NewDone(conf, cmdArgs)
 	default:
 		return NewEmpty()
 	}

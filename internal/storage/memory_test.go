@@ -14,6 +14,7 @@ func TestMemory(t *testing.T) {
 	folder1, folder2 := "folder1", "folder2"
 	project1, project2 := "project1", "project2"
 	task1 := &task.Task{
+		Id:      "id-1",
 		Folder:  folder1,
 		Project: project1,
 		Action:  "action1",
@@ -22,6 +23,7 @@ func TestMemory(t *testing.T) {
 		},
 	}
 	task2 := &task.Task{
+		Id:      "id-2",
 		Folder:  folder1,
 		Project: project2,
 		Action:  "action2",
@@ -30,6 +32,7 @@ func TestMemory(t *testing.T) {
 		},
 	}
 	task3 := &task.Task{
+		Id:      "id-3",
 		Folder:  folder2,
 		Project: project1,
 		Action:  "action3",
@@ -74,5 +77,13 @@ func TestMemory(t *testing.T) {
 			tsk.Message = nil
 		}
 		test.Equals(t, exp, act)
+	})
+
+	t.Run("findbyid", func(t *testing.T) {
+		mem := storage.NewMemory()
+		test.OK(t, mem.SetTasks(tasks))
+		act, err := mem.FindById("id-2")
+		test.OK(t, err)
+		test.Equals(t, task2, act)
 	})
 }
