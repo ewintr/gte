@@ -92,6 +92,24 @@ func TestInboxProcess(t *testing.T) {
 				task.FOLDER_UNPLANNED: {{Subject: "not really old version"}},
 			},
 		},
+		{
+			name: "remove done",
+			messages: map[string][]*mstore.Message{
+				task.FOLDER_INBOX: {{
+					Subject: "is done",
+					Body:    "id: xxx-xxx\nversion: 1\ndone: true\n",
+				}},
+				task.FOLDER_UNPLANNED: {{
+					Subject: "the task",
+					Body:    "id: xxx-xxx\nversion: 1\n",
+				}},
+			},
+			expCount: 1,
+			expMsgs: map[string][]*mstore.Message{
+				task.FOLDER_INBOX:     {},
+				task.FOLDER_UNPLANNED: {},
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			mstorer, err := mstore.NewMemory([]string{

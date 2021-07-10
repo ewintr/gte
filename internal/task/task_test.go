@@ -29,7 +29,7 @@ func TestNewFromMessage(t *testing.T) {
 			exp:     &task.Task{},
 		},
 		{
-			name: "id, action, project and folder",
+			name: "id, action, project, folder and done",
 			message: &mstore.Message{
 				Folder: task.FOLDER_UNPLANNED,
 				Body: fmt.Sprintf(`
@@ -38,6 +38,7 @@ due: no date
 version: %d
 action: %s
 project: %s
+done: true
 `, id, version, action, project),
 			},
 			hasId: true,
@@ -47,6 +48,7 @@ project: %s
 				Folder:  task.FOLDER_UNPLANNED,
 				Action:  action,
 				Project: project,
+				Done:    true,
 			},
 		},
 		{

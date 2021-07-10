@@ -135,15 +135,10 @@ func TestRepoUpdate(t *testing.T) {
 }
 
 func TestRepoCleanUp(t *testing.T) {
-	folderNew := "New"
-	folderPlanned := "Planned"
-	folders := []string{"INBOX", folderNew, "Recurring",
-		folderPlanned, "Unplanned",
-	}
 	id := "id"
 	subject := "subject"
 
-	mem, err := mstore.NewMemory(folders)
+	mem, err := mstore.NewMemory(task.KnownFolders)
 	test.OK(t, err)
 
 	for v := 1; v <= 3; v++ {
@@ -151,9 +146,9 @@ func TestRepoCleanUp(t *testing.T) {
 id: %s
 version: %d
 `, id, v)
-		folder := folderNew
+		folder := task.FOLDER_NEW
 		if v%2 == 1 {
-			folder = folderPlanned
+			folder = task.FOLDER_PLANNED
 		}
 		test.OK(t, mem.Add(folder, subject, body))
 	}
@@ -162,19 +157,43 @@ version: %d
 	test.OK(t, repo.CleanUp())
 
 	expNew := []*mstore.Message{}
-	actNew, err := mem.Messages(folderNew)
+	actNew, err := mem.Messages(task.FOLDER_NEW)
 	test.OK(t, err)
 	test.Equals(t, expNew, actNew)
 	expPlanned := []*mstore.Message{{
 		Uid:     3,
-		Folder:  folderPlanned,
+		Folder:  task.FOLDER_PLANNED,
 		Subject: subject,
 		Body: `
 id: id
 version: 3
 `,
 	}}
-	actPlanned, err := mem.Messages(folderPlanned)
+	actPlanned, err := mem.Messages(task.FOLDER_PLANNED)
 	test.OK(t, err)
 	test.Equals(t, expPlanned, actPlanned)
+}
+
+func TestRepoRemove(t *testing.T) {
+	mem, err := mstore.NewMemory(task.KnownFolders)
+	test.OK(t, err)
+
+	for id := 1; id <= 3; id++ {
+		test.OK(t, mem.Add(task.FOLDER_PLANNED, "action", fmt.Sprintf("id: id-%d\n", id)))
+	}
+	remote := storage.NewRemoteRepository(mem)
+	tasks := []*task.Task{
+		{Id: "id-1"},
+		{Id: "id-3"},
+	}
+	test.OK(t, remote.Remove(tasks))
+	actMsgs, err := mem.Messages(task.FOLDER_PLANNED)
+	expMsgs := []*mstore.Message{{
+		Uid:     2,
+		Folder:  task.FOLDER_PLANNED,
+		Subject: "action",
+		Body:    "id: id-2\n",
+	}}
+	test.Equals(t, expMsgs, actMsgs)
+
 }

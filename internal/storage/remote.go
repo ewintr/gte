@@ -126,3 +126,33 @@ func (rr *RemoteRepository) CleanUp() error {
 
 	return nil
 }
+
+func (rr *RemoteRepository) Remove(tasks []*task.Task) error {
+	tMap := map[string]*task.Task{}
+	for _, t := range tasks {
+		tMap[t.Id] = t
+	}
+
+	var toBeRemoved []*mstore.Message
+	for _, folder := range task.KnownFolders {
+		msgs, err := rr.mstore.Messages(folder)
+		if err != nil {
+			return fmt.Errorf("%w: %v", ErrMStoreError, err)
+		}
+
+		for _, msg := range msgs {
+			id, _ := task.FieldFromBody(task.FIELD_ID, msg.Body)
+			if _, ok := tMap[id]; ok {
+				toBeRemoved = append(toBeRemoved, msg)
+			}
+		}
+	}
+
+	for _, msg := range toBeRemoved {
+		if err := rr.mstore.Remove(msg); err != nil {
+			return fmt.Errorf("%w: %v", ErrMStoreError, err)
+		}
+	}
+
+	return nil
+}

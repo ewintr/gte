@@ -34,6 +34,7 @@ const (
 	FIELD_PROJECT = "project"
 	FIELD_DUE     = "due"
 	FIELD_RECUR   = "recur"
+	FIELD_DONE    = "done"
 )
 
 var (
@@ -53,6 +54,7 @@ var (
 		FIELD_PROJECT,
 		FIELD_DUE,
 		FIELD_RECUR,
+		FIELD_DONE,
 	}
 )
 
@@ -70,6 +72,7 @@ type Task struct {
 	Project string
 	Due     Date
 	Recur   Recurrer
+	Done    bool
 }
 
 func NewFromMessage(msg *mstore.Message) *Task {
@@ -108,6 +111,7 @@ func NewFromMessage(msg *mstore.Message) *Task {
 	t.Project = bodyFields[FIELD_PROJECT]
 	t.Due = NewDateFromString(bodyFields[FIELD_DUE])
 	t.Recur = NewRecurrer(bodyFields[FIELD_RECUR])
+	t.Done = bodyFields[FIELD_DONE] == "true"
 
 	return t
 }
