@@ -180,6 +180,10 @@ func (t *Task) FormatBody() string {
 		fields[FIELD_DUE] = t.Due.String()
 	}
 	order = append(order, []string{FIELD_PROJECT, FIELD_VERSION, FIELD_ID}...)
+	if t.Done {
+		fields[FIELD_DONE] = "true"
+		order = append(order, FIELD_DONE)
+	}
 
 	keyLen := 0
 	for _, f := range order {

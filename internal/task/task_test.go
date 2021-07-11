@@ -357,6 +357,7 @@ id:
 				Version: version,
 				Action:  action,
 				Project: project,
+				Done:    true,
 				Due:     task.NewDate(2021, 1, 30),
 				Message: &mstore.Message{
 					Body: "previous body",
@@ -368,6 +369,7 @@ due:     2021-01-30 (saturday)
 project: project
 version: 6
 id:      an id
+done:    true
 
 Previous version:
 
