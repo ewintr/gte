@@ -10,11 +10,13 @@ import (
 type Memory struct {
 	tasks      []*task.Task
 	latestSync time.Time
+	localIds   map[string]int
 }
 
 func NewMemory() *Memory {
 	return &Memory{
-		tasks: []*task.Task{},
+		tasks:    []*task.Task{},
+		localIds: map[string]int{},
 	}
 }
 
@@ -28,11 +30,22 @@ func (m *Memory) SetTasks(tasks []*task.Task) error {
 		nt := *t
 		nt.Message = nil
 		nTasks = append(nTasks, &nt)
+		m.setLocalId(t.Id)
 	}
 	m.tasks = nTasks
 	m.latestSync = time.Now()
 
 	return nil
+}
+
+func (m *Memory) setLocalId(id string) {
+	used := []int{}
+	for _, id := range m.localIds {
+		used = append(used, id)
+	}
+
+	next := NextLocalId(used)
+	m.localIds[id] = next
 }
 
 func (m *Memory) FindAllInFolder(folder string) ([]*task.Task, error) {
@@ -66,4 +79,18 @@ func (m *Memory) FindById(id string) (*task.Task, error) {
 	}
 
 	return &task.Task{}, ErrTaskNotFound
+}
+
+func (m *Memory) FindByLocalId(localId int) (*task.Task, error) {
+	for _, t := range m.tasks {
+		if m.localIds[t.Id] == localId {
+			return t, nil
+		}
+	}
+
+	return &task.Task{}, ErrTaskNotFound
+}
+
+func (m *Memory) LocalIds() (map[string]int, error) {
+	return m.localIds, nil
 }

@@ -10,6 +10,7 @@ import (
 
 // Tomorrow lists all tasks that are due tomorrow
 type Tomorrow struct {
+	local      storage.LocalRepository
 	tomorrower *process.List
 }
 
@@ -25,6 +26,7 @@ func NewTomorrow(conf *configuration.Configuration) (*Tomorrow, error) {
 	tomorrower := process.NewList(local, reqs)
 
 	return &Tomorrow{
+		local:      local,
 		tomorrower: tomorrower,
 	}, nil
 }
@@ -39,5 +41,5 @@ func (t *Tomorrow) Do() string {
 		return "nothing to do tomorrow\n"
 	}
 
-	return format.FormatTaskTable(res.Tasks)
+	return format.FormatTaskTable(t.local, res.Tasks)
 }

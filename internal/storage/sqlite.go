@@ -16,6 +16,7 @@ var sqliteMigrations = []sqliteMigration{
 	`CREATE TABLE task ("id" TEXT, "version" INTEGER, "folder" TEXT, "action" TEXT, "project" TEXT, "due" TEXT, "recur" TEXT)`,
 	`CREATE TABLE system ("latest_sync" INTEGER)`,
 	`INSERT INTO system (latest_sync) VALUES (0)`,
+	`CREATE TABLE local_id ("id" TEXT, "local_id" INTEGER)`,
 }
 
 var (
@@ -68,10 +69,12 @@ func (s *Sqlite) LatestSync() (time.Time, error) {
 }
 
 func (s *Sqlite) SetTasks(tasks []*task.Task) error {
+	// set tasks
 	if _, err := s.db.Exec(`DELETE FROM task`); err != nil {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
 
+	newIds := []string{}
 	for _, t := range tasks {
 		var recurStr string
 		if t.Recur != nil {
@@ -86,8 +89,56 @@ VALUES
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 		}
+
+		newIds = append(newIds, t.Id)
 	}
 
+	// set local_ids
+	oldIds := map[string]int{}
+	rows, err := s.db.Query(`SELECT id, local_id FROM local_id`)
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		var local_id int
+		if err := rows.Scan(&id, &local_id); err != nil {
+			return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+		}
+		oldIds[id] = local_id
+	}
+
+	usedLocalIds := []int{}
+	newLocalIds := map[string]int{}
+	for _, n := range newIds {
+		if localId, ok := oldIds[n]; ok {
+			newLocalIds[n] = localId
+			usedLocalIds = append(usedLocalIds, localId)
+
+			continue
+		}
+
+		localId := NextLocalId(usedLocalIds)
+		newLocalIds[n] = localId
+		usedLocalIds = append(usedLocalIds, localId)
+	}
+
+	if _, err := s.db.Exec(`DELETE FROM local_id`); err != nil {
+		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+	}
+	for id, localId := range newLocalIds {
+		_, err := s.db.Exec(`
+INSERT INTO local_id
+(id, local_id)
+VALUES
+(?, ?)`, id, localId)
+		if err != nil {
+			return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+		}
+	}
+
+	// update system
 	if _, err := s.db.Exec(`
 UPDATE system
 SET latest_sync = ?`,
@@ -143,6 +194,41 @@ LIMIT 1`, id)
 		Due:     task.NewDateFromString(due),
 		Recur:   task.NewRecurrer(recur),
 	}, nil
+}
+
+func (s *Sqlite) FindByLocalId(localId int) (*task.Task, error) {
+	var id string
+	row := s.db.QueryRow(`SELECT id FROM local_id WHERE local_id = ?`, localId)
+	if err := row.Scan(&id); err != nil {
+		return &task.Task{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+	}
+
+	t, err := s.FindById(id)
+	if err != nil {
+		return &task.Task{}, nil
+	}
+
+	return t, nil
+}
+
+func (s *Sqlite) LocalIds() (map[string]int, error) {
+	rows, err := s.db.Query(`SELECT id, local_id FROM local_id`)
+	if err != nil {
+		return map[string]int{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+	}
+
+	idMap := map[string]int{}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		var local_id int
+		if err := rows.Scan(&id, &local_id); err != nil {
+			return map[string]int{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+		}
+		idMap[id] = local_id
+	}
+
+	return idMap, nil
 }
 
 func tasksFromRows(rows *sql.Rows) ([]*task.Task, error) {

@@ -1,6 +1,8 @@
 package command
 
 import (
+	"fmt"
+
 	"git.ewintr.nl/gte/cmd/cli/format"
 	"git.ewintr.nl/gte/internal/configuration"
 	"git.ewintr.nl/gte/internal/process"
@@ -21,8 +23,22 @@ func NewDone(conf *configuration.Configuration, cmdArgs []string) (*Done, error)
 
 	disp := storage.NewDispatcher(msend.NewSSLSMTP(conf.SMTP()))
 	fields := process.UpdateFields{"done": "true"}
+	localIds, err := local.LocalIds()
+	if err != nil {
+		return &Done{}, err
+	}
+	var tId string
+	for id, localId := range localIds {
+		if fmt.Sprintf("%d", localId) == cmdArgs[0] {
+			tId = id
+			break
+		}
+	}
+	if tId == "" {
+		return &Done{}, fmt.Errorf("could not find task")
+	}
 
-	updater := process.NewUpdate(local, disp, cmdArgs[0], fields)
+	updater := process.NewUpdate(local, disp, tId, fields)
 
 	return &Done{
 		doner: updater,

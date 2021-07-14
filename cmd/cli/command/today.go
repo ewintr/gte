@@ -10,6 +10,7 @@ import (
 
 // Today lists all task that are due today or past their due date
 type Today struct {
+	local   storage.LocalRepository
 	todayer *process.List
 }
 
@@ -25,6 +26,7 @@ func NewToday(conf *configuration.Configuration) (*Today, error) {
 	todayer := process.NewList(local, reqs)
 
 	return &Today{
+		local:   local,
 		todayer: todayer,
 	}, nil
 }
@@ -38,5 +40,5 @@ func (t *Today) Do() string {
 		return "nothing left\n"
 	}
 
-	return format.FormatTaskTable(res.Tasks)
+	return format.FormatTaskTable(t.local, res.Tasks)
 }
