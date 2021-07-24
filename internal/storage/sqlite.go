@@ -74,7 +74,7 @@ func (s *Sqlite) SetTasks(tasks []*task.Task) error {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
 
-	newIds := []string{}
+	localIdMap := map[string]int{}
 	for _, t := range tasks {
 		var recurStr string
 		if t.Recur != nil {
@@ -90,11 +90,10 @@ VALUES
 			return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 		}
 
-		newIds = append(newIds, t.Id)
+		localIdMap[t.Id] = 0
 	}
 
 	// set local_ids
-	oldIds := map[string]int{}
 	rows, err := s.db.Query(`SELECT id, local_id FROM local_id`)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
@@ -102,38 +101,39 @@ VALUES
 	defer rows.Close()
 	for rows.Next() {
 		var id string
-		var local_id int
-		if err := rows.Scan(&id, &local_id); err != nil {
+		var localId int
+		if err := rows.Scan(&id, &localId); err != nil {
 			return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 		}
-		oldIds[id] = local_id
-	}
-
-	usedLocalIds := []int{}
-	newLocalIds := map[string]int{}
-	for _, n := range newIds {
-		if localId, ok := oldIds[n]; ok {
-			newLocalIds[n] = localId
-			usedLocalIds = append(usedLocalIds, localId)
-
-			continue
+		if _, ok := localIdMap[id]; ok {
+			localIdMap[id] = localId
 		}
-
-		localId := NextLocalId(usedLocalIds)
-		newLocalIds[n] = localId
-		usedLocalIds = append(usedLocalIds, localId)
 	}
 
 	if _, err := s.db.Exec(`DELETE FROM local_id`); err != nil {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
-	for id, localId := range newLocalIds {
-		_, err := s.db.Exec(`
+
+	var used []int
+	for _, localId := range localIdMap {
+		if localId != 0 {
+			used = append(used, localId)
+		}
+	}
+	for id, localId := range localIdMap {
+		if localId == 0 {
+			newLocalId := NextLocalId(used)
+			localIdMap[id] = newLocalId
+			used = append(used, newLocalId)
+		}
+	}
+
+	for id, localId := range localIdMap {
+		if _, err := s.db.Exec(`
 INSERT INTO local_id
 (id, local_id)
 VALUES
-(?, ?)`, id, localId)
-		if err != nil {
+(?, ?)`, id, localId); err != nil {
 			return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 		}
 	}
