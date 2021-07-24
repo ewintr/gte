@@ -13,10 +13,10 @@ import (
 type sqliteMigration string
 
 var sqliteMigrations = []sqliteMigration{
-	`CREATE TABLE task ("id" TEXT, "version" INTEGER, "folder" TEXT, "action" TEXT, "project" TEXT, "due" TEXT, "recur" TEXT)`,
+	`CREATE TABLE task ("id" TEXT UNIQUE, "version" INTEGER, "folder" TEXT, "action" TEXT, "project" TEXT, "due" TEXT, "recur" TEXT)`,
 	`CREATE TABLE system ("latest_sync" INTEGER)`,
 	`INSERT INTO system (latest_sync) VALUES (0)`,
-	`CREATE TABLE local_id ("id" TEXT, "local_id" INTEGER)`,
+	`CREATE TABLE local_id ("id" TEXT UNIQUE, "local_id" INTEGER UNIQUE)`,
 }
 
 var (
