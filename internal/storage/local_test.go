@@ -58,6 +58,14 @@ func TestNextLocalId(t *testing.T) {
 			used: []int{99},
 			exp:  1,
 		},
+		{
+			name: "sync bug",
+			used: []int{151, 956, 955, 150, 154, 155, 145, 144,
+				136, 152, 148, 146, 934, 149, 937, 135, 140, 139,
+				143, 137, 153, 939, 138, 953, 147, 141, 938, 142,
+			},
+			exp: 957,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			test.Equals(t, tc.exp, storage.NextLocalId(tc.used))

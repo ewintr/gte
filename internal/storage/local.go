@@ -2,6 +2,7 @@ package storage
 
 import (
 	"errors"
+	"sort"
 	"time"
 
 	"git.ewintr.nl/gte/internal/task"
@@ -26,6 +27,7 @@ func NextLocalId(used []int) int {
 		return 1
 	}
 
+	sort.Ints(used)
 	usedMax := 1
 	for _, u := range used {
 		if u > usedMax {

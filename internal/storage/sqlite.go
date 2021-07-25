@@ -120,6 +120,7 @@ VALUES
 			used = append(used, localId)
 		}
 	}
+
 	for id, localId := range localIdMap {
 		if localId == 0 {
 			newLocalId := NextLocalId(used)
