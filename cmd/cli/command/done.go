@@ -15,6 +15,8 @@ type Done struct {
 	doner *process.Update
 }
 
+func (d *Done) Cmd() string { return "done" }
+
 func NewDone(conf *configuration.Configuration, cmdArgs []string) (*Done, error) {
 	local, err := storage.NewSqlite(conf.Sqlite())
 	if err != nil {

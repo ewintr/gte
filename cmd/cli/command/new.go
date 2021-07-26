@@ -14,6 +14,8 @@ type New struct {
 	action string
 }
 
+func (n *New) Cmd() string { return "new" }
+
 func NewNew(conf *configuration.Configuration, cmdArgs []string) (*New, error) {
 	if len(cmdArgs) != 1 {
 		return &New{}, ErrInvalidAmountOfArgs

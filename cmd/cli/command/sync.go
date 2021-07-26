@@ -14,6 +14,8 @@ type Sync struct {
 	syncer *process.Sync
 }
 
+func (s *Sync) Cmd() string { return "sync" }
+
 func NewSync(conf *configuration.Configuration) (*Sync, error) {
 	msgStore := mstore.NewIMAP(conf.IMAP())
 	remote := storage.NewRemoteRepository(msgStore)

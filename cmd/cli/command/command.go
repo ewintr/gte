@@ -12,6 +12,7 @@ var (
 
 type Command interface {
 	Do() string
+	Cmd() string
 }
 
 func Parse(args []string, conf *configuration.Configuration) (Command, error) {
