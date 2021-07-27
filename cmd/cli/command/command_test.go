@@ -34,6 +34,11 @@ func TestCommand(t *testing.T) {
 			exp:  "tomorrow",
 		},
 		{
+			name: "show task",
+			args: []string{"123"},
+			exp:  "show",
+		},
+		{
 			name: "done",
 			args: []string{"done"},
 			exp:  "done",

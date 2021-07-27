@@ -28,3 +28,15 @@ func FormatTaskTable(local storage.LocalRepository, tasks []*task.Task) string {
 
 	return output
 }
+
+func FormatTask(id int, t *task.Task) string {
+	output := fmt.Sprintf(`action:  %s
+project: %s
+due:     %s
+`, t.Action, t.Project, t.Due.String())
+	if t.IsRecurrer() {
+		output += fmt.Sprintf("recur:%s", t.Recur.String())
+	}
+
+	return output
+}
