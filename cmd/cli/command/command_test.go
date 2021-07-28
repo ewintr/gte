@@ -40,7 +40,7 @@ func TestCommand(t *testing.T) {
 		},
 		{
 			name: "done",
-			args: []string{"done"},
+			args: []string{"123", "done"},
 			exp:  "done",
 		},
 	} {

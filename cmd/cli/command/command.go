@@ -37,8 +37,6 @@ func Parse(args []string, conf *configuration.Configuration) (Command, error) {
 		return NewTomorrow(conf)
 	case "new":
 		return NewNew(conf, cmdArgs)
-	case "done":
-		return NewDone(conf, cmdArgs)
 	default:
 		return NewEmpty()
 	}
@@ -49,5 +47,11 @@ func parseTaskCommand(id int, tArgs []string, conf *configuration.Configuration)
 		return NewShow(id, conf)
 	}
 
-	return NewEmpty()
+	cmd, _ := tArgs[0], tArgs[1:]
+	switch cmd {
+	case "done":
+		return NewDone(id, conf)
+	default:
+		return NewShow(id, conf)
+	}
 }

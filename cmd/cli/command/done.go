@@ -17,7 +17,7 @@ type Done struct {
 
 func (d *Done) Cmd() string { return "done" }
 
-func NewDone(conf *configuration.Configuration, cmdArgs []string) (*Done, error) {
+func NewDone(id int, conf *configuration.Configuration) (*Done, error) {
 	local, err := storage.NewSqlite(conf.Sqlite())
 	if err != nil {
 		return &Done{}, err
@@ -30,9 +30,9 @@ func NewDone(conf *configuration.Configuration, cmdArgs []string) (*Done, error)
 		return &Done{}, err
 	}
 	var tId string
-	for id, localId := range localIds {
-		if fmt.Sprintf("%d", localId) == cmdArgs[0] {
-			tId = id
+	for remoteId, localId := range localIds {
+		if localId == id {
+			tId = remoteId
 			break
 		}
 	}
