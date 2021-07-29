@@ -5,10 +5,11 @@ import (
 	"fmt"
 
 	"git.ewintr.nl/gte/internal/storage"
+	"git.ewintr.nl/gte/internal/task"
 )
 
 var (
-	ErrUpdateTask = errors.New("could not update task")
+	ErrUpdateTask = errors.New("could not update tsk")
 )
 
 // Update dispatches an updated version of a task
@@ -31,21 +32,27 @@ func NewUpdate(local storage.LocalRepository, disp *storage.Dispatcher, taskId s
 }
 
 func (u *Update) Process() error {
-	task, err := u.local.FindById(u.taskId)
+	tsk, err := u.local.FindById(u.taskId)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrUpdateTask, err)
 	}
 
 	for k, v := range u.updates {
 		switch k {
-		case "done":
+		case task.FIELD_DONE:
 			if v == "true" {
-				task.Done = true
+				tsk.Done = true
 			}
+		case task.FIELD_DUE:
+			tsk.Due = task.NewDateFromString(v)
+		case task.FIELD_ACTION:
+			tsk.Action = v
+		case task.FIELD_PROJECT:
+			tsk.Project = v
 		}
 	}
 
-	if err := u.disp.Dispatch(task); err != nil {
+	if err := u.disp.Dispatch(tsk); err != nil {
 		return fmt.Errorf("%w: %v", ErrUpdateTask, err)
 	}
 

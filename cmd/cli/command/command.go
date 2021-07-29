@@ -2,13 +2,16 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"git.ewintr.nl/gte/internal/configuration"
+	"git.ewintr.nl/gte/internal/storage"
 )
 
 var (
 	ErrInvalidAmountOfArgs = errors.New("invalid amount of args")
+	ErrCouldNotFindTask    = errors.New("could not find task")
 )
 
 type Command interface {
@@ -47,11 +50,34 @@ func parseTaskCommand(id int, tArgs []string, conf *configuration.Configuration)
 		return NewShow(id, conf)
 	}
 
-	cmd, _ := tArgs[0], tArgs[1:]
+	cmd, cmdArgs := tArgs[0], tArgs[1:]
 	switch cmd {
 	case "done":
+		fallthrough
+	case "del":
 		return NewDone(id, conf)
+	case "mod":
+		return NewUpdate(id, conf, cmdArgs)
 	default:
 		return NewShow(id, conf)
 	}
+}
+
+func findId(id int, local storage.LocalRepository) (string, error) {
+	localIds, err := local.LocalIds()
+	if err != nil {
+		return "", fmt.Errorf("%w: %v", ErrCouldNotFindTask, err)
+	}
+	var tId string
+	for remoteId, localId := range localIds {
+		if localId == id {
+			tId = remoteId
+			break
+		}
+	}
+	if tId == "" {
+		return "", ErrCouldNotFindTask
+	}
+
+	return tId, nil
 }

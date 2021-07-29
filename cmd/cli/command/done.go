@@ -1,8 +1,6 @@
 package command
 
 import (
-	"fmt"
-
 	"git.ewintr.nl/gte/cmd/cli/format"
 	"git.ewintr.nl/gte/internal/configuration"
 	"git.ewintr.nl/gte/internal/process"
@@ -17,7 +15,7 @@ type Done struct {
 
 func (d *Done) Cmd() string { return "done" }
 
-func NewDone(id int, conf *configuration.Configuration) (*Done, error) {
+func NewDone(localId int, conf *configuration.Configuration) (*Done, error) {
 	local, err := storage.NewSqlite(conf.Sqlite())
 	if err != nil {
 		return &Done{}, err
@@ -25,19 +23,9 @@ func NewDone(id int, conf *configuration.Configuration) (*Done, error) {
 
 	disp := storage.NewDispatcher(msend.NewSSLSMTP(conf.SMTP()))
 	fields := process.UpdateFields{"done": "true"}
-	localIds, err := local.LocalIds()
+	tId, err := findId(localId, local)
 	if err != nil {
 		return &Done{}, err
-	}
-	var tId string
-	for remoteId, localId := range localIds {
-		if localId == id {
-			tId = remoteId
-			break
-		}
-	}
-	if tId == "" {
-		return &Done{}, fmt.Errorf("could not find task")
 	}
 
 	updater := process.NewUpdate(local, disp, tId, fields)
