@@ -20,6 +20,7 @@ func TestListProcess(t *testing.T) {
 		Version: 1,
 		Action:  "action1",
 		Folder:  task.FOLDER_NEW,
+		Project: "project1",
 	}
 	task2 := &task.Task{
 		Id:      "id2",
@@ -27,6 +28,7 @@ func TestListProcess(t *testing.T) {
 		Action:  "action2",
 		Due:     date1,
 		Folder:  task.FOLDER_PLANNED,
+		Project: "project2",
 	}
 	task3 := &task.Task{
 		Id:      "id3",
@@ -34,6 +36,7 @@ func TestListProcess(t *testing.T) {
 		Action:  "action3",
 		Due:     date2,
 		Folder:  task.FOLDER_PLANNED,
+		Project: "project1",
 	}
 	task4 := &task.Task{
 		Id:      "id4",
@@ -41,6 +44,7 @@ func TestListProcess(t *testing.T) {
 		Action:  "action4",
 		Due:     date3,
 		Folder:  task.FOLDER_PLANNED,
+		Project: "project2",
 	}
 	allTasks := []*task.Task{task1, task2, task3, task4}
 
@@ -72,6 +76,20 @@ func TestListProcess(t *testing.T) {
 				IncludeBefore: true,
 			},
 			exp: []*task.Task{task2, task3},
+		},
+		{
+			name: "folder",
+			reqs: process.ListReqs{
+				Folder: task.FOLDER_PLANNED,
+			},
+			exp: []*task.Task{task2, task3, task4},
+		},
+		{
+			name: "project",
+			reqs: process.ListReqs{
+				Project: "project2",
+			},
+			exp: []*task.Task{task2, task4},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
