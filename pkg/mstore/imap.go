@@ -219,12 +219,12 @@ func (im *IMAP) Add(folder, subject, body string) error {
 	}
 	defer im.Close()
 
-	msgStr := fmt.Sprintf(`From: todo <mstore@erikwinter.nl>
-Date: %s
-Subject: %s
-
-%s`, time.Now().Format(time.RFC822Z), subject, body)
-
+	msgStr := fmt.Sprintf("From: %s\r\nDate: %s\r\nSubject: %s\r\n\r\n%s\r\n",
+		"gte <gte@gettingthings.email>",
+		time.Now().Format(time.RFC822Z),
+		subject,
+		body,
+	)
 	msg := NewIMAPBody(msgStr)
 
 	if err := im.client.Append(folder, nil, time.Time{}, imap.Literal(msg)); err != nil {

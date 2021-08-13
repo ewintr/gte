@@ -192,18 +192,18 @@ func (t *Task) FormatBody() string {
 		}
 	}
 
-	body := fmt.Sprintf("\n")
+	body := fmt.Sprintf("\r\n")
 	for _, f := range order {
 		key := f + FIELD_SEPARATOR
 		for i := len(key); i <= keyLen; i++ {
 			key += " "
 		}
 		line := strings.TrimSpace(fmt.Sprintf("%s %s", key, fields[f]))
-		body += fmt.Sprintf("%s\n", line)
+		body += fmt.Sprintf("%s\r\n", line)
 	}
 
 	if t.Message != nil {
-		body += fmt.Sprintf("\nPrevious version:\n\n%s\n", t.Message.Body)
+		body += fmt.Sprintf("\r\nPrevious version:\r\n\r\n%s\r\n", t.Message.Body)
 	}
 	return body
 }

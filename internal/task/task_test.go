@@ -238,13 +238,7 @@ func TestTaskNextMessage(t *testing.T) {
 			expMessage: &mstore.Message{
 				Folder:  task.FOLDER_NEW,
 				Subject: "",
-				Body: `
-action:
-due:     no date
-project:
-version: 1
-id:
-`,
+				Body:    "\r\naction:\r\ndue:     no date\r\nproject:\r\nversion: 1\r\nid:\r\n",
 			},
 		},
 		{
@@ -260,13 +254,7 @@ id:
 			expMessage: &mstore.Message{
 				Folder:  task.FOLDER_PLANNED,
 				Subject: "2021-06-22 (tuesday) - project - action",
-				Body: `
-action:  action
-due:     2021-06-22 (tuesday)
-project: project
-version: 4
-id:      id
-`,
+				Body:    "\r\naction:  action\r\ndue:     2021-06-22 (tuesday)\r\nproject: project\r\nversion: 4\r\nid:      id\r\n",
 			},
 		},
 	} {
@@ -342,13 +330,7 @@ func TestFormatBody(t *testing.T) {
 		{
 			name: "empty",
 			task: &task.Task{},
-			exp: `
-action:
-due:     no date
-project:
-version: 0
-id:
-`,
+			exp:  "\r\naction:\r\ndue:     no date\r\nproject:\r\nversion: 0\r\nid:\r\n",
 		},
 		{
 			name: "filled",
@@ -363,18 +345,7 @@ id:
 					Body: "previous body",
 				},
 			},
-			exp: `
-action:  an action
-due:     2021-01-30 (saturday)
-project: project
-version: 6
-id:      an id
-done:    true
-
-Previous version:
-
-previous body
-`,
+			exp: "\r\naction:  an action\r\ndue:     2021-01-30 (saturday)\r\nproject: project\r\nversion: 6\r\nid:      an id\r\ndone:    true\r\n\r\nPrevious version:\r\n\r\nprevious body\r\n",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
