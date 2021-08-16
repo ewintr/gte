@@ -23,7 +23,6 @@ func Parse(args []string, conf *configuration.Configuration) (Command, error) {
 	if len(args) == 0 {
 		return NewEmpty()
 	}
-
 	cmd, cmdArgs := args[0], args[1:]
 
 	id, err := strconv.Atoi(cmd)
@@ -38,6 +37,8 @@ func Parse(args []string, conf *configuration.Configuration) (Command, error) {
 		return NewToday(conf)
 	case "tomorrow":
 		return NewTomorrow(conf)
+	case "list":
+		return NewList(conf, cmdArgs)
 	case "add":
 		return NewAdd(conf, cmdArgs)
 	default:
