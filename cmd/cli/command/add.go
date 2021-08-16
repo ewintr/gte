@@ -1,6 +1,8 @@
 package command
 
 import (
+	"strings"
+
 	"git.ewintr.nl/gte/cmd/cli/format"
 	"git.ewintr.nl/gte/internal/configuration"
 	"git.ewintr.nl/gte/internal/storage"
@@ -8,28 +10,24 @@ import (
 	"git.ewintr.nl/gte/pkg/msend"
 )
 
-// New sends an action to the NEW folder so it can be updated to a real task later
-type New struct {
+// Add sends an action to the NEW folder so it can be updated to a real task later
+type Add struct {
 	disp   *storage.Dispatcher
 	action string
 }
 
-func (n *New) Cmd() string { return "new" }
+func (n *Add) Cmd() string { return "new" }
 
-func NewNew(conf *configuration.Configuration, cmdArgs []string) (*New, error) {
-	if len(cmdArgs) != 1 {
-		return &New{}, ErrInvalidAmountOfArgs
-	}
-
+func NewAdd(conf *configuration.Configuration, cmdArgs []string) (*Add, error) {
 	disp := storage.NewDispatcher(msend.NewSSLSMTP(conf.SMTP()))
 
-	return &New{
+	return &Add{
 		disp:   disp,
-		action: cmdArgs[0],
+		action: strings.Join(cmdArgs, " "),
 	}, nil
 }
 
-func (n *New) Do() string {
+func (n *Add) Do() string {
 	if err := n.disp.Dispatch(&task.Task{Action: n.action}); err != nil {
 		return format.FormatError(err)
 	}

@@ -38,8 +38,8 @@ func Parse(args []string, conf *configuration.Configuration) (Command, error) {
 		return NewToday(conf)
 	case "tomorrow":
 		return NewTomorrow(conf)
-	case "new":
-		return NewNew(conf, cmdArgs)
+	case "add":
+		return NewAdd(conf, cmdArgs)
 	default:
 		return NewEmpty()
 	}
