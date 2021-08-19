@@ -2,7 +2,6 @@ package command
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"git.ewintr.nl/gte/cmd/cli/format"
@@ -29,7 +28,6 @@ func NewList(conf *configuration.Configuration, cmdArgs []string) (*List, error)
 	if err != nil {
 		return &List{}, err
 	}
-	fmt.Printf("args: %+v\n", cmdArgs)
 	if len(cmdArgs) < 2 {
 		return &List{}, ErrInvalidAmountOfArgs
 	}

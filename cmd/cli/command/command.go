@@ -37,6 +37,8 @@ func Parse(args []string, conf *configuration.Configuration) (Command, error) {
 		return NewToday(conf)
 	case "tomorrow":
 		return NewTomorrow(conf)
+	case "projects":
+		return NewProjects(conf)
 	case "list":
 		return NewList(conf, cmdArgs)
 	case "add":
