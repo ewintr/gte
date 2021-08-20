@@ -219,26 +219,6 @@ func (s *Sqlite) FindByLocalId(localId int) (*task.LocalTask, error) {
 	return t, nil
 }
 
-func (s *Sqlite) LocalIds() (map[string]int, error) {
-	rows, err := s.db.Query(`SELECT id, local_id FROM local_task`)
-	if err != nil {
-		return map[string]int{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
-	}
-
-	idMap := map[string]int{}
-	defer rows.Close()
-	for rows.Next() {
-		var id string
-		var local_id int
-		if err := rows.Scan(&id, &local_id); err != nil {
-			return map[string]int{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
-		}
-		idMap[id] = local_id
-	}
-
-	return idMap, nil
-}
-
 func tasksFromRows(rows *sql.Rows) ([]*task.LocalTask, error) {
 	tasks := []*task.LocalTask{}
 

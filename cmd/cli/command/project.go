@@ -10,7 +10,6 @@ import (
 )
 
 type Project struct {
-	local  storage.LocalRepository
 	lister *process.List
 }
 
@@ -30,7 +29,6 @@ func NewProject(conf *configuration.Configuration, cmdArgs []string) (*Project, 
 	lister := process.NewList(local, reqs)
 
 	return &Project{
-		local:  local,
 		lister: lister,
 	}, nil
 }
@@ -45,5 +43,5 @@ func (p *Project) Do() string {
 		return "no tasks here\n"
 	}
 
-	return format.FormatTaskTable(p.local, res.Tasks)
+	return format.FormatTaskTable(res.Tasks)
 }

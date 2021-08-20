@@ -11,7 +11,6 @@ import (
 )
 
 type Folder struct {
-	local  storage.LocalRepository
 	lister *process.List
 }
 
@@ -43,7 +42,6 @@ func NewFolder(conf *configuration.Configuration, cmdArgs []string) (*Folder, er
 	lister := process.NewList(local, reqs)
 
 	return &Folder{
-		local:  local,
 		lister: lister,
 	}, nil
 }
@@ -58,5 +56,5 @@ func (f *Folder) Do() string {
 		return "no tasks here\n"
 	}
 
-	return format.FormatTaskTable(f.local, res.Tasks)
+	return format.FormatTaskTable(res.Tasks)
 }

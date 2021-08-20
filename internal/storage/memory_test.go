@@ -97,17 +97,4 @@ func TestMemory(t *testing.T) {
 		test.OK(t, err)
 		test.Equals(t, localTask2, act)
 	})
-
-	t.Run("localids", func(t *testing.T) {
-		mem := storage.NewMemory()
-		test.OK(t, mem.SetTasks(tasks))
-		act, err := mem.LocalIds()
-		test.OK(t, err)
-		exp := map[string]int{
-			"id-1": 1,
-			"id-2": 2,
-			"id-3": 3,
-		}
-		test.Equals(t, exp, act)
-	})
 }

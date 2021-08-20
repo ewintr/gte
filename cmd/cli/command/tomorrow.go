@@ -10,8 +10,7 @@ import (
 
 // Tomorrow lists all tasks that are due tomorrow
 type Tomorrow struct {
-	local      storage.LocalRepository
-	tomorrower *process.List
+	lister *process.List
 }
 
 func (t *Tomorrow) Cmd() string { return "tomorrow" }
@@ -25,16 +24,15 @@ func NewTomorrow(conf *configuration.Configuration) (*Tomorrow, error) {
 	reqs := process.ListReqs{
 		Due: task.Today.Add(1),
 	}
-	tomorrower := process.NewList(local, reqs)
+	lister := process.NewList(local, reqs)
 
 	return &Tomorrow{
-		local:      local,
-		tomorrower: tomorrower,
+		lister: lister,
 	}, nil
 }
 
 func (t *Tomorrow) Do() string {
-	res, err := t.tomorrower.Process()
+	res, err := t.lister.Process()
 	if err != nil {
 		return format.FormatError(err)
 	}
@@ -43,5 +41,5 @@ func (t *Tomorrow) Do() string {
 		return "nothing to do tomorrow\n"
 	}
 
-	return format.FormatTaskTable(t.local, res.Tasks)
+	return format.FormatTaskTable(res.Tasks)
 }

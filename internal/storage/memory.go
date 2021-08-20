@@ -101,7 +101,3 @@ func (m *Memory) FindByLocalId(localId int) (*task.LocalTask, error) {
 
 	return &task.LocalTask{}, ErrTaskNotFound
 }
-
-func (m *Memory) LocalIds() (map[string]int, error) {
-	return m.localIds, nil
-}

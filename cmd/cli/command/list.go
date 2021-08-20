@@ -17,7 +17,6 @@ var (
 
 // List lists all the tasks in a project or a folder
 type List struct {
-	local  storage.LocalRepository
 	lister *process.List
 }
 
@@ -39,7 +38,6 @@ func NewList(conf *configuration.Configuration, cmdArgs []string) (*List, error)
 	lister := process.NewList(local, reqs)
 
 	return &List{
-		local:  local,
 		lister: lister,
 	}, nil
 }
@@ -50,11 +48,7 @@ func (l *List) Do() string {
 		return format.FormatError(err)
 	}
 
-	if len(res.Tasks) == 0 {
-		return "no tasks there\n"
-	}
-
-	return format.FormatTaskTable(l.local, res.Tasks)
+	return format.FormatTaskTable(res.Tasks)
 }
 
 func parseReqs(kind, item string) (process.ListReqs, error) {

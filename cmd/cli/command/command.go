@@ -2,11 +2,9 @@ package command
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"git.ewintr.nl/gte/internal/configuration"
-	"git.ewintr.nl/gte/internal/storage"
 )
 
 var (
@@ -66,23 +64,4 @@ func parseTaskCommand(id int, tArgs []string, conf *configuration.Configuration)
 	default:
 		return NewShow(id, conf)
 	}
-}
-
-func findId(id int, local storage.LocalRepository) (string, error) {
-	localIds, err := local.LocalIds()
-	if err != nil {
-		return "", fmt.Errorf("%w: %v", ErrCouldNotFindTask, err)
-	}
-	var tId string
-	for remoteId, localId := range localIds {
-		if localId == id {
-			tId = remoteId
-			break
-		}
-	}
-	if tId == "" {
-		return "", ErrCouldNotFindTask
-	}
-
-	return tId, nil
 }

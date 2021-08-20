@@ -31,5 +31,5 @@ func (s *Show) Do() string {
 		return format.FormatError(err)
 	}
 
-	return format.FormatTask(s.id, t)
+	return format.FormatTask(t)
 }

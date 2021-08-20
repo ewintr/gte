@@ -23,12 +23,12 @@ func NewDone(localId int, conf *configuration.Configuration) (*Done, error) {
 
 	disp := storage.NewDispatcher(msend.NewSSLSMTP(conf.SMTP()))
 	fields := process.UpdateFields{"done": "true"}
-	tId, err := findId(localId, local)
+	localTask, err := local.FindByLocalId(localId)
 	if err != nil {
 		return &Done{}, err
 	}
 
-	updater := process.NewUpdate(local, disp, tId, fields)
+	updater := process.NewUpdate(local, disp, localTask.Id, fields)
 
 	return &Done{
 		doner: updater,

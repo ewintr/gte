@@ -19,7 +19,6 @@ type LocalRepository interface {
 	FindAllInProject(project string) ([]*task.LocalTask, error)
 	FindById(id string) (*task.LocalTask, error)
 	FindByLocalId(id int) (*task.LocalTask, error)
-	LocalIds() (map[string]int, error)
 }
 
 func NextLocalId(used []int) int {

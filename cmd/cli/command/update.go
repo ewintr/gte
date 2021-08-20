@@ -34,12 +34,12 @@ func NewUpdate(localId int, conf *configuration.Configuration, cmdArgs []string)
 	if err != nil {
 		return &Update{}, err
 	}
-	tId, err := findId(localId, local)
+	localTask, err := local.FindByLocalId(localId)
 	if err != nil {
 		return &Update{}, err
 	}
 
-	updater := process.NewUpdate(local, disp, tId, fields)
+	updater := process.NewUpdate(local, disp, localTask.Id, fields)
 
 	return &Update{
 		updater: updater,
