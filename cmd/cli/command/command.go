@@ -9,7 +9,10 @@ import (
 
 var (
 	ErrInvalidAmountOfArgs = errors.New("invalid amount of args")
+	ErrInvalidArg          = errors.New("invalid argument")
 	ErrCouldNotFindTask    = errors.New("could not find task")
+	ErrFieldAlreadyUsed    = errors.New("field was already used")
+	ErrUnknownFolder       = errors.New("unknown folder")
 )
 
 type Command interface {
@@ -42,6 +45,8 @@ func Parse(args []string, conf *configuration.Configuration) (Command, error) {
 		return NewFolder(conf, cmdArgs)
 	case "add":
 		return NewAdd(conf, cmdArgs)
+	case "remote":
+		return parseRemote(conf, cmdArgs)
 	default:
 		return NewEmpty()
 	}
@@ -62,5 +67,20 @@ func parseTaskCommand(id int, tArgs []string, conf *configuration.Configuration)
 		return NewUpdate(id, conf, cmdArgs)
 	default:
 		return NewShow(id, conf)
+	}
+}
+
+func parseRemote(conf *configuration.Configuration, cmdArgs []string) (Command, error) {
+	switch {
+	case len(cmdArgs) < 1:
+		cmd, _ := NewEmpty()
+		return cmd, ErrInvalidAmountOfArgs
+	case cmdArgs[0] == "recur":
+		return NewRecur(conf, cmdArgs[1:])
+	case cmdArgs[0] == "inbox":
+		return NewInbox(conf)
+	default:
+		cmd, _ := NewEmpty()
+		return cmd, ErrInvalidArg
 	}
 }

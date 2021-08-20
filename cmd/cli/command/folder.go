@@ -1,7 +1,6 @@
 package command
 
 import (
-	"errors"
 	"strings"
 
 	"git.ewintr.nl/gte/cmd/cli/format"
@@ -9,10 +8,6 @@ import (
 	"git.ewintr.nl/gte/internal/process"
 	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/internal/task"
-)
-
-var (
-	ErrUnknownFolder = errors.New("unknown folder")
 )
 
 type Folder struct {

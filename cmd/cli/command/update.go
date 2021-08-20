@@ -1,7 +1,6 @@
 package command
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -11,10 +10,6 @@ import (
 	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/internal/task"
 	"git.ewintr.nl/gte/pkg/msend"
-)
-
-var (
-	ErrFieldAlreadyUsed = errors.New("field was already used")
 )
 
 type Update struct {
