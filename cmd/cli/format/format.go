@@ -2,6 +2,7 @@ package format
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"git.ewintr.nl/gte/internal/task"
@@ -15,6 +16,8 @@ func FormatTaskTable(tasks []*task.LocalTask) string {
 	if len(tasks) == 0 {
 		return "no tasks to display\n"
 	}
+
+	sort.Sort(task.ByDue(tasks))
 
 	var output string
 	for _, t := range tasks {

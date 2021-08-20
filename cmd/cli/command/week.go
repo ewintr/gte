@@ -8,29 +8,27 @@ import (
 	"git.ewintr.nl/gte/internal/task"
 )
 
-// Tomorrow lists all tasks that are due tomorrow
-type Tomorrow struct {
+type Week struct {
 	lister *process.List
 }
 
-func NewTomorrow(conf *configuration.Configuration) (*Tomorrow, error) {
+func NewWeek(conf *configuration.Configuration) (*Week, error) {
 	local, err := storage.NewSqlite(conf.Sqlite())
 	if err != nil {
-		return &Tomorrow{}, err
+		return &Week{}, err
 	}
 
 	reqs := process.ListReqs{
-		Due: task.Today.Add(1),
+		Due:           task.Today.Add(7),
+		IncludeBefore: true,
 	}
-	lister := process.NewList(local, reqs)
-
-	return &Tomorrow{
-		lister: lister,
+	return &Week{
+		lister: process.NewList(local, reqs),
 	}, nil
 }
 
-func (t *Tomorrow) Do() string {
-	res, err := t.lister.Process()
+func (w *Week) Do() string {
+	res, err := w.lister.Process()
 	if err != nil {
 		return format.FormatError(err)
 	}
