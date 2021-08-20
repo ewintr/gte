@@ -41,7 +41,7 @@ type List struct {
 }
 
 type ListResult struct {
-	Tasks []*task.Task
+	Tasks []*task.LocalTask
 }
 
 func NewList(local storage.LocalRepository, reqs ListReqs) *List {
@@ -61,7 +61,7 @@ func (l *List) Process() (*ListResult, error) {
 		folders = []string{l.reqs.Folder}
 	}
 
-	var potentialTasks []*task.Task
+	var potentialTasks []*task.LocalTask
 	for _, folder := range folders {
 		folderTasks, err := l.local.FindAllInFolder(folder)
 		if err != nil {
@@ -79,7 +79,7 @@ func (l *List) Process() (*ListResult, error) {
 	}
 
 	if l.reqs.Project != "" {
-		var projectTasks []*task.Task
+		var projectTasks []*task.LocalTask
 		for _, pt := range potentialTasks {
 			if pt.Project == l.reqs.Project {
 				projectTasks = append(projectTasks, pt)
@@ -95,7 +95,7 @@ func (l *List) Process() (*ListResult, error) {
 		}, nil
 	}
 
-	dueTasks := []*task.Task{}
+	dueTasks := []*task.LocalTask{}
 	for _, t := range potentialTasks {
 		switch {
 		case t.Due.IsZero():

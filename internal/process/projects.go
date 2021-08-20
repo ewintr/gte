@@ -24,7 +24,7 @@ func NewProjects(local storage.LocalRepository) *Projects {
 }
 
 func (p *Projects) Process() ([]string, error) {
-	allTasks := []*task.Task{}
+	allTasks := []*task.LocalTask{}
 	for _, folder := range []string{task.FOLDER_NEW, task.FOLDER_PLANNED, task.FOLDER_UNPLANNED} {
 		folderTasks, err := p.local.FindAllInFolder(folder)
 		if err != nil {

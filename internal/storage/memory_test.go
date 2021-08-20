@@ -41,6 +41,9 @@ func TestMemory(t *testing.T) {
 		},
 	}
 	tasks := []*task.Task{task1, task2, task3}
+	localTask1 := &task.LocalTask{Task: *task1}
+	localTask2 := &task.LocalTask{Task: *task2}
+	localTask3 := &task.LocalTask{Task: *task3}
 
 	t.Run("sync", func(t *testing.T) {
 		mem := storage.NewMemory()
@@ -60,7 +63,7 @@ func TestMemory(t *testing.T) {
 		test.OK(t, mem.SetTasks(tasks))
 		act, err := mem.FindAllInFolder(folder1)
 		test.OK(t, err)
-		exp := []*task.Task{task1, task2}
+		exp := []*task.LocalTask{localTask1, localTask2}
 		for _, tsk := range exp {
 			tsk.Message = nil
 		}
@@ -72,7 +75,7 @@ func TestMemory(t *testing.T) {
 		test.OK(t, mem.SetTasks(tasks))
 		act, err := mem.FindAllInProject(project1)
 		test.OK(t, err)
-		exp := []*task.Task{task1, task3}
+		exp := []*task.LocalTask{localTask1, localTask3}
 		for _, tsk := range exp {
 			tsk.Message = nil
 		}
@@ -84,7 +87,7 @@ func TestMemory(t *testing.T) {
 		test.OK(t, mem.SetTasks(tasks))
 		act, err := mem.FindById("id-2")
 		test.OK(t, err)
-		test.Equals(t, task2, act)
+		test.Equals(t, localTask2, act)
 	})
 
 	t.Run("findbylocalid", func(t *testing.T) {
@@ -92,7 +95,7 @@ func TestMemory(t *testing.T) {
 		test.OK(t, mem.SetTasks(tasks))
 		act, err := mem.FindByLocalId(2)
 		test.OK(t, err)
-		test.Equals(t, task2, act)
+		test.Equals(t, localTask2, act)
 	})
 
 	t.Run("localids", func(t *testing.T) {

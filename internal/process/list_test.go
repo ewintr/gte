@@ -47,7 +47,9 @@ func TestListProcess(t *testing.T) {
 		Project: "project2",
 	}
 	allTasks := []*task.Task{task1, task2, task3, task4}
-
+	localTask2 := &task.LocalTask{Task: *task2}
+	localTask3 := &task.LocalTask{Task: *task3}
+	localTask4 := &task.LocalTask{Task: *task4}
 	local := storage.NewMemory()
 	test.OK(t, local.SetTasks(allTasks))
 
@@ -60,14 +62,14 @@ func TestListProcess(t *testing.T) {
 	for _, tc := range []struct {
 		name string
 		reqs process.ListReqs
-		exp  []*task.Task
+		exp  []*task.LocalTask
 	}{
 		{
 			name: "due",
 			reqs: process.ListReqs{
 				Due: date2,
 			},
-			exp: []*task.Task{task3},
+			exp: []*task.LocalTask{localTask3},
 		},
 		{
 			name: "due and before",
@@ -75,21 +77,21 @@ func TestListProcess(t *testing.T) {
 				Due:           date2,
 				IncludeBefore: true,
 			},
-			exp: []*task.Task{task2, task3},
+			exp: []*task.LocalTask{localTask2, localTask3},
 		},
 		{
 			name: "folder",
 			reqs: process.ListReqs{
 				Folder: task.FOLDER_PLANNED,
 			},
-			exp: []*task.Task{task2, task3, task4},
+			exp: []*task.LocalTask{localTask2, localTask3, localTask4},
 		},
 		{
 			name: "project",
 			reqs: process.ListReqs{
 				Project: "project2",
 			},
-			exp: []*task.Task{task2, task4},
+			exp: []*task.LocalTask{localTask2, localTask4},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

@@ -15,10 +15,10 @@ var (
 type LocalRepository interface {
 	LatestSync() (time.Time, error)
 	SetTasks(tasks []*task.Task) error
-	FindAllInFolder(folder string) ([]*task.Task, error)
-	FindAllInProject(project string) ([]*task.Task, error)
-	FindById(id string) (*task.Task, error)
-	FindByLocalId(id int) (*task.Task, error)
+	FindAllInFolder(folder string) ([]*task.LocalTask, error)
+	FindAllInProject(project string) ([]*task.LocalTask, error)
+	FindById(id string) (*task.LocalTask, error)
+	FindByLocalId(id int) (*task.LocalTask, error)
 	LocalIds() (map[string]int, error)
 }
 

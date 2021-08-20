@@ -24,6 +24,9 @@ func TestSyncProcess(t *testing.T) {
 		Folder:  task.FOLDER_UNPLANNED,
 	}
 
+	localTask1 := &task.LocalTask{Task: *task1}
+	localTask2 := &task.LocalTask{Task: *task2}
+
 	mstorer, err := mstore.NewMemory(task.KnownFolders)
 	test.OK(t, err)
 	test.OK(t, mstorer.Add(task1.Folder, task1.FormatSubject(), task1.FormatBody()))
@@ -37,8 +40,8 @@ func TestSyncProcess(t *testing.T) {
 	test.Equals(t, 2, actResult.Count)
 	actTasks1, err := local.FindAllInFolder(task.FOLDER_NEW)
 	test.OK(t, err)
-	test.Equals(t, []*task.Task{task1}, actTasks1)
+	test.Equals(t, []*task.LocalTask{localTask1}, actTasks1)
 	actTasks2, err := local.FindAllInFolder(task.FOLDER_UNPLANNED)
 	test.OK(t, err)
-	test.Equals(t, []*task.Task{task2}, actTasks2)
+	test.Equals(t, []*task.LocalTask{localTask2}, actTasks2)
 }

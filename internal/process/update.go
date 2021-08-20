@@ -52,7 +52,7 @@ func (u *Update) Process() error {
 		}
 	}
 
-	if err := u.disp.Dispatch(tsk); err != nil {
+	if err := u.disp.Dispatch(&tsk.Task); err != nil {
 		return fmt.Errorf("%w: %v", ErrUpdateTask, err)
 	}
 

@@ -48,47 +48,47 @@ func (m *Memory) setLocalId(id string) {
 	m.localIds[id] = next
 }
 
-func (m *Memory) FindAllInFolder(folder string) ([]*task.Task, error) {
-	tasks := []*task.Task{}
+func (m *Memory) FindAllInFolder(folder string) ([]*task.LocalTask, error) {
+	tasks := []*task.LocalTask{}
 	for _, t := range m.tasks {
 		if t.Folder == folder {
-			tasks = append(tasks, t)
+			tasks = append(tasks, &task.LocalTask{Task: *t})
 		}
 	}
 
 	return tasks, nil
 }
 
-func (m *Memory) FindAllInProject(project string) ([]*task.Task, error) {
-	tasks := []*task.Task{}
+func (m *Memory) FindAllInProject(project string) ([]*task.LocalTask, error) {
+	tasks := []*task.LocalTask{}
 	for _, t := range m.tasks {
 		if t.Project == project {
-			tasks = append(tasks, t)
+			tasks = append(tasks, &task.LocalTask{Task: *t})
 		}
 	}
 
 	return tasks, nil
 }
 
-func (m *Memory) FindById(id string) (*task.Task, error) {
+func (m *Memory) FindById(id string) (*task.LocalTask, error) {
 	for _, t := range m.tasks {
 		if t.Id == id {
-			return t, nil
+			return &task.LocalTask{Task: *t}, nil
 		}
 
 	}
 
-	return &task.Task{}, ErrTaskNotFound
+	return &task.LocalTask{}, ErrTaskNotFound
 }
 
-func (m *Memory) FindByLocalId(localId int) (*task.Task, error) {
+func (m *Memory) FindByLocalId(localId int) (*task.LocalTask, error) {
 	for _, t := range m.tasks {
 		if m.localIds[t.Id] == localId {
-			return t, nil
+			return &task.LocalTask{Task: *t}, nil
 		}
 	}
 
-	return &task.Task{}, ErrTaskNotFound
+	return &task.LocalTask{}, ErrTaskNotFound
 }
 
 func (m *Memory) LocalIds() (map[string]int, error) {

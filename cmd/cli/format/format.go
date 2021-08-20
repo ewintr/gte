@@ -11,7 +11,7 @@ func FormatError(err error) string {
 	return fmt.Sprintf("could not perform command.\n\nerror: %s\n", err.Error())
 }
 
-func FormatTaskTable(local storage.LocalRepository, tasks []*task.Task) string {
+func FormatTaskTable(local storage.LocalRepository, tasks []*task.LocalTask) string {
 	if len(tasks) == 0 {
 		return "no tasks to display\n"
 	}
@@ -29,7 +29,7 @@ func FormatTaskTable(local storage.LocalRepository, tasks []*task.Task) string {
 	return output
 }
 
-func FormatTask(id int, t *task.Task) string {
+func FormatTask(id int, t *task.LocalTask) string {
 	output := fmt.Sprintf(`folder: %s
 action:  %s
 project: %s
