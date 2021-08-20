@@ -35,15 +35,15 @@ func TestInboxProcess(t *testing.T) {
 					},
 					{
 						Subject: "to recurring",
-						Body:    "recur: 2021-05-14, daily\nid: xxx-xxx\nversion: 1",
+						Body:    "recur: 2021-05-14, daily\nid: xxx-xxx-a\nversion: 1",
 					},
 					{
 						Subject: "to planned",
-						Body:    "due: 2021-05-14\nid: xxx-xxx\nversion: 1",
+						Body:    "due: 2021-05-14\nid: xxx-xxx-b\nversion: 1",
 					},
 					{
 						Subject: "to unplanned",
-						Body:    "id: xxx-xxx\nversion: 1",
+						Body:    "id: xxx-xxx-c\nversion: 1",
 					},
 				},
 			},
@@ -108,6 +108,30 @@ func TestInboxProcess(t *testing.T) {
 			expMsgs: map[string][]*mstore.Message{
 				task.FOLDER_INBOX:     {},
 				task.FOLDER_UNPLANNED: {},
+			},
+		},
+		{
+			name: "deduplicate",
+			messages: map[string][]*mstore.Message{
+				task.FOLDER_INBOX: {
+					{
+						Subject: "version 2",
+						Body:    "id: xxx-xxx\nversion: 1\n",
+					},
+					{
+						Subject: "version 2b",
+						Body:    "id: xxx-xxx\nversion: 1\n",
+					},
+				},
+				task.FOLDER_UNPLANNED: {{
+					Subject: "the task",
+					Body:    "id: xxx-xxx\nversion: 1\n",
+				}},
+			},
+			expCount: 1,
+			expMsgs: map[string][]*mstore.Message{
+				task.FOLDER_INBOX:     {},
+				task.FOLDER_UNPLANNED: {{Subject: "version 2b"}},
 			},
 		},
 	} {

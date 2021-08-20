@@ -44,6 +44,22 @@ func (inbox *Inbox) Process() (*InboxResult, error) {
 		return &InboxResult{}, fmt.Errorf("%w: %v", ErrInboxProcess, err)
 	}
 
+	// deduplicate
+	taskKeys := map[string]*task.Task{}
+	for _, newT := range tasks {
+		existingT, ok := taskKeys[newT.Id]
+		switch {
+		case !ok:
+			taskKeys[newT.Id] = newT
+		case newT.Version >= existingT.Version:
+			taskKeys[newT.Id] = newT
+		}
+	}
+	tasks = []*task.Task{}
+	for _, t := range taskKeys {
+		tasks = append(tasks, t)
+	}
+
 	// split them
 	doneTasks, updateTasks := []*task.Task{}, []*task.Task{}
 	for _, t := range tasks {
