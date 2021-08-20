@@ -41,9 +41,9 @@ func TestMemory(t *testing.T) {
 		},
 	}
 	tasks := []*task.Task{task1, task2, task3}
-	localTask1 := &task.LocalTask{Task: *task1}
-	localTask2 := &task.LocalTask{Task: *task2}
-	localTask3 := &task.LocalTask{Task: *task3}
+	localTask1 := &task.LocalTask{Task: *task1, LocalId: 1}
+	localTask2 := &task.LocalTask{Task: *task2, LocalId: 2}
+	localTask3 := &task.LocalTask{Task: *task3, LocalId: 3}
 
 	t.Run("sync", func(t *testing.T) {
 		mem := storage.NewMemory()

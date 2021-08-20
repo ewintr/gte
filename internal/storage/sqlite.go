@@ -152,8 +152,9 @@ SET latest_sync = ?`,
 
 func (s *Sqlite) FindAllInFolder(folder string) ([]*task.LocalTask, error) {
 	rows, err := s.db.Query(`
-SELECT id, version, folder, action, project, due, recur
+SELECT task.id, local_id.local_id as local_id, version, folder, action, project, due, recur
 FROM task
+LEFT JOIN local_id ON task.id = local_id.id
 WHERE folder = ?`, folder)
 	if err != nil {
 		return []*task.LocalTask{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
@@ -164,8 +165,9 @@ WHERE folder = ?`, folder)
 
 func (s *Sqlite) FindAllInProject(project string) ([]*task.LocalTask, error) {
 	rows, err := s.db.Query(`
-SELECT id, version, folder, action, project, due, recur
+SELECT task.id, local_id.local_id, version, folder, action, project, due, recur
 FROM task
+LEFT JOIN local_id ON task.id = local_id.id
 WHERE project = ?`, project)
 	if err != nil {
 		return []*task.LocalTask{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
@@ -176,13 +178,14 @@ WHERE project = ?`, project)
 
 func (s *Sqlite) FindById(id string) (*task.LocalTask, error) {
 	var folder, action, project, due, recur string
-	var version int
+	var localId, version int
 	row := s.db.QueryRow(`
-SELECT version, folder, action, project, due, recur
+SELECT local_id.local_id, version, folder, action, project, due, recur
 FROM task
-WHERE id = ?
+LEFT JOIN local_id ON task.id = local_id.id
+WHERE task.id = ?
 LIMIT 1`, id)
-	if err := row.Scan(&version, &folder, &action, &project, &due, &recur); err != nil {
+	if err := row.Scan(&localId, &version, &folder, &action, &project, &due, &recur); err != nil {
 		return &task.LocalTask{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
 
@@ -195,7 +198,9 @@ LIMIT 1`, id)
 			Project: project,
 			Due:     task.NewDateFromString(due),
 			Recur:   task.NewRecurrer(recur),
-		}}, nil
+		},
+		LocalId: localId,
+	}, nil
 }
 
 func (s *Sqlite) FindByLocalId(localId int) (*task.LocalTask, error) {
@@ -239,8 +244,8 @@ func tasksFromRows(rows *sql.Rows) ([]*task.LocalTask, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var id, folder, action, project, due, recur string
-		var version int
-		if err := rows.Scan(&id, &version, &folder, &action, &project, &due, &recur); err != nil {
+		var localId, version int
+		if err := rows.Scan(&id, &localId, &version, &folder, &action, &project, &due, &recur); err != nil {
 			return []*task.LocalTask{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 		}
 		tasks = append(tasks, &task.LocalTask{
@@ -252,7 +257,9 @@ func tasksFromRows(rows *sql.Rows) ([]*task.LocalTask, error) {
 				Project: project,
 				Due:     task.NewDateFromString(due),
 				Recur:   task.NewRecurrer(recur),
-			}})
+			},
+			LocalId: localId,
+		})
 	}
 
 	return tasks, nil

@@ -24,8 +24,8 @@ func TestSyncProcess(t *testing.T) {
 		Folder:  task.FOLDER_UNPLANNED,
 	}
 
-	localTask1 := &task.LocalTask{Task: *task1}
-	localTask2 := &task.LocalTask{Task: *task2}
+	localTask1 := &task.LocalTask{Task: *task1, LocalId: 1}
+	localTask2 := &task.LocalTask{Task: *task2, LocalId: 2}
 
 	mstorer, err := mstore.NewMemory(task.KnownFolders)
 	test.OK(t, err)
