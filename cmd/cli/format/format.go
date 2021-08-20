@@ -2,6 +2,7 @@ package format
 
 import (
 	"fmt"
+	"strings"
 
 	"git.ewintr.nl/gte/internal/task"
 )
@@ -17,7 +18,7 @@ func FormatTaskTable(tasks []*task.LocalTask) string {
 
 	var output string
 	for _, t := range tasks {
-		output += fmt.Sprintf("%d\t%s\t%s\n", t.LocalId, t.Due.String(), t.Action)
+		output += fmt.Sprintf("%d\t%s\t%s (%s, %s)\n", t.LocalId, t.Due.String(), t.Action, t.Project, strings.ToLower(t.Folder))
 	}
 
 	return output
