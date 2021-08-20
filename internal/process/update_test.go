@@ -23,13 +23,13 @@ func TestUpdate(t *testing.T) {
 
 	for _, tc := range []struct {
 		name    string
-		updates process.UpdateFields
+		updates task.LocalUpdate
 		exp     *task.Task
 	}{
 		{
 			name: "done",
-			updates: process.UpdateFields{
-				task.FIELD_DONE: "true",
+			updates: task.LocalUpdate{
+				Done: true,
 			},
 			exp: &task.Task{
 				Id:      "id-1",
@@ -42,10 +42,10 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name: "fields",
-			updates: process.UpdateFields{
-				task.FIELD_PROJECT: "project2",
-				task.FIELD_ACTION:  "action2",
-				task.FIELD_DUE:     "2021-08-01",
+			updates: task.LocalUpdate{
+				Project: "project2",
+				Action:  "action2",
+				Due:     task.NewDate(2021, 8, 1),
 			},
 			exp: &task.Task{
 				Id:      "id-1",

@@ -14,20 +14,18 @@ var (
 
 // Update dispatches an updated version of a task
 type Update struct {
-	local   storage.LocalRepository
-	disp    *storage.Dispatcher
-	taskId  string
-	updates UpdateFields
+	local  storage.LocalRepository
+	disp   *storage.Dispatcher
+	taskId string
+	update task.LocalUpdate
 }
 
-type UpdateFields map[string]string
-
-func NewUpdate(local storage.LocalRepository, disp *storage.Dispatcher, taskId string, updates UpdateFields) *Update {
+func NewUpdate(local storage.LocalRepository, disp *storage.Dispatcher, taskId string, update task.LocalUpdate) *Update {
 	return &Update{
-		local:   local,
-		disp:    disp,
-		taskId:  taskId,
-		updates: updates,
+		local:  local,
+		disp:   disp,
+		taskId: taskId,
+		update: update,
 	}
 }
 
@@ -36,21 +34,7 @@ func (u *Update) Process() error {
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrUpdateTask, err)
 	}
-
-	for k, v := range u.updates {
-		switch k {
-		case task.FIELD_DONE:
-			if v == "true" {
-				tsk.Done = true
-			}
-		case task.FIELD_DUE:
-			tsk.Due = task.NewDateFromString(v)
-		case task.FIELD_ACTION:
-			tsk.Action = v
-		case task.FIELD_PROJECT:
-			tsk.Project = v
-		}
-	}
+	tsk.Apply(u.update)
 
 	if err := u.disp.Dispatch(&tsk.Task); err != nil {
 		return fmt.Errorf("%w: %v", ErrUpdateTask, err)

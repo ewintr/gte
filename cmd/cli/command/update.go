@@ -47,8 +47,8 @@ func (u *Update) Do() string {
 	return "message sent\n"
 }
 
-func ParseTaskFieldArgs(args []string) (process.UpdateFields, error) {
-	result := process.UpdateFields{}
+func ParseTaskFieldArgs(args []string) (task.LocalUpdate, error) {
+	lu := task.LocalUpdate{}
 
 	var action []string
 	for _, f := range args {
@@ -56,15 +56,15 @@ func ParseTaskFieldArgs(args []string) (process.UpdateFields, error) {
 		if len(split) == 2 {
 			switch split[0] {
 			case "project":
-				if _, ok := result[task.FIELD_PROJECT]; ok {
-					return process.UpdateFields{}, fmt.Errorf("%w: %s", ErrFieldAlreadyUsed, task.FIELD_PROJECT)
+				if lu.Project != "" {
+					return task.LocalUpdate{}, fmt.Errorf("%w: %s", ErrFieldAlreadyUsed, task.FIELD_PROJECT)
 				}
-				result[task.FIELD_PROJECT] = split[1]
+				lu.Project = split[1]
 			case "due":
-				if _, ok := result[task.FIELD_DUE]; ok {
-					return process.UpdateFields{}, fmt.Errorf("%w: %s", ErrFieldAlreadyUsed, task.FIELD_DUE)
+				if !lu.Due.IsZero() {
+					return task.LocalUpdate{}, fmt.Errorf("%w: %s", ErrFieldAlreadyUsed, task.FIELD_DUE)
 				}
-				result[task.FIELD_DUE] = split[1]
+				lu.Due = task.NewDateFromString(split[1])
 			}
 		} else {
 			action = append(action, f)
@@ -72,8 +72,8 @@ func ParseTaskFieldArgs(args []string) (process.UpdateFields, error) {
 	}
 
 	if len(action) > 0 {
-		result[task.FIELD_ACTION] = strings.Join(action, " ")
+		lu.Action = strings.Join(action, " ")
 	}
 
-	return result, nil
+	return lu, nil
 }

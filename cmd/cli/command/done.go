@@ -5,6 +5,7 @@ import (
 	"git.ewintr.nl/gte/internal/configuration"
 	"git.ewintr.nl/gte/internal/process"
 	"git.ewintr.nl/gte/internal/storage"
+	"git.ewintr.nl/gte/internal/task"
 	"git.ewintr.nl/gte/pkg/msend"
 )
 
@@ -20,13 +21,12 @@ func NewDone(localId int, conf *configuration.Configuration) (*Done, error) {
 	}
 
 	disp := storage.NewDispatcher(msend.NewSSLSMTP(conf.SMTP()))
-	fields := process.UpdateFields{"done": "true"}
 	localTask, err := local.FindByLocalId(localId)
 	if err != nil {
 		return &Done{}, err
 	}
 
-	updater := process.NewUpdate(local, disp, localTask.Id, fields)
+	updater := process.NewUpdate(local, disp, localTask.Id, task.LocalUpdate{Done: true})
 
 	return &Done{
 		doner: updater,
