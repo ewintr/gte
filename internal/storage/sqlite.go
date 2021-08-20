@@ -17,6 +17,7 @@ var sqliteMigrations = []sqliteMigration{
 	`CREATE TABLE system ("latest_sync" INTEGER)`,
 	`INSERT INTO system (latest_sync) VALUES (0)`,
 	`CREATE TABLE local_id ("id" TEXT UNIQUE, "local_id" INTEGER UNIQUE)`,
+	`ALTER TABLE local_id RENAME TO local_task`,
 }
 
 var (
@@ -94,7 +95,7 @@ VALUES
 	}
 
 	// set local_ids
-	rows, err := s.db.Query(`SELECT id, local_id FROM local_id`)
+	rows, err := s.db.Query(`SELECT id, local_id FROM local_task`)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
@@ -110,7 +111,7 @@ VALUES
 		}
 	}
 
-	if _, err := s.db.Exec(`DELETE FROM local_id`); err != nil {
+	if _, err := s.db.Exec(`DELETE FROM local_task`); err != nil {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
 
@@ -131,7 +132,7 @@ VALUES
 
 	for id, localId := range localIdMap {
 		if _, err := s.db.Exec(`
-INSERT INTO local_id
+INSERT INTO local_task
 (id, local_id)
 VALUES
 (?, ?)`, id, localId); err != nil {
@@ -152,9 +153,9 @@ SET latest_sync = ?`,
 
 func (s *Sqlite) FindAllInFolder(folder string) ([]*task.LocalTask, error) {
 	rows, err := s.db.Query(`
-SELECT task.id, local_id.local_id as local_id, version, folder, action, project, due, recur
+SELECT task.id, local_task.local_id, version, folder, action, project, due, recur
 FROM task
-LEFT JOIN local_id ON task.id = local_id.id
+LEFT JOIN local_task ON task.id = local_task.id
 WHERE folder = ?`, folder)
 	if err != nil {
 		return []*task.LocalTask{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
@@ -165,9 +166,9 @@ WHERE folder = ?`, folder)
 
 func (s *Sqlite) FindAllInProject(project string) ([]*task.LocalTask, error) {
 	rows, err := s.db.Query(`
-SELECT task.id, local_id.local_id, version, folder, action, project, due, recur
+SELECT task.id, local_task.local_id, version, folder, action, project, due, recur
 FROM task
-LEFT JOIN local_id ON task.id = local_id.id
+LEFT JOIN local_task ON task.id = local_task.id
 WHERE project = ?`, project)
 	if err != nil {
 		return []*task.LocalTask{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
@@ -180,9 +181,9 @@ func (s *Sqlite) FindById(id string) (*task.LocalTask, error) {
 	var folder, action, project, due, recur string
 	var localId, version int
 	row := s.db.QueryRow(`
-SELECT local_id.local_id, version, folder, action, project, due, recur
+SELECT local_task.local_id, version, folder, action, project, due, recur
 FROM task
-LEFT JOIN local_id ON task.id = local_id.id
+LEFT JOIN local_task ON task.id = local_task.id
 WHERE task.id = ?
 LIMIT 1`, id)
 	if err := row.Scan(&localId, &version, &folder, &action, &project, &due, &recur); err != nil {
@@ -205,7 +206,7 @@ LIMIT 1`, id)
 
 func (s *Sqlite) FindByLocalId(localId int) (*task.LocalTask, error) {
 	var id string
-	row := s.db.QueryRow(`SELECT id FROM local_id WHERE local_id = ?`, localId)
+	row := s.db.QueryRow(`SELECT id FROM local_task WHERE local_id = ?`, localId)
 	if err := row.Scan(&id); err != nil {
 		return &task.LocalTask{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
@@ -219,7 +220,7 @@ func (s *Sqlite) FindByLocalId(localId int) (*task.LocalTask, error) {
 }
 
 func (s *Sqlite) LocalIds() (map[string]int, error) {
-	rows, err := s.db.Query(`SELECT id, local_id FROM local_id`)
+	rows, err := s.db.Query(`SELECT id, local_id FROM local_task`)
 	if err != nil {
 		return map[string]int{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
