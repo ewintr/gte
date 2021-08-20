@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"strings"
 
 	"git.ewintr.nl/gte/cmd/cli/format"
@@ -10,11 +11,13 @@ import (
 	"git.ewintr.nl/gte/internal/task"
 )
 
+var (
+	ErrUnknownFolder = errors.New("unknown folder")
+)
+
 type Folder struct {
 	lister *process.List
 }
-
-func (f *Folder) Cmd() string { return "folder" }
 
 func NewFolder(conf *configuration.Configuration, cmdArgs []string) (*Folder, error) {
 	local, err := storage.NewSqlite(conf.Sqlite())

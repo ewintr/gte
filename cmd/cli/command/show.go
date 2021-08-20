@@ -11,8 +11,6 @@ type Show struct {
 	id    int
 }
 
-func (s *Show) Cmd() string { return "show" }
-
 func NewShow(id int, conf *configuration.Configuration) (*Show, error) {
 	local, err := storage.NewSqlite(conf.Sqlite())
 	if err != nil {

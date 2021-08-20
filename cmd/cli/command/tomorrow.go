@@ -13,8 +13,6 @@ type Tomorrow struct {
 	lister *process.List
 }
 
-func (t *Tomorrow) Cmd() string { return "tomorrow" }
-
 func NewTomorrow(conf *configuration.Configuration) (*Tomorrow, error) {
 	local, err := storage.NewSqlite(conf.Sqlite())
 	if err != nil {

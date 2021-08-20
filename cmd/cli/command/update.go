@@ -21,8 +21,6 @@ type Update struct {
 	updater *process.Update
 }
 
-func (u *Update) Cmd() string { return "update" }
-
 func NewUpdate(localId int, conf *configuration.Configuration, cmdArgs []string) (*Update, error) {
 	local, err := storage.NewSqlite(conf.Sqlite())
 	if err != nil {

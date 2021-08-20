@@ -13,8 +13,6 @@ type Project struct {
 	lister *process.List
 }
 
-func (p *Project) Cmd() string { return "project" }
-
 func NewProject(conf *configuration.Configuration, cmdArgs []string) (*Project, error) {
 	local, err := storage.NewSqlite(conf.Sqlite())
 	if err != nil {

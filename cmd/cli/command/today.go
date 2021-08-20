@@ -13,8 +13,6 @@ type Today struct {
 	lister *process.List
 }
 
-func (t *Today) Cmd() string { return "today" }
-
 func NewToday(conf *configuration.Configuration) (*Today, error) {
 	local, err := storage.NewSqlite(conf.Sqlite())
 	if err != nil {

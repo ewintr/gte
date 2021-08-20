@@ -14,8 +14,6 @@ type Projects struct {
 	projecter *process.Projects
 }
 
-func (p *Projects) Cmd() string { return "projects" }
-
 func NewProjects(conf *configuration.Configuration) (*Projects, error) {
 	local, err := storage.NewSqlite(conf.Sqlite())
 	if err != nil {

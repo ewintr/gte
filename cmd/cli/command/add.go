@@ -16,8 +16,6 @@ type Add struct {
 	action string
 }
 
-func (n *Add) Cmd() string { return "new" }
-
 func NewAdd(conf *configuration.Configuration, cmdArgs []string) (*Add, error) {
 	disp := storage.NewDispatcher(msend.NewSSLSMTP(conf.SMTP()))
 
