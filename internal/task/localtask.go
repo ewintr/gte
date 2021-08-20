@@ -35,6 +35,22 @@ func (lt ByDue) Len() int           { return len(lt) }
 func (lt ByDue) Swap(i, j int)      { lt[i], lt[j] = lt[j], lt[i] }
 func (lt ByDue) Less(i, j int) bool { return lt[j].Due.After(lt[i].Due) }
 
+type ByDefault []*LocalTask
+
+func (lt ByDefault) Len() int      { return len(lt) }
+func (lt ByDefault) Swap(i, j int) { lt[i], lt[j] = lt[j], lt[i] }
+func (lt ByDefault) Less(i, j int) bool {
+	if !lt[j].Due.Equal(lt[i].Due) {
+		return lt[j].Due.After(lt[i].Due)
+	}
+
+	if lt[i].Project != lt[j].Project {
+		return lt[i].Project < lt[j].Project
+	}
+
+	return lt[i].LocalId < lt[j].LocalId
+}
+
 type LocalUpdate struct {
 	Action  string
 	Project string

@@ -16,7 +16,7 @@ func FormatTaskTable(tasks []*task.LocalTask) string {
 		return "no tasks to display\n"
 	}
 
-	sort.Sort(task.ByDue(tasks))
+	sort.Sort(task.ByDefault(tasks))
 
 	var output string
 	for _, t := range tasks {
