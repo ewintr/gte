@@ -6,17 +6,22 @@ import (
 	"git.ewintr.nl/gte/internal/task"
 )
 
+type localData struct {
+	LocalId     int
+	LocalUpdate *task.LocalUpdate
+}
+
 // Memory is an in memory implementation of LocalRepository
 type Memory struct {
 	tasks      []*task.Task
 	latestSync time.Time
-	localIds   map[string]int
+	localData  map[string]localData
 }
 
 func NewMemory() *Memory {
 	return &Memory{
-		tasks:    []*task.Task{},
-		localIds: map[string]int{},
+		tasks:     []*task.Task{},
+		localData: map[string]localData{},
 	}
 }
 
@@ -40,12 +45,14 @@ func (m *Memory) SetTasks(tasks []*task.Task) error {
 
 func (m *Memory) setLocalId(id string) {
 	used := []int{}
-	for _, id := range m.localIds {
-		used = append(used, id)
+	for _, ld := range m.localData {
+		used = append(used, ld.LocalId)
 	}
 
 	next := NextLocalId(used)
-	m.localIds[id] = next
+	m.localData[id] = localData{
+		LocalId: next,
+	}
 }
 
 func (m *Memory) FindAllInFolder(folder string) ([]*task.LocalTask, error) {
@@ -53,8 +60,9 @@ func (m *Memory) FindAllInFolder(folder string) ([]*task.LocalTask, error) {
 	for _, t := range m.tasks {
 		if t.Folder == folder {
 			tasks = append(tasks, &task.LocalTask{
-				Task:    *t,
-				LocalId: m.localIds[t.Id],
+				Task:        *t,
+				LocalId:     m.localData[t.Id].LocalId,
+				LocalUpdate: m.localData[t.Id].LocalUpdate,
 			})
 		}
 	}
@@ -67,8 +75,9 @@ func (m *Memory) FindAllInProject(project string) ([]*task.LocalTask, error) {
 	for _, t := range m.tasks {
 		if t.Project == project {
 			tasks = append(tasks, &task.LocalTask{
-				Task:    *t,
-				LocalId: m.localIds[t.Id],
+				Task:        *t,
+				LocalId:     m.localData[t.Id].LocalId,
+				LocalUpdate: m.localData[t.Id].LocalUpdate,
 			})
 		}
 	}
@@ -80,8 +89,9 @@ func (m *Memory) FindById(id string) (*task.LocalTask, error) {
 	for _, t := range m.tasks {
 		if t.Id == id {
 			return &task.LocalTask{
-				Task:    *t,
-				LocalId: m.localIds[t.Id],
+				Task:        *t,
+				LocalId:     m.localData[t.Id].LocalId,
+				LocalUpdate: m.localData[t.Id].LocalUpdate,
 			}, nil
 		}
 	}
@@ -91,13 +101,28 @@ func (m *Memory) FindById(id string) (*task.LocalTask, error) {
 
 func (m *Memory) FindByLocalId(localId int) (*task.LocalTask, error) {
 	for _, t := range m.tasks {
-		if m.localIds[t.Id] == localId {
+		if m.localData[t.Id].LocalId == localId {
 			return &task.LocalTask{
-				Task:    *t,
-				LocalId: localId,
+				Task:        *t,
+				LocalId:     localId,
+				LocalUpdate: m.localData[t.Id].LocalUpdate,
 			}, nil
 		}
 	}
 
 	return &task.LocalTask{}, ErrTaskNotFound
+}
+
+func (m *Memory) SetLocalUpdate(localId int, localUpdate *task.LocalUpdate) error {
+	t, err := m.FindByLocalId(localId)
+	if err != nil {
+		return err
+	}
+
+	m.localData[t.Id] = localData{
+		LocalId:     localId,
+		LocalUpdate: localUpdate,
+	}
+
+	return nil
 }

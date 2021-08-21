@@ -97,4 +97,21 @@ func TestMemory(t *testing.T) {
 		test.OK(t, err)
 		test.Equals(t, localTask2, act)
 	})
+
+	t.Run("setlocalupdate", func(t *testing.T) {
+		mem := storage.NewMemory()
+		test.OK(t, mem.SetTasks(tasks))
+		expUpdate := &task.LocalUpdate{
+			ForVersion: 1,
+			Action:     "update action",
+			Project:    "update project",
+			Due:        task.NewDate(2021, 8, 21),
+			Recur:      task.NewRecurrer("today, weekly, monday"),
+			Done:       true,
+		}
+		test.OK(t, mem.SetLocalUpdate(2, expUpdate))
+		actTask, err := mem.FindByLocalId(2)
+		test.OK(t, err)
+		test.Equals(t, expUpdate, actTask.LocalUpdate)
+	})
 }

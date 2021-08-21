@@ -34,6 +34,11 @@ func (u *Update) Process() error {
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrUpdateTask, err)
 	}
+	u.update.ForVersion = tsk.Version
+	if err := u.local.SetLocalUpdate(tsk.LocalId, &u.update); err != nil {
+		return fmt.Errorf("%w: %v", ErrUpdateTask, err)
+	}
+
 	tsk.Apply(u.update)
 
 	if err := u.disp.Dispatch(&tsk.Task); err != nil {

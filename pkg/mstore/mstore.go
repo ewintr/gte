@@ -2,6 +2,7 @@ package mstore
 
 import (
 	"errors"
+	"fmt"
 )
 
 var (
@@ -24,13 +25,29 @@ func (m *Message) Valid() bool {
 }
 
 func (m *Message) Equal(n *Message) bool {
+	var prt bool
+	if m.Uid == 156 && n.Uid == 155 {
+		prt = true
+	}
+	if m.Uid == 155 && n.Uid == 156 {
+		prt = true
+	}
 	if m.Folder != n.Folder {
+		if prt {
+			fmt.Println("folder")
+		}
 		return false
 	}
 	if m.Subject != n.Subject {
+		if prt {
+			fmt.Println("subject")
+		}
 		return false
 	}
 	if m.Body != n.Body {
+		if prt {
+			fmt.Println("body")
+		}
 		return false
 	}
 

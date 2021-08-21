@@ -3,12 +3,14 @@ package task
 import (
 	"database/sql/driver"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
 type LocalTask struct {
 	Task
-	LocalId int
+	LocalId     int
+	LocalUpdate *LocalUpdate
 }
 
 func (lt *LocalTask) Apply(lu LocalUpdate) {
@@ -52,22 +54,30 @@ func (lt ByDefault) Less(i, j int) bool {
 }
 
 type LocalUpdate struct {
-	Action  string
-	Project string
-	Due     Date
-	Recur   Recurrer
-	Done    bool
+	ForVersion int
+	Action     string
+	Project    string
+	Due        Date
+	Recur      Recurrer
+	Done       bool
 }
 
 func (lu LocalUpdate) Value() (driver.Value, error) {
-	return fmt.Sprintf(`action: %s
+	var recurStr string
+	if lu.Recur != nil {
+		recurStr = lu.Recur.String()
+	}
+
+	return fmt.Sprintf(`forversion: %d
+action: %s
 project: %s
 recur: %s
 due: %s
 done: %t`,
+		lu.ForVersion,
 		lu.Action,
 		lu.Project,
-		lu.Recur.String(),
+		recurStr,
 		lu.Due.String(),
 		lu.Done), nil
 }
@@ -88,6 +98,9 @@ func (lu *LocalUpdate) Scan(value interface{}) error {
 		k := strings.TrimSpace(kv[0])
 		v := strings.TrimSpace(kv[1])
 		switch k {
+		case "forversion":
+			d, _ := strconv.Atoi(v)
+			newLu.ForVersion = d
 		case "action":
 			newLu.Action = v
 		case "project":

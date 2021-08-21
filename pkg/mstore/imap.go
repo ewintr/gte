@@ -214,12 +214,16 @@ func (im *IMAP) Messages(folder string) ([]*Message, error) {
 	// above sometimes returns the same message twice, but with a different uid.
 	dedupMessages := []*Message{}
 	for _, m := range messages {
+		var isDupe bool
 		for _, dm := range dedupMessages {
 			if m.Equal(dm) {
-				continue
+				isDupe = true
+				break
 			}
 		}
-		dedupMessages = append(dedupMessages, m)
+		if !isDupe {
+			dedupMessages = append(dedupMessages, m)
+		}
 	}
 
 	return dedupMessages, nil
