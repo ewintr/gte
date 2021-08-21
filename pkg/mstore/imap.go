@@ -210,7 +210,19 @@ func (im *IMAP) Messages(folder string) ([]*Message, error) {
 		return []*Message{}, fmt.Errorf("%w: %v", ErrIMAPServerProblem, err)
 	}
 
-	return messages, nil
+	// for reasons yet unknown, with some imap providers (i.e. Fastmail) the code
+	// above sometimes returns the same message twice, but with a different uid.
+	dedupMessages := []*Message{}
+	for _, m := range messages {
+		for _, dm := range dedupMessages {
+			if m.Equal(dm) {
+				continue
+			}
+		}
+		dedupMessages = append(dedupMessages, m)
+	}
+
+	return dedupMessages, nil
 }
 
 func (im *IMAP) Add(folder, subject, body string) error {
