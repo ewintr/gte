@@ -38,6 +38,7 @@ func (u *Update) Process() error {
 	if err := u.local.SetLocalUpdate(tsk); err != nil {
 		return fmt.Errorf("%w: %v", ErrUpdateTask, err)
 	}
+	// create a new version and send it away
 	tsk.ApplyUpdate()
 	if err := u.disp.Dispatch(&tsk.Task); err != nil {
 		return fmt.Errorf("%w: %v", ErrUpdateTask, err)
