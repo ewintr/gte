@@ -109,7 +109,12 @@ func TestMemory(t *testing.T) {
 			Recur:      task.NewRecurrer("today, weekly, monday"),
 			Done:       true,
 		}
-		test.OK(t, mem.SetLocalUpdate(2, expUpdate))
+		lt := &task.LocalTask{
+			Task:        *task2,
+			LocalId:     2,
+			LocalUpdate: expUpdate,
+		}
+		test.OK(t, mem.SetLocalUpdate(lt))
 		actTask, err := mem.FindByLocalId(2)
 		test.OK(t, err)
 		test.Equals(t, expUpdate, actTask.LocalUpdate)

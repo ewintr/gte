@@ -14,24 +14,28 @@ func TestParseTaskFieldArgs(t *testing.T) {
 	for _, tc := range []struct {
 		name      string
 		input     string
-		expUpdate task.LocalUpdate
+		expUpdate *task.LocalUpdate
 		expErr    error
 	}{
 		{
-			name:      "empty",
-			expUpdate: task.LocalUpdate{},
+			name: "empty",
+			expUpdate: &task.LocalUpdate{
+				Fields: []string{},
+			},
 		},
 		{
 			name:  "join action",
 			input: "some things to do",
-			expUpdate: task.LocalUpdate{
+			expUpdate: &task.LocalUpdate{
+				Fields: []string{task.FIELD_ACTION},
 				Action: "some things to do",
 			},
 		},
 		{
 			name:  "all",
 			input: "project:project do stuff due:2021-08-06",
-			expUpdate: task.LocalUpdate{
+			expUpdate: &task.LocalUpdate{
+				Fields:  []string{task.FIELD_PROJECT, task.FIELD_DUE, task.FIELD_ACTION},
 				Action:  "do stuff",
 				Project: "project",
 				Due:     task.NewDate(2021, 8, 6),
@@ -40,14 +44,15 @@ func TestParseTaskFieldArgs(t *testing.T) {
 		{
 			name:  "no action",
 			input: "due:2021-08-06",
-			expUpdate: task.LocalUpdate{
-				Due: task.NewDate(2021, 8, 6),
+			expUpdate: &task.LocalUpdate{
+				Fields: []string{task.FIELD_DUE},
+				Due:    task.NewDate(2021, 8, 6),
 			},
 		},
 		{
 			name:      "two projects",
 			input:     "project:project1 project:project2",
-			expUpdate: task.LocalUpdate{},
+			expUpdate: &task.LocalUpdate{},
 			expErr:    command.ErrFieldAlreadyUsed,
 		},
 	} {

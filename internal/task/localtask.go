@@ -13,22 +13,40 @@ type LocalTask struct {
 	LocalUpdate *LocalUpdate
 }
 
-func (lt *LocalTask) Apply(lu LocalUpdate) {
-	if lu.Action != "" {
-		lt.Action = lu.Action
+func (lt *LocalTask) AddUpdate(update *LocalUpdate) {
+	if lt.LocalUpdate == nil {
+		lt.LocalUpdate = &LocalUpdate{}
 	}
-	if lu.Project != "" {
-		lt.Project = lu.Project
+
+	lt.LocalUpdate.Add(update)
+}
+
+func (lt *LocalTask) ApplyUpdate() {
+	if lt.LocalUpdate == nil {
+		return
 	}
-	if lu.Recur != nil {
-		lt.Recur = lu.Recur
+	u := lt.LocalUpdate
+	if u.ForVersion == 0 || u.ForVersion != lt.Version {
+		lt.LocalUpdate = &LocalUpdate{}
+		return
 	}
-	if !lu.Due.IsZero() {
-		lt.Due = lu.Due
+
+	for _, field := range u.Fields {
+		switch field {
+		case FIELD_ACTION:
+			lt.Action = u.Action
+		case FIELD_PROJECT:
+			lt.Project = u.Project
+		case FIELD_DUE:
+			lt.Due = u.Due
+		case FIELD_RECUR:
+			lt.Recur = u.Recur
+		case FIELD_DONE:
+			lt.Done = u.Done
+		}
 	}
-	if lu.Done {
-		lt.Done = lu.Done
-	}
+
+	lt.LocalUpdate = &LocalUpdate{}
 }
 
 type ByDue []*LocalTask
@@ -55,11 +73,45 @@ func (lt ByDefault) Less(i, j int) bool {
 
 type LocalUpdate struct {
 	ForVersion int
+	Fields     []string
 	Action     string
 	Project    string
 	Due        Date
 	Recur      Recurrer
 	Done       bool
+}
+
+func (lu *LocalUpdate) Add(newUpdate *LocalUpdate) {
+	if lu.ForVersion > newUpdate.ForVersion {
+		return
+	}
+	lu.ForVersion = newUpdate.ForVersion
+
+	for _, nf := range newUpdate.Fields {
+		switch nf {
+		case FIELD_ACTION:
+			lu.Action = newUpdate.Action
+		case FIELD_PROJECT:
+			lu.Project = newUpdate.Project
+		case FIELD_DUE:
+			lu.Due = newUpdate.Due
+		case FIELD_RECUR:
+			lu.Recur = newUpdate.Recur
+		case FIELD_DONE:
+			lu.Done = newUpdate.Done
+		}
+
+		add := true
+		for _, of := range lu.Fields {
+			if nf == of {
+				add = false
+				break
+			}
+		}
+		if add {
+			lu.Fields = append(lu.Fields, nf)
+		}
+	}
 }
 
 func (lu LocalUpdate) Value() (driver.Value, error) {

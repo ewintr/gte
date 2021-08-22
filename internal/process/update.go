@@ -17,10 +17,10 @@ type Update struct {
 	local  storage.LocalRepository
 	disp   *storage.Dispatcher
 	taskId string
-	update task.LocalUpdate
+	update *task.LocalUpdate
 }
 
-func NewUpdate(local storage.LocalRepository, disp *storage.Dispatcher, taskId string, update task.LocalUpdate) *Update {
+func NewUpdate(local storage.LocalRepository, disp *storage.Dispatcher, taskId string, update *task.LocalUpdate) *Update {
 	return &Update{
 		local:  local,
 		disp:   disp,
@@ -34,13 +34,11 @@ func (u *Update) Process() error {
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrUpdateTask, err)
 	}
-	u.update.ForVersion = tsk.Version
-	if err := u.local.SetLocalUpdate(tsk.LocalId, &u.update); err != nil {
+	tsk.AddUpdate(u.update)
+	if err := u.local.SetLocalUpdate(tsk); err != nil {
 		return fmt.Errorf("%w: %v", ErrUpdateTask, err)
 	}
-
-	tsk.Apply(u.update)
-
+	tsk.ApplyUpdate()
 	if err := u.disp.Dispatch(&tsk.Task); err != nil {
 		return fmt.Errorf("%w: %v", ErrUpdateTask, err)
 	}

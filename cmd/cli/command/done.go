@@ -26,7 +26,12 @@ func NewDone(localId int, conf *configuration.Configuration) (*Done, error) {
 		return &Done{}, err
 	}
 
-	updater := process.NewUpdate(local, disp, localTask.Id, task.LocalUpdate{Done: true})
+	update := &task.LocalUpdate{
+		ForVersion: localTask.Version,
+		Fields:     []string{task.FIELD_DONE},
+		Done:       true,
+	}
+	updater := process.NewUpdate(local, disp, localTask.Id, update)
 
 	return &Done{
 		doner: updater,

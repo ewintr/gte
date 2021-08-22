@@ -23,7 +23,7 @@ func NewUpdate(localId int, conf *configuration.Configuration, cmdArgs []string)
 	}
 
 	disp := storage.NewDispatcher(msend.NewSSLSMTP(conf.SMTP()))
-	fields, err := ParseTaskFieldArgs(cmdArgs)
+	update, err := ParseTaskFieldArgs(cmdArgs)
 	if err != nil {
 		return &Update{}, err
 	}
@@ -31,8 +31,9 @@ func NewUpdate(localId int, conf *configuration.Configuration, cmdArgs []string)
 	if err != nil {
 		return &Update{}, err
 	}
+	update.ForVersion = localTask.Version
 
-	updater := process.NewUpdate(local, disp, localTask.Id, fields)
+	updater := process.NewUpdate(local, disp, localTask.Id, update)
 
 	return &Update{
 		updater: updater,
@@ -47,33 +48,40 @@ func (u *Update) Do() string {
 	return "message sent\n"
 }
 
-func ParseTaskFieldArgs(args []string) (task.LocalUpdate, error) {
-	lu := task.LocalUpdate{}
+func ParseTaskFieldArgs(args []string) (*task.LocalUpdate, error) {
+	lu := &task.LocalUpdate{}
 
-	var action []string
+	action, fields := []string{}, []string{}
 	for _, f := range args {
 		split := strings.SplitN(f, ":", 2)
 		if len(split) == 2 {
 			switch split[0] {
 			case "project":
 				if lu.Project != "" {
-					return task.LocalUpdate{}, fmt.Errorf("%w: %s", ErrFieldAlreadyUsed, task.FIELD_PROJECT)
+					return &task.LocalUpdate{}, fmt.Errorf("%w: %s", ErrFieldAlreadyUsed, task.FIELD_PROJECT)
 				}
 				lu.Project = split[1]
+				fields = append(fields, task.FIELD_PROJECT)
 			case "due":
 				if !lu.Due.IsZero() {
-					return task.LocalUpdate{}, fmt.Errorf("%w: %s", ErrFieldAlreadyUsed, task.FIELD_DUE)
+					return &task.LocalUpdate{}, fmt.Errorf("%w: %s", ErrFieldAlreadyUsed, task.FIELD_DUE)
 				}
 				lu.Due = task.NewDateFromString(split[1])
+				fields = append(fields, task.FIELD_DUE)
 			}
 		} else {
-			action = append(action, f)
+			if len(f) > 0 {
+				action = append(action, f)
+			}
 		}
 	}
 
 	if len(action) > 0 {
 		lu.Action = strings.Join(action, " ")
+		fields = append(fields, task.FIELD_ACTION)
 	}
+
+	lu.Fields = fields
 
 	return lu, nil
 }

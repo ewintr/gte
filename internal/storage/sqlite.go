@@ -222,11 +222,11 @@ func (s *Sqlite) FindByLocalId(localId int) (*task.LocalTask, error) {
 	return t, nil
 }
 
-func (s *Sqlite) SetLocalUpdate(localId int, localUpdate *task.LocalUpdate) error {
+func (s *Sqlite) SetLocalUpdate(tsk *task.LocalTask) error {
 	if _, err := s.db.Exec(`
 UPDATE local_task
 SET local_update = ?
-WHERE local_id = ?`, localUpdate, localId); err != nil {
+WHERE local_id = ?`, tsk.LocalUpdate, tsk.LocalId); err != nil {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
 

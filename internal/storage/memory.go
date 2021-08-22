@@ -113,15 +113,10 @@ func (m *Memory) FindByLocalId(localId int) (*task.LocalTask, error) {
 	return &task.LocalTask{}, ErrTaskNotFound
 }
 
-func (m *Memory) SetLocalUpdate(localId int, localUpdate *task.LocalUpdate) error {
-	t, err := m.FindByLocalId(localId)
-	if err != nil {
-		return err
-	}
-
-	m.localData[t.Id] = localData{
-		LocalId:     localId,
-		LocalUpdate: localUpdate,
+func (m *Memory) SetLocalUpdate(tsk *task.LocalTask) error {
+	m.localData[tsk.Id] = localData{
+		LocalId:     tsk.LocalId,
+		LocalUpdate: tsk.LocalUpdate,
 	}
 
 	return nil

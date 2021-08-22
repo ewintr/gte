@@ -13,6 +13,7 @@ import (
 func TestUpdate(t *testing.T) {
 	task1 := &task.Task{
 		Id:      "id-1",
+		Version: 2,
 		Project: "project1",
 		Action:  "action1",
 		Due:     task.NewDate(2021, 7, 29),
@@ -23,16 +24,19 @@ func TestUpdate(t *testing.T) {
 
 	for _, tc := range []struct {
 		name    string
-		updates task.LocalUpdate
+		updates *task.LocalUpdate
 		exp     *task.Task
 	}{
 		{
 			name: "done",
-			updates: task.LocalUpdate{
-				Done: true,
+			updates: &task.LocalUpdate{
+				ForVersion: 2,
+				Fields:     []string{task.FIELD_DONE},
+				Done:       true,
 			},
 			exp: &task.Task{
 				Id:      "id-1",
+				Version: 2,
 				Project: "project1",
 				Action:  "action1",
 				Due:     task.NewDate(2021, 7, 29),
@@ -42,13 +46,16 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name: "fields",
-			updates: task.LocalUpdate{
-				Project: "project2",
-				Action:  "action2",
-				Due:     task.NewDate(2021, 8, 1),
+			updates: &task.LocalUpdate{
+				ForVersion: 2,
+				Fields:     []string{task.FIELD_ACTION, task.FIELD_PROJECT, task.FIELD_DUE},
+				Project:    "project2",
+				Action:     "action2",
+				Due:        task.NewDate(2021, 8, 1),
 			},
 			exp: &task.Task{
 				Id:      "id-1",
+				Version: 2,
 				Project: "project2",
 				Action:  "action2",
 				Due:     task.NewDate(2021, 8, 1),
