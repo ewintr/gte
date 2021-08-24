@@ -12,6 +12,9 @@ type localData struct {
 }
 
 // Memory is an in memory implementation of LocalRepository
+//
+// It is meant for testing and does not make an attempt to
+// keep local state between consecutive calls to SetTasks()
 type Memory struct {
 	tasks      []*task.Task
 	latestSync time.Time

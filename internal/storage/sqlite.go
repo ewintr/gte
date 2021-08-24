@@ -76,7 +76,13 @@ func (s *Sqlite) SetTasks(tasks []*task.Task) error {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
 
-	localIdMap := map[string]int{}
+	type localTaskInfo struct {
+		TaskId      string
+		TaskVersion int
+		LocalId     int
+		LocalUpdate task.LocalUpdate
+	}
+	localIdMap := map[string]localTaskInfo{}
 	for _, t := range tasks {
 		var recurStr string
 		if t.Recur != nil {
@@ -92,11 +98,17 @@ VALUES
 			return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 		}
 
-		localIdMap[t.Id] = 0
+		localIdMap[t.Id] = localTaskInfo{
+			TaskId:      t.Id,
+			TaskVersion: t.Version,
+			LocalId:     0,
+			LocalUpdate: task.LocalUpdate{},
+		}
 	}
 
-	// set local_ids
-	rows, err := s.db.Query(`SELECT id, local_id FROM local_task`)
+	// set local_ids and local_updates:
+	// 1 - find existing
+	rows, err := s.db.Query(`SELECT id, local_id, local_update FROM local_task`)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
@@ -104,39 +116,55 @@ VALUES
 	for rows.Next() {
 		var id string
 		var localId int
-		if err := rows.Scan(&id, &localId); err != nil {
+		var localUpdate task.LocalUpdate
+		if err := rows.Scan(&id, &localId, &localUpdate); err != nil {
 			return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 		}
-		if _, ok := localIdMap[id]; ok {
-			localIdMap[id] = localId
+		if oldInfo, ok := localIdMap[id]; ok {
+			newInfo := localTaskInfo{
+				TaskId:      oldInfo.TaskId,
+				TaskVersion: oldInfo.TaskVersion,
+				LocalId:     localId,
+				LocalUpdate: localUpdate,
+			}
+			localIdMap[id] = newInfo
 		}
 	}
 
+	// 2 - remove old values
 	if _, err := s.db.Exec(`DELETE FROM local_task`); err != nil {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
 
+	// 3 - figure out new values
 	var used []int
-	for _, localId := range localIdMap {
-		if localId != 0 {
-			used = append(used, localId)
+	for _, info := range localIdMap {
+		if info.LocalId != 0 {
+			used = append(used, info.LocalId)
 		}
 	}
-
-	for id, localId := range localIdMap {
-		if localId == 0 {
+	for id, info := range localIdMap {
+		newInfo := info
+		// find new local_id when needed
+		if info.LocalId == 0 {
 			newLocalId := NextLocalId(used)
-			localIdMap[id] = newLocalId
 			used = append(used, newLocalId)
+			newInfo.LocalId = newLocalId
 		}
+		// remove local_update when outdated
+		if info.LocalUpdate.ForVersion < info.TaskVersion {
+			newInfo.LocalUpdate = task.LocalUpdate{}
+		}
+		localIdMap[id] = newInfo
 	}
 
-	for id, localId := range localIdMap {
+	// 4 - store new values
+	for id, info := range localIdMap {
 		if _, err := s.db.Exec(`
 INSERT INTO local_task
-(id, local_id)
+(id, local_id, local_update)
 VALUES
-(?, ?)`, id, localId); err != nil {
+(?, ?, ?)`, id, info.LocalId, info.LocalUpdate); err != nil {
 			return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 		}
 	}

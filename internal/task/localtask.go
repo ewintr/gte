@@ -13,6 +13,10 @@ type LocalTask struct {
 	LocalUpdate *LocalUpdate
 }
 
+func (lt *LocalTask) HasUpdate() bool {
+	return lt.LocalUpdate.ForVersion != 0
+}
+
 func (lt *LocalTask) AddUpdate(update *LocalUpdate) {
 	if lt.LocalUpdate == nil {
 		lt.LocalUpdate = &LocalUpdate{}
