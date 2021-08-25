@@ -1,10 +1,12 @@
 package storage_test
 
 import (
+	"sort"
 	"testing"
 
 	"git.ewintr.nl/go-kit/test"
 	"git.ewintr.nl/gte/internal/storage"
+	"git.ewintr.nl/gte/internal/task"
 )
 
 func TestNextLocalId(t *testing.T) {
@@ -69,6 +71,108 @@ func TestNextLocalId(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			test.Equals(t, tc.exp, storage.NextLocalId(tc.used))
+		})
+	}
+}
+
+func TestMergeNewTaskSet(t *testing.T) {
+	task1 := &task.Task{Id: "id-1", Version: 1, Action: "action-1"}
+	task1v2 := &task.Task{Id: "id-1", Version: 2, Action: "action-1v2"}
+	task2 := &task.Task{Id: "id-2", Version: 2, Action: "action-2"}
+	emptyUpdate := &task.LocalUpdate{}
+
+	t.Run("local ids are added", func(t *testing.T) {
+		act1 := storage.MergeNewTaskSet([]*task.LocalTask{}, []*task.Task{task1})
+		test.Assert(t, len(act1) == 1, "length was not 1")
+		test.Equals(t, 1, act1[0].LocalId)
+
+		act2 := storage.MergeNewTaskSet(act1, []*task.Task{task1, task2})
+		var actIds []int
+		for _, t := range act2 {
+			actIds = append(actIds, t.LocalId)
+		}
+		sort.Ints(actIds)
+		test.Equals(t, []int{1, 2}, actIds)
+	})
+
+	for _, tc := range []struct {
+		name     string
+		oldTasks []*task.LocalTask
+		newTasks []*task.Task
+		exp      []*task.LocalTask
+	}{
+		{
+			name:     "add tasks and find local ids",
+			oldTasks: []*task.LocalTask{},
+			newTasks: []*task.Task{task1, task2},
+			exp: []*task.LocalTask{
+				{Task: *task1, LocalUpdate: emptyUpdate},
+				{Task: *task2, LocalUpdate: emptyUpdate},
+			},
+		},
+		{
+			name: "update existing task",
+			oldTasks: []*task.LocalTask{
+				{Task: *task1, LocalUpdate: emptyUpdate},
+				{Task: *task2, LocalId: 2, LocalUpdate: emptyUpdate},
+			},
+			newTasks: []*task.Task{task1v2, task2},
+			exp: []*task.LocalTask{
+				{Task: *task1v2, LocalUpdate: emptyUpdate},
+				{Task: *task2, LocalUpdate: emptyUpdate},
+			},
+		},
+		{
+			name: "remove deleted task",
+			oldTasks: []*task.LocalTask{
+				{Task: *task1, LocalUpdate: emptyUpdate},
+				{Task: *task2, LocalUpdate: emptyUpdate},
+			},
+			newTasks: []*task.Task{task2},
+			exp: []*task.LocalTask{
+				{Task: *task2, LocalUpdate: emptyUpdate},
+			},
+		},
+		{
+			name: "remove only outdated updates",
+			oldTasks: []*task.LocalTask{
+				{
+					Task: *task1,
+					LocalUpdate: &task.LocalUpdate{
+						ForVersion: 1,
+						Project:    "project-v2",
+					},
+				},
+				{
+					Task: *task2,
+					LocalUpdate: &task.LocalUpdate{
+						ForVersion: 2,
+						Project:    "project-v3",
+					},
+				},
+			},
+			newTasks: []*task.Task{task1v2, task2},
+			exp: []*task.LocalTask{
+				{Task: *task1v2, LocalUpdate: emptyUpdate},
+				{
+					Task: *task2,
+					LocalUpdate: &task.LocalUpdate{
+						ForVersion: 2,
+						Project:    "project-v3",
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sExp := task.ById(tc.exp)
+			sAct := task.ById(storage.MergeNewTaskSet(tc.oldTasks, tc.newTasks))
+			for i := range sAct {
+				sAct[i].LocalId = 0
+			}
+			sort.Sort(sExp)
+			sort.Sort(sAct)
+			test.Equals(t, sExp, sAct)
 		})
 	}
 }

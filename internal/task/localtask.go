@@ -53,6 +53,12 @@ func (lt *LocalTask) ApplyUpdate() {
 	lt.LocalUpdate = &LocalUpdate{}
 }
 
+type ById []*LocalTask
+
+func (lt ById) Len() int           { return len(lt) }
+func (lt ById) Swap(i, j int)      { lt[i], lt[j] = lt[j], lt[i] }
+func (lt ById) Less(i, j int) bool { return lt[i].Id < lt[j].Id }
+
 type ByDue []*LocalTask
 
 func (lt ByDue) Len() int           { return len(lt) }

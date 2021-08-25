@@ -6,7 +6,6 @@ import (
 	"sort"
 
 	"git.ewintr.nl/gte/internal/storage"
-	"git.ewintr.nl/gte/internal/task"
 )
 
 var (
@@ -24,13 +23,9 @@ func NewProjects(local storage.LocalRepository) *Projects {
 }
 
 func (p *Projects) Process() ([]string, error) {
-	allTasks := []*task.LocalTask{}
-	for _, folder := range []string{task.FOLDER_NEW, task.FOLDER_PLANNED, task.FOLDER_UNPLANNED} {
-		folderTasks, err := p.local.FindAllInFolder(folder)
-		if err != nil {
-			return []string{}, fmt.Errorf("%w: %v", ErrCouldNotFetchProjects, err)
-		}
-		allTasks = append(allTasks, folderTasks...)
+	allTasks, err := p.local.FindAll()
+	if err != nil {
+		return []string{}, fmt.Errorf("%w: %v", ErrCouldNotFetchProjects, err)
 	}
 
 	knownMap := map[string]bool{}

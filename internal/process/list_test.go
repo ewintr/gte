@@ -2,6 +2,7 @@ package process_test
 
 import (
 	"errors"
+	"sort"
 	"testing"
 
 	"git.ewintr.nl/go-kit/test"
@@ -47,9 +48,9 @@ func TestListProcess(t *testing.T) {
 		Project: "project2",
 	}
 	allTasks := []*task.Task{task1, task2, task3, task4}
-	localTask2 := &task.LocalTask{Task: *task2, LocalId: 2}
-	localTask3 := &task.LocalTask{Task: *task3, LocalId: 3}
-	localTask4 := &task.LocalTask{Task: *task4, LocalId: 4}
+	localTask2 := &task.LocalTask{Task: *task2, LocalUpdate: &task.LocalUpdate{}}
+	localTask3 := &task.LocalTask{Task: *task3, LocalUpdate: &task.LocalUpdate{}}
+	localTask4 := &task.LocalTask{Task: *task4, LocalUpdate: &task.LocalUpdate{}}
 	local := storage.NewMemory()
 	test.OK(t, local.SetTasks(allTasks))
 
@@ -96,10 +97,18 @@ func TestListProcess(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			list := process.NewList(local, tc.reqs)
-
-			act, err := list.Process()
+			actRes, err := list.Process()
 			test.OK(t, err)
-			test.Equals(t, tc.exp, act.Tasks)
+			act := actRes.Tasks
+			for _, a := range act {
+				a.LocalId = 0
+			}
+			sAct := task.ById(act)
+			sExp := task.ById(tc.exp)
+			sort.Sort(sAct)
+			sort.Sort(sExp)
+
+			test.Equals(t, sExp, sAct)
 		})
 	}
 }

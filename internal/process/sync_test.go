@@ -1,6 +1,7 @@
 package process_test
 
 import (
+	"sort"
 	"testing"
 
 	"git.ewintr.nl/go-kit/test"
@@ -24,8 +25,8 @@ func TestSyncProcess(t *testing.T) {
 		Folder:  task.FOLDER_UNPLANNED,
 	}
 
-	localTask1 := &task.LocalTask{Task: *task1, LocalId: 1}
-	localTask2 := &task.LocalTask{Task: *task2, LocalId: 2}
+	localTask1 := &task.LocalTask{Task: *task1, LocalUpdate: &task.LocalUpdate{}}
+	localTask2 := &task.LocalTask{Task: *task2, LocalUpdate: &task.LocalUpdate{}}
 
 	mstorer, err := mstore.NewMemory(task.KnownFolders)
 	test.OK(t, err)
@@ -38,10 +39,16 @@ func TestSyncProcess(t *testing.T) {
 	actResult, err := syncer.Process()
 	test.OK(t, err)
 	test.Equals(t, 2, actResult.Count)
-	actTasks1, err := local.FindAllInFolder(task.FOLDER_NEW)
+	actTasks, err := local.FindAll()
 	test.OK(t, err)
-	test.Equals(t, []*task.LocalTask{localTask1}, actTasks1)
-	actTasks2, err := local.FindAllInFolder(task.FOLDER_UNPLANNED)
-	test.OK(t, err)
-	test.Equals(t, []*task.LocalTask{localTask2}, actTasks2)
+	for _, a := range actTasks {
+		a.LocalId = 0
+		a.Message = nil
+	}
+	exp := task.ById([]*task.LocalTask{localTask1, localTask2})
+	sExp := task.ById(exp)
+	sAct := task.ById(actTasks)
+	sort.Sort(sAct)
+	sort.Sort(sExp)
+	test.Equals(t, sExp, sAct)
 }

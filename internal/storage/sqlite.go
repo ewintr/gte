@@ -19,6 +19,11 @@ var sqliteMigrations = []sqliteMigration{
 	`CREATE TABLE local_id ("id" TEXT UNIQUE, "local_id" INTEGER UNIQUE)`,
 	`ALTER TABLE local_id RENAME TO local_task`,
 	`ALTER TABLE local_task ADD COLUMN local_update TEXT`,
+	`ALTER TABLE task ADD COLUMN local_id INTEGER`,
+	`ALTER TABLE task ADD COLUMN local_update TEXT`,
+	`UPDATE task SET local_id = (SELECT local_id FROM local_task WHERE local_task.id=task.id)`,
+	`UPDATE task SET local_update = (SELECT local_update FROM local_task WHERE local_task.id=task.id)`,
+	`DROP TABLE local_task`,
 }
 
 var (
@@ -71,134 +76,40 @@ func (s *Sqlite) LatestSync() (time.Time, error) {
 }
 
 func (s *Sqlite) SetTasks(tasks []*task.Task) error {
-	// set tasks
+	oldTasks, err := s.FindAll()
+	if err != nil {
+		return err
+	}
+	newTasks := MergeNewTaskSet(oldTasks, tasks)
+
 	if _, err := s.db.Exec(`DELETE FROM task`); err != nil {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
-
-	type localTaskInfo struct {
-		TaskId      string
-		TaskVersion int
-		LocalId     int
-		LocalUpdate task.LocalUpdate
-	}
-	localIdMap := map[string]localTaskInfo{}
-	for _, t := range tasks {
+	for _, t := range newTasks {
 		var recurStr string
 		if t.Recur != nil {
 			recurStr = t.Recur.String()
 		}
+
 		_, err := s.db.Exec(`
 INSERT INTO task
-(id, version, folder, action, project, due, recur)
+(id, local_id, version, folder, action, project, due, recur, local_update)
 VALUES
-(?, ?, ?, ?, ?, ?, ?)`,
-			t.Id, t.Version, t.Folder, t.Action, t.Project, t.Due.String(), recurStr)
+(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			t.Id, t.LocalId, t.Version, t.Folder, t.Action, t.Project, t.Due.String(), recurStr, t.LocalUpdate)
+
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 		}
-
-		localIdMap[t.Id] = localTaskInfo{
-			TaskId:      t.Id,
-			TaskVersion: t.Version,
-			LocalId:     0,
-			LocalUpdate: task.LocalUpdate{},
-		}
-	}
-
-	// set local_ids and local_updates:
-	// 1 - find existing
-	rows, err := s.db.Query(`SELECT id, local_id, local_update FROM local_task`)
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var id string
-		var localId int
-		var localUpdate task.LocalUpdate
-		if err := rows.Scan(&id, &localId, &localUpdate); err != nil {
-			return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
-		}
-		if oldInfo, ok := localIdMap[id]; ok {
-			newInfo := localTaskInfo{
-				TaskId:      oldInfo.TaskId,
-				TaskVersion: oldInfo.TaskVersion,
-				LocalId:     localId,
-				LocalUpdate: localUpdate,
-			}
-			localIdMap[id] = newInfo
-		}
-	}
-
-	// 2 - remove old values
-	if _, err := s.db.Exec(`DELETE FROM local_task`); err != nil {
-		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
-	}
-
-	// 3 - figure out new values
-	var used []int
-	for _, info := range localIdMap {
-		if info.LocalId != 0 {
-			used = append(used, info.LocalId)
-		}
-	}
-	for id, info := range localIdMap {
-		newInfo := info
-		// find new local_id when needed
-		if info.LocalId == 0 {
-			newLocalId := NextLocalId(used)
-			used = append(used, newLocalId)
-			newInfo.LocalId = newLocalId
-		}
-		// remove local_update when outdated
-		if info.LocalUpdate.ForVersion < info.TaskVersion {
-			newInfo.LocalUpdate = task.LocalUpdate{}
-		}
-		localIdMap[id] = newInfo
-	}
-
-	// 4 - store new values
-	for id, info := range localIdMap {
-		if _, err := s.db.Exec(`
-INSERT INTO local_task
-(id, local_id, local_update)
-VALUES
-(?, ?, ?)`, id, info.LocalId, info.LocalUpdate); err != nil {
-			return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
-		}
-	}
-
-	// update system
-	if _, err := s.db.Exec(`
-UPDATE system
-SET latest_sync = ?`,
-		time.Now().Unix()); err != nil {
-		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
 
 	return nil
 }
 
-func (s *Sqlite) FindAllInFolder(folder string) ([]*task.LocalTask, error) {
+func (s *Sqlite) FindAll() ([]*task.LocalTask, error) {
 	rows, err := s.db.Query(`
-SELECT task.id, local_task.local_id, version, folder, action, project, due, recur, local_task.local_update
-FROM task
-LEFT JOIN local_task ON task.id = local_task.id
-WHERE folder = ?`, folder)
-	if err != nil {
-		return []*task.LocalTask{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
-	}
-
-	return tasksFromRows(rows)
-}
-
-func (s *Sqlite) FindAllInProject(project string) ([]*task.LocalTask, error) {
-	rows, err := s.db.Query(`
-SELECT task.id, local_task.local_id, version, folder, action, project, due, recur, local_task.local_update
-FROM task
-LEFT JOIN local_task ON task.id = local_task.id
-WHERE project = ?`, project)
+SELECT id, local_id, version, folder, action, project, due, recur, local_update
+FROM task`)
 	if err != nil {
 		return []*task.LocalTask{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
@@ -211,9 +122,8 @@ func (s *Sqlite) FindById(id string) (*task.LocalTask, error) {
 	var localId, version int
 	var localUpdate task.LocalUpdate
 	row := s.db.QueryRow(`
-SELECT local_task.local_id, version, folder, action, project, due, recur, local_task.local_update
+SELECT local_id, version, folder, action, project, due, recur, local_update
 FROM task
-LEFT JOIN local_task ON task.id = local_task.id
 WHERE task.id = ?
 LIMIT 1`, id)
 	if err := row.Scan(&localId, &version, &folder, &action, &project, &due, &recur, &localUpdate); err != nil {
@@ -237,7 +147,7 @@ LIMIT 1`, id)
 
 func (s *Sqlite) FindByLocalId(localId int) (*task.LocalTask, error) {
 	var id string
-	row := s.db.QueryRow(`SELECT id FROM local_task WHERE local_id = ?`, localId)
+	row := s.db.QueryRow(`SELECT id FROM task WHERE local_id = ?`, localId)
 	if err := row.Scan(&id); err != nil {
 		return &task.LocalTask{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
@@ -252,7 +162,7 @@ func (s *Sqlite) FindByLocalId(localId int) (*task.LocalTask, error) {
 
 func (s *Sqlite) SetLocalUpdate(tsk *task.LocalTask) error {
 	if _, err := s.db.Exec(`
-UPDATE local_task
+UPDATE task
 SET local_update = ?
 WHERE local_id = ?`, tsk.LocalUpdate, tsk.LocalId); err != nil {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)

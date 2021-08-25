@@ -56,20 +56,21 @@ func (l *List) Process() (*ListResult, error) {
 		return &ListResult{}, ErrInvalidReqs
 	}
 
-	folders := []string{task.FOLDER_NEW, task.FOLDER_PLANNED, task.FOLDER_UNPLANNED}
-	if l.reqs.Folder != "" {
-		folders = []string{l.reqs.Folder}
+	potentialTasks, err := l.local.FindAll()
+	if err != nil {
+		return &ListResult{}, fmt.Errorf("%w: %v", ErrListProcess, err)
 	}
 
-	var potentialTasks []*task.LocalTask
-	for _, folder := range folders {
-		folderTasks, err := l.local.FindAllInFolder(folder)
-		if err != nil {
-			return &ListResult{}, fmt.Errorf("%w: %v", ErrListProcess, err)
+	// folder
+	if l.reqs.Folder != "" {
+		var folderTasks []*task.LocalTask
+		for _, pt := range potentialTasks {
+			if pt.Folder == l.reqs.Folder {
+				folderTasks = append(folderTasks, pt)
+			}
 		}
-		for _, ft := range folderTasks {
-			potentialTasks = append(potentialTasks, ft)
-		}
+
+		potentialTasks = folderTasks
 	}
 
 	if l.reqs.Due.IsZero() && l.reqs.Project == "" {
@@ -78,6 +79,7 @@ func (l *List) Process() (*ListResult, error) {
 		}, nil
 	}
 
+	// project
 	if l.reqs.Project != "" {
 		var projectTasks []*task.LocalTask
 		for _, pt := range potentialTasks {

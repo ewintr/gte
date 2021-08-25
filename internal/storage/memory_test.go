@@ -1,6 +1,7 @@
 package storage_test
 
 import (
+	"sort"
 	"testing"
 	"time"
 
@@ -41,9 +42,10 @@ func TestMemory(t *testing.T) {
 		},
 	}
 	tasks := []*task.Task{task1, task2, task3}
-	localTask1 := &task.LocalTask{Task: *task1, LocalId: 1}
-	localTask2 := &task.LocalTask{Task: *task2, LocalId: 2}
-	localTask3 := &task.LocalTask{Task: *task3, LocalId: 3}
+	emptyUpdate := &task.LocalUpdate{}
+	localTask1 := &task.LocalTask{Task: *task1, LocalUpdate: emptyUpdate}
+	localTask2 := &task.LocalTask{Task: *task2, LocalUpdate: emptyUpdate}
+	localTask3 := &task.LocalTask{Task: *task3, LocalUpdate: emptyUpdate}
 
 	t.Run("sync", func(t *testing.T) {
 		mem := storage.NewMemory()
@@ -58,28 +60,20 @@ func TestMemory(t *testing.T) {
 		test.Assert(t, latest.After(start), "latest was not after start")
 	})
 
-	t.Run("findallinfolder", func(t *testing.T) {
+	t.Run("findallin", func(t *testing.T) {
 		mem := storage.NewMemory()
 		test.OK(t, mem.SetTasks(tasks))
-		act, err := mem.FindAllInFolder(folder1)
+		act, err := mem.FindAll()
 		test.OK(t, err)
-		exp := []*task.LocalTask{localTask1, localTask2}
-		for _, tsk := range exp {
-			tsk.Message = nil
+		exp := []*task.LocalTask{localTask1, localTask2, localTask3}
+		for _, tsk := range act {
+			tsk.LocalId = 0
 		}
-		test.Equals(t, exp, act)
-	})
-
-	t.Run("findallinproject", func(t *testing.T) {
-		mem := storage.NewMemory()
-		test.OK(t, mem.SetTasks(tasks))
-		act, err := mem.FindAllInProject(project1)
-		test.OK(t, err)
-		exp := []*task.LocalTask{localTask1, localTask3}
-		for _, tsk := range exp {
-			tsk.Message = nil
-		}
-		test.Equals(t, exp, act)
+		sExp := task.ById(exp)
+		sAct := task.ById(act)
+		sort.Sort(sExp)
+		sort.Sort(sAct)
+		test.Equals(t, sExp, sAct)
 	})
 
 	t.Run("findbyid", func(t *testing.T) {
@@ -87,15 +81,17 @@ func TestMemory(t *testing.T) {
 		test.OK(t, mem.SetTasks(tasks))
 		act, err := mem.FindById("id-2")
 		test.OK(t, err)
+		act.LocalId = 0
 		test.Equals(t, localTask2, act)
 	})
 
 	t.Run("findbylocalid", func(t *testing.T) {
 		mem := storage.NewMemory()
-		test.OK(t, mem.SetTasks(tasks))
-		act, err := mem.FindByLocalId(2)
+		test.OK(t, mem.SetTasks([]*task.Task{task1}))
+		act, err := mem.FindByLocalId(1)
 		test.OK(t, err)
-		test.Equals(t, localTask2, act)
+		act.LocalId = 0
+		test.Equals(t, localTask1, act)
 	})
 
 	t.Run("setlocalupdate", func(t *testing.T) {
