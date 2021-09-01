@@ -106,8 +106,8 @@ func TestMergeNewTaskSet(t *testing.T) {
 			oldTasks: []*task.LocalTask{},
 			newTasks: []*task.Task{task1, task2},
 			exp: []*task.LocalTask{
-				{Task: *task1, LocalUpdate: emptyUpdate},
-				{Task: *task2, LocalUpdate: emptyUpdate},
+				{Task: *task1, LocalUpdate: emptyUpdate, LocalStatus: task.STATUS_FETCHED},
+				{Task: *task2, LocalUpdate: emptyUpdate, LocalStatus: task.STATUS_FETCHED},
 			},
 		},
 		{
@@ -118,8 +118,8 @@ func TestMergeNewTaskSet(t *testing.T) {
 			},
 			newTasks: []*task.Task{task1v2, task2},
 			exp: []*task.LocalTask{
-				{Task: *task1v2, LocalUpdate: emptyUpdate},
-				{Task: *task2, LocalUpdate: emptyUpdate},
+				{Task: *task1v2, LocalUpdate: emptyUpdate, LocalStatus: task.STATUS_FETCHED},
+				{Task: *task2, LocalUpdate: emptyUpdate, LocalStatus: task.STATUS_FETCHED},
 			},
 		},
 		{
@@ -130,7 +130,7 @@ func TestMergeNewTaskSet(t *testing.T) {
 			},
 			newTasks: []*task.Task{task2},
 			exp: []*task.LocalTask{
-				{Task: *task2, LocalUpdate: emptyUpdate},
+				{Task: *task2, LocalUpdate: emptyUpdate, LocalStatus: task.STATUS_FETCHED},
 			},
 		},
 		{
@@ -153,13 +153,14 @@ func TestMergeNewTaskSet(t *testing.T) {
 			},
 			newTasks: []*task.Task{task1v2, task2},
 			exp: []*task.LocalTask{
-				{Task: *task1v2, LocalUpdate: emptyUpdate},
+				{Task: *task1v2, LocalUpdate: emptyUpdate, LocalStatus: task.STATUS_FETCHED},
 				{
 					Task: *task2,
 					LocalUpdate: &task.LocalUpdate{
 						ForVersion: 2,
 						Project:    "project-v3",
 					},
+					LocalStatus: task.STATUS_UPDATED,
 				},
 			},
 		},

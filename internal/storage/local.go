@@ -72,8 +72,8 @@ func NextLocalId(used []int) int {
 
 // MergeNewTaskSet updates a local set of tasks with a remote one
 //
-// New set is leading and tasks that are not in there get dismissed. Tasks that
-// were created locally and got dispatched  might temporarily dissappear if the
+// The new set is leading and tasks that are not in there get dismissed. Tasks that
+// were created locally and got dispatched might temporarily dissappear if the
 // remote inbox has a delay in processing.
 func MergeNewTaskSet(oldTasks []*task.LocalTask, newTasks []*task.Task) []*task.LocalTask {
 
@@ -84,6 +84,7 @@ func MergeNewTaskSet(oldTasks []*task.LocalTask, newTasks []*task.Task) []*task.
 			Task:        *nt,
 			LocalId:     0,
 			LocalUpdate: &task.LocalUpdate{},
+			LocalStatus: task.STATUS_FETCHED,
 		}
 	}
 	oldMap := map[string]*task.LocalTask{}
@@ -116,6 +117,7 @@ func MergeNewTaskSet(oldTasks []*task.LocalTask, newTasks []*task.Task) []*task.
 		if nt, ok := resultMap[ot.Id]; ok {
 			if ot.LocalUpdate.ForVersion >= nt.Version {
 				resultMap[ot.Id].LocalUpdate = ot.LocalUpdate
+				resultMap[ot.Id].LocalStatus = task.STATUS_UPDATED
 			}
 		}
 	}

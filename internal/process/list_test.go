@@ -48,9 +48,9 @@ func TestListProcess(t *testing.T) {
 		Project: "project2",
 	}
 	allTasks := []*task.Task{task1, task2, task3, task4}
-	localTask2 := &task.LocalTask{Task: *task2, LocalUpdate: &task.LocalUpdate{}}
-	localTask3 := &task.LocalTask{Task: *task3, LocalUpdate: &task.LocalUpdate{}}
-	localTask4 := &task.LocalTask{Task: *task4, LocalUpdate: &task.LocalUpdate{}}
+	localTask2 := &task.LocalTask{Task: *task2, LocalUpdate: &task.LocalUpdate{}, LocalStatus: task.STATUS_FETCHED}
+	localTask3 := &task.LocalTask{Task: *task3, LocalUpdate: &task.LocalUpdate{}, LocalStatus: task.STATUS_FETCHED}
+	localTask4 := &task.LocalTask{Task: *task4, LocalUpdate: &task.LocalUpdate{}, LocalStatus: task.STATUS_FETCHED}
 	local := storage.NewMemory()
 	test.OK(t, local.SetTasks(allTasks))
 

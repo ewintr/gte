@@ -7,10 +7,16 @@ import (
 	"strings"
 )
 
+const (
+	STATUS_FETCHED = "fetched"
+	STATUS_UPDATED = "updated"
+)
+
 type LocalTask struct {
 	Task
 	LocalId     int
 	LocalUpdate *LocalUpdate
+	LocalStatus string
 }
 
 func (lt *LocalTask) HasUpdate() bool {
