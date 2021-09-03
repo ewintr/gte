@@ -11,7 +11,7 @@ import (
 	"git.ewintr.nl/gte/pkg/mstore"
 )
 
-func TestSyncProcess(t *testing.T) {
+func TestFetchProcess(t *testing.T) {
 	task1 := &task.Task{
 		Id:      "id1",
 		Version: 1,
@@ -35,7 +35,7 @@ func TestSyncProcess(t *testing.T) {
 	remote := storage.NewRemoteRepository(mstorer)
 	local := storage.NewMemory()
 
-	syncer := process.NewSync(remote, local)
+	syncer := process.NewFetch(remote, local)
 	actResult, err := syncer.Process()
 	test.OK(t, err)
 	test.Equals(t, 2, actResult.Count)

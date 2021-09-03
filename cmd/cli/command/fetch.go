@@ -10,29 +10,29 @@ import (
 	"git.ewintr.nl/gte/pkg/mstore"
 )
 
-type Sync struct {
-	syncer *process.Sync
+type Fetch struct {
+	fetcher *process.Fetch
 }
 
-func NewSync(conf *configuration.Configuration) (*Sync, error) {
+func NewFetch(conf *configuration.Configuration) (*Fetch, error) {
 	msgStore := mstore.NewIMAP(conf.IMAP())
 	remote := storage.NewRemoteRepository(msgStore)
 	local, err := storage.NewSqlite(conf.Sqlite())
 	if err != nil {
-		return &Sync{}, err
+		return &Fetch{}, err
 	}
-	syncer := process.NewSync(remote, local)
+	fetcher := process.NewFetch(remote, local)
 
-	return &Sync{
-		syncer: syncer,
+	return &Fetch{
+		fetcher: fetcher,
 	}, nil
 }
 
-func (s *Sync) Do() string {
-	result, err := s.syncer.Process()
+func (s *Fetch) Do() string {
+	result, err := s.fetcher.Process()
 	if err != nil {
 		return format.FormatError(err)
 	}
 
-	return fmt.Sprintf("synced %d tasks\n", result.Count)
+	return fmt.Sprintf("fetched %d tasks\n", result.Count)
 }

@@ -31,8 +31,8 @@ func Parse(args []string, conf *configuration.Configuration) (Command, error) {
 	}
 
 	switch cmd {
-	case "sync":
-		return NewSync(conf)
+	case "fetch":
+		return NewFetch(conf)
 	case "today":
 		return NewToday(conf)
 	case "tomorrow":

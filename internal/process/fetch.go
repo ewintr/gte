@@ -10,28 +10,28 @@ import (
 )
 
 var (
-	ErrSyncProcess = errors.New("could not sync local repository")
+	ErrFetchProcess = errors.New("could not fetch tasks")
 )
 
-// Sync fetches all tasks in regular folders from the remote repository and overwrites what is stored locally
-type Sync struct {
+// Fetch fetches all tasks in regular folders from the remote repository and overwrites what is stored locally
+type Fetch struct {
 	remote *storage.RemoteRepository
 	local  storage.LocalRepository
 }
 
-type SyncResult struct {
+type FetchResult struct {
 	Duration string `json:"duration"`
 	Count    int    `json:"count"`
 }
 
-func NewSync(remote *storage.RemoteRepository, local storage.LocalRepository) *Sync {
-	return &Sync{
+func NewFetch(remote *storage.RemoteRepository, local storage.LocalRepository) *Fetch {
+	return &Fetch{
 		remote: remote,
 		local:  local,
 	}
 }
 
-func (s *Sync) Process() (*SyncResult, error) {
+func (s *Fetch) Process() (*FetchResult, error) {
 	start := time.Now()
 
 	tasks := []*task.Task{}
@@ -41,7 +41,7 @@ func (s *Sync) Process() (*SyncResult, error) {
 		}
 		folderTasks, err := s.remote.FindAll(folder)
 		if err != nil {
-			return &SyncResult{}, fmt.Errorf("%w: %v", ErrSyncProcess, err)
+			return &FetchResult{}, fmt.Errorf("%w: %v", ErrFetchProcess, err)
 		}
 
 		for _, t := range folderTasks {
@@ -50,10 +50,10 @@ func (s *Sync) Process() (*SyncResult, error) {
 	}
 
 	if err := s.local.SetTasks(tasks); err != nil {
-		return &SyncResult{}, fmt.Errorf("%w: %v", ErrSyncProcess, err)
+		return &FetchResult{}, fmt.Errorf("%w: %v", ErrFetchProcess, err)
 	}
 
-	return &SyncResult{
+	return &FetchResult{
 		Duration: time.Since(start).String(),
 		Count:    len(tasks),
 	}, nil
