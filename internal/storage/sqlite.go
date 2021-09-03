@@ -199,6 +199,16 @@ WHERE local_id = ?`, tsk.LocalUpdate, task.STATUS_UPDATED, tsk.LocalId); err != 
 	return nil
 }
 
+func (s *Sqlite) MarkDispatched(localId int) error {
+	if _, err := s.db.Exec(`
+UPDATE task
+SET local_status = ?
+WHERE local_id = ?`, task.STATUS_DISPATCHED, localId); err != nil {
+		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+	}
+	return nil
+}
+
 func (s *Sqlite) migrate(wanted []sqliteMigration) error {
 	// admin table
 	if _, err := s.db.Exec(`

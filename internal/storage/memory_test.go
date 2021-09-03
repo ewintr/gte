@@ -114,5 +114,17 @@ func TestMemory(t *testing.T) {
 		actTask, err := mem.FindByLocalId(2)
 		test.OK(t, err)
 		test.Equals(t, expUpdate, actTask.LocalUpdate)
+		test.Equals(t, task.STATUS_UPDATED, actTask.LocalStatus)
+	})
+
+	t.Run("markdispatched", func(t *testing.T) {
+		mem := storage.NewMemory()
+		test.OK(t, mem.SetTasks(tasks))
+		lt, err := mem.FindById(task2.Id)
+		test.OK(t, err)
+		test.OK(t, mem.MarkDispatched(lt.LocalId))
+		act, err := mem.FindById(task2.Id)
+		test.OK(t, err)
+		test.Equals(t, task.STATUS_DISPATCHED, act.LocalStatus)
 	})
 }

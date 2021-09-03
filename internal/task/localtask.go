@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	STATUS_FETCHED = "fetched"
-	STATUS_UPDATED = "updated"
+	STATUS_FETCHED    = "fetched"
+	STATUS_UPDATED    = "updated"
+	STATUS_DISPATCHED = "dispatched"
 )
 
 type LocalTask struct {

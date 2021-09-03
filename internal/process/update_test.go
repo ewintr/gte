@@ -64,7 +64,7 @@ func TestUpdate(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			local.SetTasks(allTasks)
+			test.OK(t, local.SetTasks(allTasks))
 			out := msend.NewMemory()
 			disp := storage.NewDispatcher(out)
 

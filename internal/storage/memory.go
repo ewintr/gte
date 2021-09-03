@@ -69,7 +69,15 @@ func (m *Memory) FindByLocalId(localId int) (*task.LocalTask, error) {
 }
 
 func (m *Memory) SetLocalUpdate(tsk *task.LocalTask) error {
+	tsk.LocalStatus = task.STATUS_UPDATED
 	m.tasks[tsk.Id] = tsk
+
+	return nil
+}
+
+func (m *Memory) MarkDispatched(localId int) error {
+	t, _ := m.FindByLocalId(localId)
+	m.tasks[t.Id].LocalStatus = task.STATUS_DISPATCHED
 
 	return nil
 }
