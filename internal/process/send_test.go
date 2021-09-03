@@ -35,7 +35,9 @@ func TestSend(t *testing.T) {
 		out := msend.NewMemory()
 		disp := storage.NewDispatcher(out)
 		send := process.NewSend(local, disp)
-		test.OK(t, send.Process())
+		res, err := send.Process()
+		test.OK(t, err)
+		test.Equals(t, 0, res)
 		test.Assert(t, len(out.Messages) == 0, "amount of messages was not 0")
 	})
 
@@ -53,7 +55,9 @@ func TestSend(t *testing.T) {
 		out := msend.NewMemory()
 		disp := storage.NewDispatcher(out)
 		send := process.NewSend(local, disp)
-		test.OK(t, send.Process())
+		res, err := send.Process()
+		test.OK(t, err)
+		test.Equals(t, 1, res)
 		test.Assert(t, len(out.Messages) == 1, "amount of messages was not 1")
 		expSubject := "project1 - updated"
 		test.Equals(t, expSubject, out.Messages[0].Subject)

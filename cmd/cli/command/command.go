@@ -33,6 +33,8 @@ func Parse(args []string, conf *configuration.Configuration) (Command, error) {
 	switch cmd {
 	case "fetch":
 		return NewFetch(conf)
+	case "send":
+		return NewSend(conf)
 	case "today":
 		return NewToday(conf)
 	case "tomorrow":
