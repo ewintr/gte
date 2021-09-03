@@ -7,25 +7,12 @@ import (
 	"git.ewintr.nl/gte/internal/process"
 	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/internal/task"
-	"git.ewintr.nl/gte/pkg/msend"
 )
 
 func TestUpdate(t *testing.T) {
-	task1 := &task.Task{
-		Id:      "id-1",
-		Version: 2,
-		Project: "project1",
-		Action:  "action1",
-		Due:     task.NewDate(2021, 7, 29),
-		Folder:  task.FOLDER_PLANNED,
-	}
-	local := storage.NewMemory()
-	allTasks := []*task.Task{task1}
-
 	for _, tc := range []struct {
 		name    string
 		updates *task.LocalUpdate
-		exp     *task.Task
 	}{
 		{
 			name: "done",
@@ -33,15 +20,6 @@ func TestUpdate(t *testing.T) {
 				ForVersion: 2,
 				Fields:     []string{task.FIELD_DONE},
 				Done:       true,
-			},
-			exp: &task.Task{
-				Id:      "id-1",
-				Version: 2,
-				Project: "project1",
-				Action:  "action1",
-				Due:     task.NewDate(2021, 7, 29),
-				Folder:  task.FOLDER_PLANNED,
-				Done:    true,
 			},
 		},
 		{
@@ -53,29 +31,27 @@ func TestUpdate(t *testing.T) {
 				Action:     "action2",
 				Due:        task.NewDate(2021, 8, 1),
 			},
-			exp: &task.Task{
-				Id:      "id-1",
-				Version: 2,
-				Project: "project2",
-				Action:  "action2",
-				Due:     task.NewDate(2021, 8, 1),
-				Folder:  task.FOLDER_PLANNED,
-			},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			test.OK(t, local.SetTasks(allTasks))
-			out := msend.NewMemory()
-			disp := storage.NewDispatcher(out)
-
-			update := process.NewUpdate(local, disp, task1.Id, tc.updates)
-			test.OK(t, update.Process())
-			expMsg := &msend.Message{
-				Subject: tc.exp.FormatSubject(),
-				Body:    tc.exp.FormatBody(),
+			task1 := &task.Task{
+				Id:      "id-1",
+				Version: 2,
+				Project: "project1",
+				Action:  "action1",
+				Due:     task.NewDate(2021, 7, 29),
+				Folder:  task.FOLDER_PLANNED,
 			}
-			test.Assert(t, len(out.Messages) == 1, "amount of messages was not one")
-			test.Equals(t, expMsg, out.Messages[0])
+			local := storage.NewMemory()
+			allTasks := []*task.Task{task1}
+
+			test.OK(t, local.SetTasks(allTasks))
+			update := process.NewUpdate(local, task1.Id, tc.updates)
+			test.OK(t, update.Process())
+			lt, err := local.FindById(task1.Id)
+			test.OK(t, err)
+			test.Equals(t, task.STATUS_UPDATED, lt.LocalStatus)
+			test.Equals(t, tc.updates, lt.LocalUpdate)
 		})
 	}
 }

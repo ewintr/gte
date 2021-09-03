@@ -9,7 +9,6 @@ import (
 	"git.ewintr.nl/gte/internal/process"
 	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/internal/task"
-	"git.ewintr.nl/gte/pkg/msend"
 )
 
 type Update struct {
@@ -22,7 +21,6 @@ func NewUpdate(localId int, conf *configuration.Configuration, cmdArgs []string)
 		return &Update{}, err
 	}
 
-	disp := storage.NewDispatcher(msend.NewSSLSMTP(conf.SMTP()))
 	update, err := ParseTaskFieldArgs(cmdArgs)
 	if err != nil {
 		return &Update{}, err
@@ -33,7 +31,7 @@ func NewUpdate(localId int, conf *configuration.Configuration, cmdArgs []string)
 	}
 	update.ForVersion = localTask.Version
 
-	updater := process.NewUpdate(local, disp, localTask.Id, update)
+	updater := process.NewUpdate(local, localTask.Id, update)
 
 	return &Update{
 		updater: updater,
@@ -45,7 +43,7 @@ func (u *Update) Do() string {
 		return format.FormatError(err)
 	}
 
-	return "message sent\n"
+	return "local task updated\n"
 }
 
 func ParseTaskFieldArgs(args []string) (*task.LocalUpdate, error) {

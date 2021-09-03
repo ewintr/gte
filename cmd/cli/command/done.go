@@ -6,7 +6,6 @@ import (
 	"git.ewintr.nl/gte/internal/process"
 	"git.ewintr.nl/gte/internal/storage"
 	"git.ewintr.nl/gte/internal/task"
-	"git.ewintr.nl/gte/pkg/msend"
 )
 
 // Done updates a task to be marked done
@@ -19,8 +18,6 @@ func NewDone(localId int, conf *configuration.Configuration) (*Done, error) {
 	if err != nil {
 		return &Done{}, err
 	}
-
-	disp := storage.NewDispatcher(msend.NewSSLSMTP(conf.SMTP()))
 	localTask, err := local.FindByLocalId(localId)
 	if err != nil {
 		return &Done{}, err
@@ -31,7 +28,7 @@ func NewDone(localId int, conf *configuration.Configuration) (*Done, error) {
 		Fields:     []string{task.FIELD_DONE},
 		Done:       true,
 	}
-	updater := process.NewUpdate(local, disp, localTask.Id, update)
+	updater := process.NewUpdate(local, localTask.Id, update)
 
 	return &Done{
 		doner: updater,

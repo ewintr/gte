@@ -132,23 +132,23 @@ func (lu *LocalUpdate) Add(newUpdate *LocalUpdate) {
 }
 
 func (lu LocalUpdate) Value() (driver.Value, error) {
-	var recurStr string
-	if lu.Recur != nil {
-		recurStr = lu.Recur.String()
+	v := fmt.Sprintf("forversion: %d\n", lu.ForVersion)
+	for _, f := range lu.Fields {
+		switch f {
+		case FIELD_ACTION:
+			v += fmt.Sprintf("action: %s\n", lu.Action)
+		case FIELD_PROJECT:
+			v += fmt.Sprintf("project: %s\n", lu.Project)
+		case FIELD_RECUR:
+			v += fmt.Sprintf("recur: %s\n", lu.Recur.String())
+		case FIELD_DUE:
+			v += fmt.Sprintf("due: %s\n", lu.Due)
+		case FIELD_DONE:
+			v += fmt.Sprintf("done: %t\n", lu.Done)
+		}
 	}
 
-	return fmt.Sprintf(`forversion: %d
-action: %s
-project: %s
-recur: %s
-due: %s
-done: %t`,
-		lu.ForVersion,
-		lu.Action,
-		lu.Project,
-		recurStr,
-		lu.Due.String(),
-		lu.Done), nil
+	return v, nil
 }
 
 func (lu *LocalUpdate) Scan(value interface{}) error {
@@ -172,15 +172,20 @@ func (lu *LocalUpdate) Scan(value interface{}) error {
 			newLu.ForVersion = d
 		case "action":
 			newLu.Action = v
+			newLu.Fields = append(newLu.Fields, FIELD_ACTION)
 		case "project":
 			newLu.Project = v
+			newLu.Fields = append(newLu.Fields, FIELD_PROJECT)
 		case "recur":
 			newLu.Recur = NewRecurrer(v)
+			newLu.Fields = append(newLu.Fields, FIELD_RECUR)
 		case "due":
 			newLu.Due = NewDateFromString(v)
+			newLu.Fields = append(newLu.Fields, FIELD_DUE)
 		case "done":
 			if v == "true" {
 				newLu.Done = true
+				newLu.Fields = append(newLu.Fields, FIELD_DONE)
 			}
 		}
 	}
