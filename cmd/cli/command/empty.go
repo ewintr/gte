@@ -7,5 +7,5 @@ func NewEmpty() (*Empty, error) {
 }
 
 func (cmd *Empty) Do() string {
-	return "did nothing\n"
+	return "did nothing\n\n"
 }

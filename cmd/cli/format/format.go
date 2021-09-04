@@ -33,7 +33,7 @@ func FormatTaskTable(tasks []*task.LocalTask) string {
 		output += fmt.Sprintf("%d%s\t%s\t%s (%s)\n", t.LocalId, updateStr, t.Due.String(), t.Action, t.Project)
 	}
 
-	return output
+	return fmt.Sprintf("%s\n", output)
 }
 
 func FormatTask(t *task.LocalTask) string {
@@ -46,7 +46,7 @@ due:     %s
 		output += fmt.Sprintf("recur:%s", t.Recur.String())
 	}
 
-	return output
+	return fmt.Sprintf("%s\n", output)
 }
 
 func ParseTaskFieldArgs(args []string) (*task.LocalUpdate, error) {

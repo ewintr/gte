@@ -41,5 +41,5 @@ func (d *Done) Do() string {
 		return format.FormatError(err)
 	}
 
-	return "message sent\n"
+	return ""
 }

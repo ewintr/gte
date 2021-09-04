@@ -34,5 +34,5 @@ func (s *Fetch) Do() string {
 		return format.FormatError(err)
 	}
 
-	return fmt.Sprintf("fetched %d tasks\n", result.Count)
+	return fmt.Sprintf("fetched %d tasks\n\n", result.Count)
 }

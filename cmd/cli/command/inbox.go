@@ -28,5 +28,5 @@ func (i *Inbox) Do() string {
 		return format.FormatError(err)
 	}
 
-	return fmt.Sprintf("processed %d tasks\n", res.Count)
+	return fmt.Sprintf("processed %d tasks\n\n", res.Count)
 }

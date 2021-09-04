@@ -38,7 +38,7 @@ func (p *Project) Do() string {
 	}
 
 	if len(res.Tasks) == 0 {
-		return "no tasks here\n"
+		return "no tasks here\n\n"
 	}
 
 	return format.FormatTaskTable(res.Tasks)

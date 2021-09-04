@@ -25,5 +25,5 @@ func main() {
 		fmt.Println(err, "could not initialize command")
 		os.Exit(1)
 	}
-	fmt.Printf("%s\n", cmd.Do())
+	fmt.Printf("%s", cmd.Do())
 }

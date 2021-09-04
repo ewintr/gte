@@ -35,7 +35,7 @@ func (p *Projects) Do() string {
 	}
 
 	if len(projects) == 0 {
-		return "no projects here\n"
+		return "no projects here\n\n"
 	}
 
 	var out string
@@ -45,5 +45,5 @@ func (p *Projects) Do() string {
 		}
 	}
 
-	return out
+	return fmt.Sprintf("%s\n", out)
 }

@@ -32,5 +32,5 @@ func (s *Send) Do() string {
 		return format.FormatError(err)
 	}
 
-	return fmt.Sprintf("sent %d tasks\n", count)
+	return fmt.Sprintf("sent %d tasks\n\n", count)
 }

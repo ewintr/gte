@@ -39,5 +39,5 @@ func (r *Recur) Do() string {
 		return format.FormatError(err)
 	}
 
-	return fmt.Sprintf("generated %d tasks\n", res.Count)
+	return fmt.Sprintf("generated %d tasks\n\n", res.Count)
 }
