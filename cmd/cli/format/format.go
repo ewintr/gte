@@ -1,10 +1,16 @@
 package format
 
 import (
+	"errors"
 	"fmt"
 	"sort"
+	"strings"
 
 	"git.ewintr.nl/gte/internal/task"
+)
+
+var (
+	ErrFieldAlreadyUsed = errors.New("field was already used")
 )
 
 func FormatError(err error) string {
@@ -41,4 +47,42 @@ due:     %s
 	}
 
 	return output
+}
+
+func ParseTaskFieldArgs(args []string) (*task.LocalUpdate, error) {
+	lu := &task.LocalUpdate{}
+
+	action, fields := []string{}, []string{}
+	for _, f := range args {
+		split := strings.SplitN(f, ":", 2)
+		if len(split) == 2 {
+			switch split[0] {
+			case "project":
+				if lu.Project != "" {
+					return &task.LocalUpdate{}, fmt.Errorf("%w: %s", ErrFieldAlreadyUsed, task.FIELD_PROJECT)
+				}
+				lu.Project = split[1]
+				fields = append(fields, task.FIELD_PROJECT)
+			case "due":
+				if !lu.Due.IsZero() {
+					return &task.LocalUpdate{}, fmt.Errorf("%w: %s", ErrFieldAlreadyUsed, task.FIELD_DUE)
+				}
+				lu.Due = task.NewDateFromString(split[1])
+				fields = append(fields, task.FIELD_DUE)
+			}
+		} else {
+			if len(f) > 0 {
+				action = append(action, f)
+			}
+		}
+	}
+
+	if len(action) > 0 {
+		lu.Action = strings.Join(action, " ")
+		fields = append(fields, task.FIELD_ACTION)
+	}
+
+	lu.Fields = fields
+
+	return lu, nil
 }

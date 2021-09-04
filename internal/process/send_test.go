@@ -50,7 +50,7 @@ func TestSend(t *testing.T) {
 		lt, err := local.FindById(task2.Id)
 		test.OK(t, err)
 		lt.AddUpdate(lu)
-		test.OK(t, local.SetLocalUpdate(lt))
+		test.OK(t, local.SetLocalUpdate(lt.Id, lt.LocalUpdate))
 
 		out := msend.NewMemory()
 		disp := storage.NewDispatcher(out)

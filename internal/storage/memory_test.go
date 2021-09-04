@@ -105,13 +105,8 @@ func TestMemory(t *testing.T) {
 			Recur:      task.NewRecurrer("today, weekly, monday"),
 			Done:       true,
 		}
-		lt := &task.LocalTask{
-			Task:        *task2,
-			LocalId:     2,
-			LocalUpdate: expUpdate,
-		}
-		test.OK(t, mem.SetLocalUpdate(lt))
-		actTask, err := mem.FindByLocalId(2)
+		test.OK(t, mem.SetLocalUpdate(task2.Id, expUpdate))
+		actTask, err := mem.FindById(task2.Id)
 		test.OK(t, err)
 		test.Equals(t, expUpdate, actTask.LocalUpdate)
 		test.Equals(t, task.STATUS_UPDATED, actTask.LocalStatus)
@@ -126,5 +121,37 @@ func TestMemory(t *testing.T) {
 		act, err := mem.FindById(task2.Id)
 		test.OK(t, err)
 		test.Equals(t, task.STATUS_DISPATCHED, act.LocalStatus)
+	})
+
+	t.Run("add", func(t *testing.T) {
+
+		action := "action"
+		project := "project"
+		due := task.NewDate(2021, 9, 4)
+		recur := task.Daily{Start: task.NewDate(2021, 9, 5)}
+		mem := storage.NewMemory()
+		expUpdate := &task.LocalUpdate{
+			Fields:  []string{task.FIELD_ACTION, task.FIELD_PROJECT, task.FIELD_DUE, task.FIELD_RECUR},
+			Action:  action,
+			Project: project,
+			Due:     due,
+			Recur:   recur,
+		}
+		act1, err := mem.Add(expUpdate)
+		test.OK(t, err)
+		test.Assert(t, act1.Id != "", "id was empty")
+		test.Equals(t, task.FOLDER_NEW, act1.Folder)
+		test.Equals(t, "", act1.Action)
+		test.Equals(t, "", act1.Project)
+		test.Assert(t, act1.Due.IsZero(), "date was not zero")
+		test.Equals(t, nil, act1.Recur)
+		test.Equals(t, 0, act1.Version)
+		test.Equals(t, 1, act1.LocalId)
+		test.Equals(t, task.STATUS_UPDATED, act1.LocalStatus)
+		test.Equals(t, expUpdate, act1.LocalUpdate)
+
+		act2, err := mem.FindById(act1.Id)
+		test.OK(t, err)
+		test.Equals(t, act1, act2)
 	})
 }

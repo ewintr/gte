@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"git.ewintr.nl/gte/internal/task"
+	"github.com/google/uuid"
 )
 
 // Memory is an in memory implementation of LocalRepository
@@ -68,9 +69,9 @@ func (m *Memory) FindByLocalId(localId int) (*task.LocalTask, error) {
 	return &task.LocalTask{}, ErrTaskNotFound
 }
 
-func (m *Memory) SetLocalUpdate(tsk *task.LocalTask) error {
-	tsk.LocalStatus = task.STATUS_UPDATED
-	m.tasks[tsk.Id] = tsk
+func (m *Memory) SetLocalUpdate(id string, update *task.LocalUpdate) error {
+	m.tasks[id].LocalStatus = task.STATUS_UPDATED
+	m.tasks[id].LocalUpdate = update
 
 	return nil
 }
@@ -80,4 +81,26 @@ func (m *Memory) MarkDispatched(localId int) error {
 	m.tasks[t.Id].LocalStatus = task.STATUS_DISPATCHED
 
 	return nil
+}
+
+func (m *Memory) Add(update *task.LocalUpdate) (*task.LocalTask, error) {
+	var used []int
+	for _, t := range m.tasks {
+		used = append(used, t.LocalId)
+	}
+
+	tsk := &task.LocalTask{
+		Task: task.Task{
+			Id:      uuid.New().String(),
+			Version: 0,
+			Folder:  task.FOLDER_NEW,
+		},
+		LocalId:     NextLocalId(used),
+		LocalStatus: task.STATUS_UPDATED,
+		LocalUpdate: update,
+	}
+
+	m.tasks[tsk.Id] = tsk
+
+	return tsk, nil
 }

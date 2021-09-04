@@ -37,7 +37,7 @@ func (lt *LocalTask) ApplyUpdate() {
 		return
 	}
 	u := lt.LocalUpdate
-	if u.ForVersion == 0 || u.ForVersion != lt.Version {
+	if u.ForVersion != lt.Version {
 		lt.LocalUpdate = &LocalUpdate{}
 		return
 	}

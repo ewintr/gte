@@ -18,8 +18,9 @@ type LocalRepository interface {
 	FindAll() ([]*task.LocalTask, error)
 	FindById(id string) (*task.LocalTask, error)
 	FindByLocalId(id int) (*task.LocalTask, error)
-	SetLocalUpdate(tsk *task.LocalTask) error
+	SetLocalUpdate(id string, update *task.LocalUpdate) error
 	MarkDispatched(id int) error
+	Add(update *task.LocalUpdate) (*task.LocalTask, error)
 }
 
 // NextLocalId finds a new local id by incrememting to a variable limit.

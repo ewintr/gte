@@ -33,7 +33,7 @@ func (u *Update) Process() error {
 		return fmt.Errorf("%w: %v", ErrUpdateTask, err)
 	}
 	tsk.AddUpdate(u.update)
-	if err := u.local.SetLocalUpdate(tsk); err != nil {
+	if err := u.local.SetLocalUpdate(tsk.Id, tsk.LocalUpdate); err != nil {
 		return fmt.Errorf("%w: %v", ErrUpdateTask, err)
 	}
 

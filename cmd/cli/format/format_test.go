@@ -1,4 +1,4 @@
-package command_test
+package format_test
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"git.ewintr.nl/go-kit/test"
-	"git.ewintr.nl/gte/cmd/cli/command"
+	"git.ewintr.nl/gte/cmd/cli/format"
 	"git.ewintr.nl/gte/internal/task"
 )
 
@@ -53,12 +53,12 @@ func TestParseTaskFieldArgs(t *testing.T) {
 			name:      "two projects",
 			input:     "project:project1 project:project2",
 			expUpdate: &task.LocalUpdate{},
-			expErr:    command.ErrFieldAlreadyUsed,
+			expErr:    format.ErrFieldAlreadyUsed,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			args := strings.Split(tc.input, " ")
-			act, err := command.ParseTaskFieldArgs(args)
+			act, err := format.ParseTaskFieldArgs(args)
 			test.Equals(t, tc.expUpdate, act)
 			test.Assert(t, errors.Is(err, tc.expErr), "wrong err")
 		})

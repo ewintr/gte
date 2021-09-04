@@ -1,14 +1,10 @@
 package command
 
 import (
-	"fmt"
-	"strings"
-
 	"git.ewintr.nl/gte/cmd/cli/format"
 	"git.ewintr.nl/gte/internal/configuration"
 	"git.ewintr.nl/gte/internal/process"
 	"git.ewintr.nl/gte/internal/storage"
-	"git.ewintr.nl/gte/internal/task"
 )
 
 type Update struct {
@@ -21,7 +17,7 @@ func NewUpdate(localId int, conf *configuration.Configuration, cmdArgs []string)
 		return &Update{}, err
 	}
 
-	update, err := ParseTaskFieldArgs(cmdArgs)
+	update, err := format.ParseTaskFieldArgs(cmdArgs)
 	if err != nil {
 		return &Update{}, err
 	}
@@ -43,43 +39,5 @@ func (u *Update) Do() string {
 		return format.FormatError(err)
 	}
 
-	return "local task updated\n"
-}
-
-func ParseTaskFieldArgs(args []string) (*task.LocalUpdate, error) {
-	lu := &task.LocalUpdate{}
-
-	action, fields := []string{}, []string{}
-	for _, f := range args {
-		split := strings.SplitN(f, ":", 2)
-		if len(split) == 2 {
-			switch split[0] {
-			case "project":
-				if lu.Project != "" {
-					return &task.LocalUpdate{}, fmt.Errorf("%w: %s", ErrFieldAlreadyUsed, task.FIELD_PROJECT)
-				}
-				lu.Project = split[1]
-				fields = append(fields, task.FIELD_PROJECT)
-			case "due":
-				if !lu.Due.IsZero() {
-					return &task.LocalUpdate{}, fmt.Errorf("%w: %s", ErrFieldAlreadyUsed, task.FIELD_DUE)
-				}
-				lu.Due = task.NewDateFromString(split[1])
-				fields = append(fields, task.FIELD_DUE)
-			}
-		} else {
-			if len(f) > 0 {
-				action = append(action, f)
-			}
-		}
-	}
-
-	if len(action) > 0 {
-		lu.Action = strings.Join(action, " ")
-		fields = append(fields, task.FIELD_ACTION)
-	}
-
-	lu.Fields = fields
-
-	return lu, nil
+	return ""
 }

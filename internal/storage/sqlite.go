@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"git.ewintr.nl/gte/internal/task"
+	"github.com/google/uuid"
 	_ "modernc.org/sqlite"
 )
 
@@ -188,11 +189,11 @@ func (s *Sqlite) FindByLocalId(localId int) (*task.LocalTask, error) {
 	return t, nil
 }
 
-func (s *Sqlite) SetLocalUpdate(tsk *task.LocalTask) error {
+func (s *Sqlite) SetLocalUpdate(id string, update *task.LocalUpdate) error {
 	if _, err := s.db.Exec(`
 UPDATE task
 SET local_update = ?, local_status = ?
-WHERE local_id = ?`, tsk.LocalUpdate, task.STATUS_UPDATED, tsk.LocalId); err != nil {
+WHERE id = ?`, update, task.STATUS_UPDATED, id); err != nil {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
 
@@ -207,6 +208,49 @@ WHERE local_id = ?`, task.STATUS_DISPATCHED, localId); err != nil {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
 	return nil
+}
+
+func (s *Sqlite) Add(update *task.LocalUpdate) (*task.LocalTask, error) {
+	rows, err := s.db.Query(`SELECT local_id FROM task`)
+	if err != nil {
+		return &task.LocalTask{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+	}
+	var used []int
+	for rows.Next() {
+		var localId int
+		if err := rows.Scan(&localId); err != nil {
+			return &task.LocalTask{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+		}
+		used = append(used, localId)
+	}
+	rows.Close()
+
+	tsk := &task.LocalTask{
+		Task: task.Task{
+			Id:      uuid.New().String(),
+			Version: 0,
+			Folder:  task.FOLDER_NEW,
+		},
+		LocalId:     NextLocalId(used),
+		LocalStatus: task.STATUS_UPDATED,
+		LocalUpdate: update,
+	}
+
+	var recurStr string
+	if tsk.LocalUpdate.Recur != nil {
+		recurStr = tsk.LocalUpdate.Recur.String()
+	}
+	if _, err := s.db.Exec(`
+INSERT INTO task
+(id, local_id, version, folder, action, project, due, recur, local_status, local_update)
+VALUES
+(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		tsk.Id, tsk.LocalId, tsk.Version, tsk.Folder, tsk.Action, tsk.Project,
+		tsk.Due.String(), recurStr, tsk.LocalStatus, tsk.LocalUpdate); err != nil {
+		return &task.LocalTask{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+	}
+
+	return tsk, nil
 }
 
 func (s *Sqlite) migrate(wanted []sqliteMigration) error {
