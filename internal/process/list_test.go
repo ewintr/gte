@@ -111,4 +111,27 @@ func TestListProcess(t *testing.T) {
 			test.Equals(t, sExp, sAct)
 		})
 	}
+
+	t.Run("applyupdates", func(t *testing.T) {
+		mem := storage.NewMemory()
+		test.OK(t, mem.SetTasks([]*task.Task{task2, task4}))
+		lu := &task.LocalUpdate{
+			ForVersion: task4.Version,
+			Fields:     []string{task.FIELD_PROJECT},
+			Project:    "project4",
+		}
+		test.OK(t, mem.SetLocalUpdate(task4.Id, lu))
+
+		lr := process.ListReqs{
+			Project:      "project4",
+			ApplyUpdates: true,
+		}
+
+		list := process.NewList(mem, lr)
+		actRes, err := list.Process()
+		test.OK(t, err)
+		act := actRes.Tasks
+		test.Equals(t, 1, len(act))
+		test.Equals(t, "project4", act[0].Project)
+	})
 }

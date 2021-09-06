@@ -19,6 +19,7 @@ type ListReqs struct {
 	IncludeBefore bool
 	Folder        string
 	Project       string
+	ApplyUpdates  bool
 }
 
 func (lr ListReqs) Valid() bool {
@@ -59,6 +60,13 @@ func (l *List) Process() (*ListResult, error) {
 	potentialTasks, err := l.local.FindAll()
 	if err != nil {
 		return &ListResult{}, fmt.Errorf("%w: %v", ErrListProcess, err)
+	}
+
+	// updates
+	if l.reqs.ApplyUpdates {
+		for i := range potentialTasks {
+			potentialTasks[i].ApplyUpdate()
+		}
 	}
 
 	// folder
