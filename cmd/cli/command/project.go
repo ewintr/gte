@@ -22,7 +22,8 @@ func NewProject(conf *configuration.Configuration, cmdArgs []string) (*Project, 
 		return &Project{}, ErrInvalidAmountOfArgs
 	}
 	reqs := process.ListReqs{
-		Project: strings.ToLower(cmdArgs[0]),
+		Project:      strings.ToLower(cmdArgs[0]),
+		ApplyUpdates: true,
 	}
 	lister := process.NewList(local, reqs)
 

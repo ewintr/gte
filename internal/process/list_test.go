@@ -114,13 +114,20 @@ func TestListProcess(t *testing.T) {
 
 	t.Run("applyupdates", func(t *testing.T) {
 		mem := storage.NewMemory()
-		test.OK(t, mem.SetTasks([]*task.Task{task2, task4}))
-		lu := &task.LocalUpdate{
+		test.OK(t, mem.SetTasks([]*task.Task{task2, task3, task4}))
+		lu3 := &task.LocalUpdate{
+			ForVersion: task3.Version,
+			Fields:     []string{task.FIELD_PROJECT, task.FIELD_DONE},
+			Project:    "project4",
+			Done:       true,
+		}
+		test.OK(t, mem.SetLocalUpdate(task3.Id, lu3))
+		lu4 := &task.LocalUpdate{
 			ForVersion: task4.Version,
 			Fields:     []string{task.FIELD_PROJECT},
 			Project:    "project4",
 		}
-		test.OK(t, mem.SetLocalUpdate(task4.Id, lu))
+		test.OK(t, mem.SetLocalUpdate(task4.Id, lu4))
 
 		lr := process.ListReqs{
 			Project:      "project4",

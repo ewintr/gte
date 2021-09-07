@@ -67,6 +67,13 @@ func (l *List) Process() (*ListResult, error) {
 		for i := range potentialTasks {
 			potentialTasks[i].ApplyUpdate()
 		}
+		var undoneTasks []*task.LocalTask
+		for _, pt := range potentialTasks {
+			if !pt.Done {
+				undoneTasks = append(undoneTasks, pt)
+			}
+		}
+		potentialTasks = undoneTasks
 	}
 
 	// folder

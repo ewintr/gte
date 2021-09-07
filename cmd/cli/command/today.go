@@ -21,6 +21,7 @@ func NewToday(conf *configuration.Configuration) (*Today, error) {
 	reqs := process.ListReqs{
 		Due:           task.Today,
 		IncludeBefore: true,
+		ApplyUpdates:  true,
 	}
 	lister := process.NewList(local, reqs)
 

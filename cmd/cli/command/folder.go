@@ -35,7 +35,8 @@ func NewFolder(conf *configuration.Configuration, cmdArgs []string) (*Folder, er
 	}
 
 	reqs := process.ListReqs{
-		Folder: folder,
+		Folder:       folder,
+		ApplyUpdates: true,
 	}
 	lister := process.NewList(local, reqs)
 
