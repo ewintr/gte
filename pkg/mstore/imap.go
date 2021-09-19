@@ -236,7 +236,7 @@ func (im *IMAP) Add(folder, subject, body string) error {
 	defer im.Close()
 
 	msgStr := fmt.Sprintf("From: %s\r\nDate: %s\r\nSubject: %s\r\n\r\n%s\r\n",
-		"gte <gte@gettingthings.email>",
+		"gte <gte@ewintr.nl>",
 		time.Now().Format(time.RFC822Z),
 		subject,
 		body,
