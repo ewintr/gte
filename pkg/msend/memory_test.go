@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"git.ewintr.nl/go-kit/test"
-	"git.ewintr.nl/gte/pkg/msend"
+	"ewintr.nl/go-kit/test"
+	"ewintr.nl/gte/pkg/msend"
 )
 
 func TestMemorySend(t *testing.T) {

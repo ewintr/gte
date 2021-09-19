@@ -1,9 +1,9 @@
 package command
 
 import (
-	"git.ewintr.nl/gte/cmd/cli/format"
-	"git.ewintr.nl/gte/internal/configuration"
-	"git.ewintr.nl/gte/internal/storage"
+	"ewintr.nl/gte/cmd/cli/format"
+	"ewintr.nl/gte/internal/configuration"
+	"ewintr.nl/gte/internal/storage"
 )
 
 type Show struct {

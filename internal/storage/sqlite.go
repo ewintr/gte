@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"git.ewintr.nl/gte/internal/task"
+	"ewintr.nl/gte/internal/task"
 	"github.com/google/uuid"
 	_ "modernc.org/sqlite"
 )

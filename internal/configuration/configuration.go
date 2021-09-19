@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"git.ewintr.nl/gte/internal/storage"
-	"git.ewintr.nl/gte/pkg/msend"
-	"git.ewintr.nl/gte/pkg/mstore"
+	"ewintr.nl/gte/internal/storage"
+	"ewintr.nl/gte/pkg/msend"
+	"ewintr.nl/gte/pkg/mstore"
 )
 
 var (

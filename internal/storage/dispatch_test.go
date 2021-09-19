@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"git.ewintr.nl/go-kit/test"
-	"git.ewintr.nl/gte/internal/storage"
-	"git.ewintr.nl/gte/internal/task"
-	"git.ewintr.nl/gte/pkg/msend"
+	"ewintr.nl/go-kit/test"
+	"ewintr.nl/gte/internal/storage"
+	"ewintr.nl/gte/internal/task"
+	"ewintr.nl/gte/pkg/msend"
 )
 
 func TestDispatcherDispatch(t *testing.T) {

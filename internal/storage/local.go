@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"git.ewintr.nl/gte/internal/task"
+	"ewintr.nl/gte/internal/task"
 )
 
 var (

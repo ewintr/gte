@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"git.ewintr.nl/gte/internal/storage"
+	"ewintr.nl/gte/internal/storage"
 )
 
 var (

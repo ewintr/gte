@@ -6,13 +6,13 @@ import (
 	"os/signal"
 	"time"
 
-	"git.ewintr.nl/go-kit/log"
-	"git.ewintr.nl/gte/internal/configuration"
-	"git.ewintr.nl/gte/internal/process"
-	"git.ewintr.nl/gte/internal/storage"
-	"git.ewintr.nl/gte/internal/task"
-	"git.ewintr.nl/gte/pkg/msend"
-	"git.ewintr.nl/gte/pkg/mstore"
+	"ewintr.nl/go-kit/log"
+	"ewintr.nl/gte/internal/configuration"
+	"ewintr.nl/gte/internal/process"
+	"ewintr.nl/gte/internal/storage"
+	"ewintr.nl/gte/internal/task"
+	"ewintr.nl/gte/pkg/msend"
+	"ewintr.nl/gte/pkg/mstore"
 )
 
 func main() {

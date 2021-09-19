@@ -3,11 +3,11 @@ package command
 import (
 	"fmt"
 
-	"git.ewintr.nl/gte/cmd/cli/format"
-	"git.ewintr.nl/gte/internal/configuration"
-	"git.ewintr.nl/gte/internal/process"
-	"git.ewintr.nl/gte/internal/storage"
-	"git.ewintr.nl/gte/pkg/mstore"
+	"ewintr.nl/gte/cmd/cli/format"
+	"ewintr.nl/gte/internal/configuration"
+	"ewintr.nl/gte/internal/process"
+	"ewintr.nl/gte/internal/storage"
+	"ewintr.nl/gte/pkg/mstore"
 )
 
 type Inbox struct {

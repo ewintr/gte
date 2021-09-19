@@ -4,11 +4,11 @@ import (
 	"sort"
 	"testing"
 
-	"git.ewintr.nl/go-kit/test"
-	"git.ewintr.nl/gte/internal/process"
-	"git.ewintr.nl/gte/internal/storage"
-	"git.ewintr.nl/gte/internal/task"
-	"git.ewintr.nl/gte/pkg/mstore"
+	"ewintr.nl/go-kit/test"
+	"ewintr.nl/gte/internal/process"
+	"ewintr.nl/gte/internal/storage"
+	"ewintr.nl/gte/internal/task"
+	"ewintr.nl/gte/pkg/mstore"
 )
 
 func TestFetchProcess(t *testing.T) {

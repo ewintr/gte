@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"git.ewintr.nl/gte/internal/task"
+	"ewintr.nl/gte/internal/task"
 )
 
 var (

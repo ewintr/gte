@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 
-	"git.ewintr.nl/gte/internal/configuration"
+	"ewintr.nl/gte/internal/configuration"
 )
 
 var (
