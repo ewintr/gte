@@ -16,7 +16,7 @@ var (
 )
 
 const (
-	FOLDER_INBOX     = "GTE/In"
+	FOLDER_INBOX     = "GTE/Inbox"
 	FOLDER_NEW       = "GTE/New"
 	FOLDER_RECURRING = "GTE/Recurring"
 	FOLDER_PLANNED   = "GTE/Planned"

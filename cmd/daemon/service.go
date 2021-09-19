@@ -52,7 +52,7 @@ func main() {
 
 func Run(inboxProc *process.Inbox, recurProc *process.Recur, logger log.Logger) {
 	logger = logger.WithField("func", "run")
-	inboxTicker := time.NewTicker(10 * time.Second)
+	inboxTicker := time.NewTicker(30 * time.Second)
 	recurTicker := time.NewTicker(time.Hour)
 	oldToday := task.Today
 
