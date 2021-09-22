@@ -37,10 +37,6 @@ func NewMemory(folders []string) (*Memory, error) {
 	}, nil
 }
 
-func (mem *Memory) Folders() ([]string, error) {
-	return mem.folders, nil
-}
-
 func (mem *Memory) Add(folder, subject, body string) error {
 	if subject == "" {
 		return ErrInvalidMessage

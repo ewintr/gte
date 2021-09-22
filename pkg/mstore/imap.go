@@ -41,9 +41,10 @@ func (b *IMAPBody) Len() int {
 }
 
 type IMAPConfig struct {
-	IMAPURL      string
-	IMAPUsername string
-	IMAPPassword string
+	IMAPURL          string
+	IMAPUsername     string
+	IMAPPassword     string
+	IMAPFolderPrefix string
 }
 
 func (esc *IMAPConfig) Valid() bool {
@@ -97,34 +98,12 @@ func (im *IMAP) Close() {
 	im.connected = false
 }
 
-func (im *IMAP) Folders() ([]string, error) {
-	if err := im.Connect(); err != nil {
-		return []string{}, err
-	}
-	defer im.Close()
-
-	boxes, done := make(chan *imap.MailboxInfo), make(chan error)
-	go func() {
-		done <- im.client.List("", "*", boxes)
-	}()
-
-	folders := []string{}
-	for b := range boxes {
-		folders = append(folders, b.Name)
-	}
-
-	if err := <-done; err != nil {
-		return []string{}, err
-	}
-
-	return folders, nil
-}
-
 func (im *IMAP) selectFolder(folder string) error {
 	if !im.connected {
 		return ErrIMAPNotConnected
 	}
 
+	folder = fmt.Sprintf("%s%s", im.config.IMAPFolderPrefix, folder)
 	status, err := im.client.Select(folder, false)
 	if err != nil {
 		return fmt.Errorf("%w, %v", ErrIMAPServerProblem, err)
@@ -243,6 +222,7 @@ func (im *IMAP) Add(folder, subject, body string) error {
 	)
 	msg := NewIMAPBody(msgStr)
 
+	folder = fmt.Sprintf("%s%s", im.config.IMAPFolderPrefix, folder)
 	if err := im.client.Append(folder, nil, time.Time{}, imap.Literal(msg)); err != nil {
 		return fmt.Errorf("%w: %v", ErrIMAPServerProblem, err)
 	}

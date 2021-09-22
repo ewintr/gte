@@ -2,7 +2,6 @@ package mstore_test
 
 import (
 	"fmt"
-	"sort"
 	"testing"
 
 	"ewintr.nl/go-kit/test"
@@ -37,32 +36,6 @@ func TestNewMemory(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := mstore.NewMemory(tc.folders)
 			test.Equals(t, tc.exp, err)
-		})
-	}
-}
-
-func TestMemoryFolders(t *testing.T) {
-	for _, tc := range []struct {
-		name    string
-		folders []string
-	}{
-		{
-			name:    "one",
-			folders: []string{"one"},
-		},
-		{
-			name:    "many",
-			folders: []string{"one", "two", "three"},
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			mem, err := mstore.NewMemory(tc.folders)
-			test.OK(t, err)
-			actFolders, err := mem.Folders()
-			test.OK(t, err)
-			expFolders := tc.folders
-			sort.Strings(expFolders)
-			test.Equals(t, expFolders, actFolders)
 		})
 	}
 }

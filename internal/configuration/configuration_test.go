@@ -42,11 +42,12 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name:   "imap",
-			source: "imap_url=url\nimap_username=username\nimap_password=password",
+			source: "imap_url=url\nimap_username=username\nimap_password=password\nimap_folder_prefix=prefix",
 			exp: &configuration.Configuration{
-				IMAPURL:      "url",
-				IMAPUsername: "username",
-				IMAPPassword: "password",
+				IMAPURL:          "url",
+				IMAPUsername:     "username",
+				IMAPPassword:     "password",
+				IMAPFolderPrefix: "prefix",
 			},
 		},
 		{
@@ -84,24 +85,26 @@ func TestNew(t *testing.T) {
 
 func TestConfigs(t *testing.T) {
 	conf := &configuration.Configuration{
-		IMAPURL:      "imap_url",
-		IMAPUsername: "imap_username",
-		IMAPPassword: "imap_password",
-		SMTPURL:      "smtp_url",
-		SMTPUsername: "smtp_username",
-		SMTPPassword: "smtp_password",
-		ToName:       "to_name",
-		ToAddress:    "to_address",
-		FromName:     "from_name",
-		FromAddress:  "from_address",
-		LocalDBPath:  "db_path",
+		IMAPURL:          "imap_url",
+		IMAPUsername:     "imap_username",
+		IMAPPassword:     "imap_password",
+		IMAPFolderPrefix: "imap_folder_prefix",
+		SMTPURL:          "smtp_url",
+		SMTPUsername:     "smtp_username",
+		SMTPPassword:     "smtp_password",
+		ToName:           "to_name",
+		ToAddress:        "to_address",
+		FromName:         "from_name",
+		FromAddress:      "from_address",
+		LocalDBPath:      "db_path",
 	}
 
 	t.Run("imap", func(t *testing.T) {
 		exp := &mstore.IMAPConfig{
-			IMAPURL:      "imap_url",
-			IMAPUsername: "imap_username",
-			IMAPPassword: "imap_password",
+			IMAPURL:          "imap_url",
+			IMAPUsername:     "imap_username",
+			IMAPPassword:     "imap_password",
+			IMAPFolderPrefix: "imap_folder_prefix",
 		}
 
 		test.Equals(t, exp, conf.IMAP())

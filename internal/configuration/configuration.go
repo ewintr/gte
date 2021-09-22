@@ -17,9 +17,10 @@ var (
 )
 
 type Configuration struct {
-	IMAPURL      string
-	IMAPUsername string
-	IMAPPassword string
+	IMAPURL          string
+	IMAPUsername     string
+	IMAPPassword     string
+	IMAPFolderPrefix string
 
 	SMTPURL      string
 	SMTPUsername string
@@ -56,6 +57,8 @@ func New(src io.Reader) *Configuration {
 			conf.IMAPUsername = value
 		case "imap_password":
 			conf.IMAPPassword = value
+		case "imap_folder_prefix":
+			conf.IMAPFolderPrefix = value
 		case "smtp_url":
 			conf.SMTPURL = value
 		case "smtp_username":
@@ -80,9 +83,10 @@ func New(src io.Reader) *Configuration {
 
 func (c *Configuration) IMAP() *mstore.IMAPConfig {
 	return &mstore.IMAPConfig{
-		IMAPURL:      c.IMAPURL,
-		IMAPUsername: c.IMAPUsername,
-		IMAPPassword: c.IMAPPassword,
+		IMAPURL:          c.IMAPURL,
+		IMAPUsername:     c.IMAPUsername,
+		IMAPPassword:     c.IMAPPassword,
+		IMAPFolderPrefix: c.IMAPFolderPrefix,
 	}
 }
 

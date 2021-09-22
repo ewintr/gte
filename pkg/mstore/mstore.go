@@ -38,7 +38,6 @@ func (m *Message) Equal(n *Message) bool {
 }
 
 type MStorer interface {
-	Folders() ([]string, error)
 	Messages(folder string) ([]*Message, error)
 	Add(folder, subject, body string) error
 	Remove(msg *Message) error

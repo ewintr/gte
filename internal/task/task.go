@@ -16,11 +16,11 @@ var (
 )
 
 const (
-	FOLDER_INBOX     = "GTE/Inbox"
-	FOLDER_NEW       = "GTE/New"
-	FOLDER_RECURRING = "GTE/Recurring"
-	FOLDER_PLANNED   = "GTE/Planned"
-	FOLDER_UNPLANNED = "GTE/Unplanned"
+	FOLDER_INBOX     = "Inbox"
+	FOLDER_NEW       = "New"
+	FOLDER_RECURRING = "Recurring"
+	FOLDER_PLANNED   = "Planned"
+	FOLDER_UNPLANNED = "Unplanned"
 
 	QUOTE_PREFIX       = ">"
 	PREVIOUS_SEPARATOR = "Previous version:"
