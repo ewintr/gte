@@ -35,15 +35,15 @@ func TestInboxProcess(t *testing.T) {
 					},
 					{
 						Subject: "to recurring",
-						Body:    "recur: 2021-05-14, daily\nid: xxx-xxx-a\nversion: 1",
+						Body:    "recur: 2021-05-14, daily\nid: xxx-xxx-a\nversion: 1\nproject: project\n",
 					},
 					{
 						Subject: "to planned",
-						Body:    "due: 2021-05-14\nid: xxx-xxx-b\nversion: 1",
+						Body:    "due: 2021-05-14\nid: xxx-xxx-b\nversion: 1\nproject: project\n",
 					},
 					{
 						Subject: "to unplanned",
-						Body:    "id: xxx-xxx-c\nversion: 1",
+						Body:    "id: xxx-xxx-c\nversion: 1\nproject: project\n",
 					},
 				},
 			},
@@ -51,45 +51,45 @@ func TestInboxProcess(t *testing.T) {
 			expMsgs: map[string][]*mstore.Message{
 				task.FOLDER_INBOX:     {},
 				task.FOLDER_NEW:       {{Subject: "to new"}},
-				task.FOLDER_RECURRING: {{Subject: "to recurring"}},
-				task.FOLDER_PLANNED:   {{Subject: "2021-05-14 (friday) - to planned"}},
-				task.FOLDER_UNPLANNED: {{Subject: "to unplanned"}},
+				task.FOLDER_RECURRING: {{Subject: "project - to recurring"}},
+				task.FOLDER_PLANNED:   {{Subject: "2021-05-14 (friday) - project - to planned"}},
+				task.FOLDER_UNPLANNED: {{Subject: "project - to unplanned"}},
 			},
 		},
 		{
 			name: "cleanup",
 			messages: map[string][]*mstore.Message{
 				task.FOLDER_INBOX: {{
-					Subject: "new version",
-					Body:    "id: xxx-xxx\nversion: 3",
+					Subject: "project - new version",
+					Body:    "id: xxx-xxx\nversion: 3\nproject: project\n",
 				}},
 				task.FOLDER_UNPLANNED: {{
 					Subject: "old version",
-					Body:    "id: xxx-xxx\nversion: 3",
+					Body:    "id: xxx-xxx\nversion: 3\nproject: project\n",
 				}},
 			},
 			expCount: 1,
 			expMsgs: map[string][]*mstore.Message{
 				task.FOLDER_INBOX:     {},
-				task.FOLDER_UNPLANNED: {{Subject: "new version"}},
+				task.FOLDER_UNPLANNED: {{Subject: "project - new version"}},
 			},
 		},
 		{
 			name: "cleanup version conflict",
 			messages: map[string][]*mstore.Message{
 				task.FOLDER_INBOX: {{
-					Subject: "new version",
-					Body:    "id: xxx-xxx\nversion: 3",
+					Subject: "project - new version",
+					Body:    "id: xxx-xxx\nversion: 3\nproject\n",
 				}},
 				task.FOLDER_UNPLANNED: {{
-					Subject: "not really old version",
-					Body:    "id: xxx-xxx\nversion: 5",
+					Subject: "project - not really old version",
+					Body:    "id: xxx-xxx\nversion: 5\nproject: project\n",
 				}},
 			},
 			expCount: 1,
 			expMsgs: map[string][]*mstore.Message{
 				task.FOLDER_INBOX:     {},
-				task.FOLDER_UNPLANNED: {{Subject: "not really old version"}},
+				task.FOLDER_UNPLANNED: {{Subject: "project - not really old version"}},
 			},
 		},
 		{
@@ -115,23 +115,23 @@ func TestInboxProcess(t *testing.T) {
 			messages: map[string][]*mstore.Message{
 				task.FOLDER_INBOX: {
 					{
-						Subject: "version 2",
-						Body:    "id: xxx-xxx\nversion: 1\n",
+						Subject: "project - version 2",
+						Body:    "id: xxx-xxx\nversion: 1\nproject: project\n",
 					},
 					{
-						Subject: "version 2b",
-						Body:    "id: xxx-xxx\nversion: 1\n",
+						Subject: "project - version 2b",
+						Body:    "id: xxx-xxx\nversion: 1\nproject: project\n",
 					},
 				},
 				task.FOLDER_UNPLANNED: {{
-					Subject: "the task",
-					Body:    "id: xxx-xxx\nversion: 1\n",
+					Subject: "project - the task",
+					Body:    "id: xxx-xxx\nversion: 1\nproject: project\n",
 				}},
 			},
 			expCount: 1,
 			expMsgs: map[string][]*mstore.Message{
 				task.FOLDER_INBOX:     {},
-				task.FOLDER_UNPLANNED: {{Subject: "version 2b"}},
+				task.FOLDER_UNPLANNED: {{Subject: "project - version 2b"}},
 			},
 		},
 	} {

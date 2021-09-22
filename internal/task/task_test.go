@@ -198,6 +198,7 @@ func TestTaskTargetFolder(t *testing.T) {
 			tsk: &task.Task{
 				Id:      "id",
 				Version: 2,
+				Project: "project",
 				Recur:   task.Daily{Start: task.NewDate(2021, 06, 21)},
 			},
 			expFolder: task.FOLDER_RECURRING,
@@ -207,6 +208,7 @@ func TestTaskTargetFolder(t *testing.T) {
 			tsk: &task.Task{
 				Id:      "id",
 				Version: 2,
+				Project: "project",
 				Due:     task.NewDate(2021, 06, 21),
 			},
 			expFolder: task.FOLDER_PLANNED,
@@ -216,6 +218,7 @@ func TestTaskTargetFolder(t *testing.T) {
 			tsk: &task.Task{
 				Id:      "id",
 				Version: 2,
+				Project: "project",
 			},
 			expFolder: task.FOLDER_UNPLANNED,
 		},

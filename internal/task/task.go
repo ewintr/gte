@@ -118,7 +118,7 @@ func NewFromMessage(msg *mstore.Message) *Task {
 
 func (t *Task) TargetFolder() string {
 	switch {
-	case t.Version == 0:
+	case t.Project == "":
 		return FOLDER_NEW
 	case t.IsRecurrer():
 		return FOLDER_RECURRING
