@@ -131,18 +131,13 @@ func TestNewDateFromString(t *testing.T) {
 			exp   task.Date
 		}{
 			{
-				name:  "english dayname lowercase",
+				name:  "dayname lowercase",
 				input: "monday",
 				exp:   task.NewDate(2021, 2, 1),
 			},
 			{
-				name:  "english dayname capitalized",
+				name:  "dayname capitalized",
 				input: "Monday",
-				exp:   task.NewDate(2021, 2, 1),
-			},
-			{
-				name:  "dutch dayname lowercase",
-				input: "maandag",
 				exp:   task.NewDate(2021, 2, 1),
 			},
 		} {
@@ -155,63 +150,32 @@ func TestNewDateFromString(t *testing.T) {
 	t.Run("relative days", func(t *testing.T) {
 		task.Today = task.NewDate(2021, 1, 30)
 		for _, tc := range []struct {
-			name  string
-			input string
-			exp   task.Date
+			name string
+			exp  task.Date
 		}{
 			{
-				name:  "today english",
-				input: "today",
-				exp:   task.NewDate(2021, 1, 30),
+				name: "today",
+				exp:  task.NewDate(2021, 1, 30),
 			},
 			{
-				name:  "today dutch",
-				input: "vandaag",
-				exp:   task.NewDate(2021, 1, 30),
+				name: "tomorrow",
+				exp:  task.NewDate(2021, 1, 31),
 			},
 			{
-				name:  "tomorrow english",
-				input: "tomorrow",
-				exp:   task.NewDate(2021, 1, 31),
+				name: "day after tomorrow",
+				exp:  task.NewDate(2021, 2, 1),
 			},
 			{
-				name:  "tomorrow dutch",
-				input: "morgen",
-				exp:   task.NewDate(2021, 1, 31),
+				name: "this week",
+				exp:  task.NewDate(2021, 2, 5),
 			},
 			{
-				name:  "day after tomorrow english",
-				input: "day after tomorrow",
-				exp:   task.NewDate(2021, 2, 1),
-			},
-			{
-				name:  "day after tomorrow dutch",
-				input: "overmorgen",
-				exp:   task.NewDate(2021, 2, 1),
-			},
-			{
-				name:  "this week english",
-				input: "this week",
-				exp:   task.NewDate(2021, 2, 5),
-			},
-			{
-				name:  "this week dutch",
-				input: "deze week",
-				exp:   task.NewDate(2021, 2, 5),
-			},
-			{
-				name:  "next week english",
-				input: "next week",
-				exp:   task.NewDate(2021, 2, 12),
-			},
-			{
-				name:  "next week dutch",
-				input: "volgende week",
-				exp:   task.NewDate(2021, 2, 12),
+				name: "next week",
+				exp:  task.NewDate(2021, 2, 12),
 			},
 		} {
 			t.Run(tc.name, func(t *testing.T) {
-				test.Equals(t, tc.exp, task.NewDateFromString(tc.input))
+				test.Equals(t, tc.exp, task.NewDateFromString(tc.name))
 			})
 		}
 	})
@@ -224,15 +188,9 @@ func TestNewDateFromString(t *testing.T) {
 			exp   task.Date
 		}{
 			{
-				name:  "this sprint english",
+				name:  "this sprint",
 				today: task.NewDate(2021, 1, 30),
 				input: "this sprint",
-				exp:   task.NewDate(2021, 2, 11),
-			},
-			{
-				name:  "this sprint dutch",
-				today: task.NewDate(2021, 1, 30),
-				input: "deze sprint",
 				exp:   task.NewDate(2021, 2, 11),
 			},
 			{

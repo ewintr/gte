@@ -98,39 +98,35 @@ func NewDateFromString(date string) Date {
 	switch date {
 	case "":
 		fallthrough
+	case "no-date":
+		fallthrough
 	case "no date":
 		return Date{}
 
 	case "today":
-		fallthrough
-	case "vandaag":
 		return Today
 
 	case "tomorrow":
-		fallthrough
-	case "morgen":
 		return Today.AddDays(1)
 
 	case "day after tomorrow":
 		fallthrough
-	case "overmorgen":
+	case "day-after-tomorrow":
 		return Today.AddDays(2)
 
 	case "this week":
 		fallthrough
-	case "deze week":
+	case "this-week":
 		daysToAdd := findDaysToWeekday(Today.Weekday(), time.Friday)
 		return Today.Add(daysToAdd)
 
 	case "next week":
 		fallthrough
-	case "volgende week":
+	case "next-week":
 		daysToAdd := findDaysToWeekday(Today.Weekday(), time.Friday) + 7
 		return Today.Add(daysToAdd)
 
 	case "this sprint":
-		fallthrough
-	case "deze sprint":
 		tDate := NewDate(2021, 1, 28) // a sprint end
 		for {
 			if tDate.After(Today) {
