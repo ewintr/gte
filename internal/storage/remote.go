@@ -88,8 +88,8 @@ func (rr *RemoteRepository) CleanUp() error {
 		}
 
 		for _, msg := range msgs {
-			id, _ := task.FieldFromBody(task.FIELD_ID, msg.Body)
-			versionStr, _ := task.FieldFromBody(task.FIELD_VERSION, msg.Body)
+			id := task.FieldFromBody(task.FIELD_ID, msg.Body)
+			versionStr := task.FieldFromBody(task.FIELD_VERSION, msg.Body)
 			version, _ := strconv.Atoi(versionStr)
 			if _, ok := msgsSet[id]; !ok {
 				msgsSet[id] = []msgInfo{}
@@ -141,7 +141,7 @@ func (rr *RemoteRepository) Remove(tasks []*task.Task) error {
 		}
 
 		for _, msg := range msgs {
-			id, _ := task.FieldFromBody(task.FIELD_ID, msg.Body)
+			id := task.FieldFromBody(task.FIELD_ID, msg.Body)
 			if _, ok := tMap[id]; ok {
 				toBeRemoved = append(toBeRemoved, msg)
 			}

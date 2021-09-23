@@ -89,8 +89,7 @@ func NewFromMessage(msg *mstore.Message) *Task {
 
 	bodyFields := map[string]string{}
 	for _, f := range bodyFieldNames {
-		value, _ := FieldFromBody(f, msg.Body)
-		bodyFields[f] = value
+		bodyFields[f] = FieldFromBody(f, msg.Body)
 	}
 
 	// apply precedence rules
@@ -238,16 +237,14 @@ func (t *Task) GenerateFromRecurrer(date Date) (*Task, error) {
 	}, nil
 }
 
-func FieldFromBody(field, body string) (string, bool) {
+func FieldFromBody(field, body string) string {
 	value := ""
-	dirty := false
-
 	lines := strings.Split(body, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(strings.TrimPrefix(line, QUOTE_PREFIX))
 
 		if line == PREVIOUS_SEPARATOR {
-			return value, dirty
+			return value
 		}
 
 		parts := strings.SplitN(line, FIELD_SEPARATOR, 2)
@@ -256,16 +253,12 @@ func FieldFromBody(field, body string) (string, bool) {
 		}
 
 		fieldName := strings.ToLower(strings.TrimSpace(parts[0]))
-		if fieldName == field {
-			if value == "" {
-				value = lowerAndTrim(parts[1])
-			} else {
-				dirty = true
-			}
+		if fieldName == field && value == "" {
+			value = lowerAndTrim(parts[1])
 		}
 	}
 
-	return value, dirty
+	return value
 }
 
 func FieldFromSubject(field, subject string) string {

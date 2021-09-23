@@ -363,7 +363,6 @@ func TestFieldFromBody(t *testing.T) {
 		field    string
 		body     string
 		expValue string
-		expDirty bool
 	}{
 		{
 			name: "empty field",
@@ -398,7 +397,6 @@ field: valuea
 field: valueb
 			`,
 			expValue: "valuea",
-			expDirty: true,
 		},
 		{
 			name:     "colons",
@@ -451,9 +449,8 @@ field: valuea
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			actValue, actDirty := task.FieldFromBody(tc.field, tc.body)
+			actValue := task.FieldFromBody(tc.field, tc.body)
 			test.Equals(t, tc.expValue, actValue)
-			test.Equals(t, tc.expDirty, actDirty)
 		})
 	}
 }
