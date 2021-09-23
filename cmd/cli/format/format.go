@@ -26,11 +26,14 @@ func FormatTaskTable(tasks []*task.LocalTask) string {
 
 	var output string
 	for _, t := range tasks {
-		var updateStr string
+		var projectStr, updateStr string
 		if t.LocalStatus == task.STATUS_UPDATED {
 			updateStr = " *"
 		}
-		output += fmt.Sprintf("%d%s\t%s\t%s (%s)\n", t.LocalId, updateStr, t.Due.String(), t.Action, t.Project)
+		if t.Folder != task.FOLDER_NEW {
+			projectStr = fmt.Sprintf(" (%s)", t.Project)
+		}
+		output += fmt.Sprintf("%d%s\t%s\t%s%s\n", t.LocalId, updateStr, t.Due.String(), t.Action, projectStr)
 	}
 
 	return fmt.Sprintf("%s\n", output)
