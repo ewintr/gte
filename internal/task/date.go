@@ -206,11 +206,17 @@ func (d Date) Add(days int) Date {
 }
 
 func (d Date) AddMonths(addMonths int) Date {
-	year, month, day := d.t.Date()
-	addYears := int((int(month) + addMonths) / 12)
-	newMonth := (int(month) + addMonths) % 12
+	year, mmonth, day := d.t.Date()
+	month := int(mmonth)
+	for m := 1; m <= addMonths; m++ {
+		month += 1
+		if month == 12 {
+			year += 1
+			month = 1
+		}
+	}
 
-	return NewDate(year+addYears, newMonth, day)
+	return NewDate(year, month, day)
 }
 
 func (d Date) Equal(ud Date) bool {

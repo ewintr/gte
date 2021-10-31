@@ -367,4 +367,12 @@ func TestEveryNMonths(t *testing.T) {
 		}
 		test.Equals(t, false, recur.RecursOn(task.NewDate(2021, 3, 9)))
 	})
+
+	t.Run("bug", func(t *testing.T) {
+		recur := task.EveryNMonths{
+			Start: task.NewDate(2021, 3, 1),
+			N:     1,
+		}
+		test.Equals(t, false, recur.RecursOn(task.NewDate(2021, 11, 3)))
+	})
 }
