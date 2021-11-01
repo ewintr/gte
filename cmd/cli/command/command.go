@@ -34,6 +34,8 @@ func Parse(args []string, conf *configuration.Configuration) (Command, error) {
 		return NewFetch(conf)
 	case "send":
 		return NewSend(conf)
+	case "sync":
+		return NewSync(conf)
 	case "today":
 		return NewToday(conf)
 	case "tomorrow":
