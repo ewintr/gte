@@ -63,7 +63,7 @@ func NewSqlite(conf *SqliteConfig) (*Sqlite, error) {
 }
 
 func (s *Sqlite) LatestSync() (time.Time, error) {
-	rows, err := s.db.Query(`SELECT latest_sync FROM system`)
+	rows, err := s.db.Query(`SELECT strftime('%s', latest_sync) FROM system`)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
@@ -79,6 +79,12 @@ func (s *Sqlite) LatestSync() (time.Time, error) {
 }
 
 func (s *Sqlite) SetTasks(tasks []*task.Task) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+	}
+	defer tx.Rollback()
+
 	oldTasks, err := s.FindAll()
 	if err != nil {
 		return err
@@ -104,6 +110,14 @@ VALUES
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 		}
+	}
+
+	if _, err := s.db.Exec(`UPDATE system SET latest_sync=DATETIME('now')`); err != nil {
+		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
 
 	return nil
