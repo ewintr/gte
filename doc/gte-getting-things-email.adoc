@@ -1,10 +1,6 @@
 = GTE - Email based task management
-Erik Winter <ik@erikwinter.nl>
 2021-05-11
-:kind: article
-:public: yes
-:language: en
-:tags: gte, golang, email
+:tags: go, email, en, public
 
 It’s a rough estimate, but I think there about at least a billion apps and systems out there that can help you organize your daily tasks. All of them suck. Task management apparently is a very personal thing. 
 
