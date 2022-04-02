@@ -201,9 +201,6 @@ func (t *Task) FormatBody() string {
 		body += fmt.Sprintf("%s\r\n", line)
 	}
 
-	if t.Message != nil {
-		body += fmt.Sprintf("\r\nPrevious version:\r\n\r\n%s\r\n", t.Message.Body)
-	}
 	return body
 }
 

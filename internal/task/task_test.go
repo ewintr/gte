@@ -348,7 +348,7 @@ func TestFormatBody(t *testing.T) {
 					Body: "previous body",
 				},
 			},
-			exp: "\r\naction:  an action\r\ndue:     2021-01-30 (saturday)\r\nproject: project\r\nversion: 6\r\nid:      an id\r\ndone:    true\r\n\r\nPrevious version:\r\n\r\nprevious body\r\n",
+			exp: "\r\naction:  an action\r\ndue:     2021-01-30 (saturday)\r\nproject: project\r\nversion: 6\r\nid:      an id\r\ndone:    true\r\n",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
