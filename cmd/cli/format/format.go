@@ -13,30 +13,74 @@ var (
 	ErrFieldAlreadyUsed = errors.New("field was already used")
 )
 
+type column int
+
+const (
+	COL_ID column = iota
+	COL_STATUS
+	COL_DATE
+	COL_TASK
+	COL_PROJECT
+)
+
 func FormatError(err error) string {
 	return fmt.Sprintf("could not perform command.\n\nerror: %s\n", err.Error())
 }
 
-func FormatTaskTable(tasks []*task.LocalTask) string {
+func FormatTasks(tasks []*task.LocalTask) string {
 	if len(tasks) == 0 {
 		return "no tasks to display\n"
 	}
 
 	sort.Sort(task.ByDefault(tasks))
 
-	var output string
-	for _, t := range tasks {
-		var projectStr, updateStr string
-		if t.LocalStatus == task.STATUS_UPDATED {
-			updateStr = " *"
+	normal, recurring := []*task.LocalTask{}, []*task.LocalTask{}
+	for _, lt := range tasks {
+		if lt.Folder == task.FOLDER_RECURRING {
+			recurring = append(recurring, lt)
+			continue
 		}
-		if t.Folder != task.FOLDER_NEW {
-			projectStr = fmt.Sprintf(" (%s)", t.Project)
-		}
-		output += fmt.Sprintf("%d%s\t%s\t%s%s\n", t.LocalId, updateStr, t.Due.String(), t.Action, projectStr)
+		normal = append(normal, lt)
 	}
 
-	return fmt.Sprintf("%s\n", output)
+	output := ""
+	if len(recurring) > 0 {
+		output = fmt.Sprintf("%s\nRecurring:\n%s\nTasks:\n", output, FormatTaskTable(recurring))
+	}
+
+	return fmt.Sprintf("%s\n%s\n", output, FormatTaskTable(normal))
+}
+
+func FormatTaskTable(tasks []*task.LocalTask, cols ...column) string {
+	if len(cols) == 0 {
+		cols = []column{COL_ID, COL_STATUS, COL_DATE, COL_TASK, COL_PROJECT}
+	}
+
+	var data [][]string
+	for _, t := range tasks {
+		var line []string
+		for _, col := range cols {
+			switch col {
+			case COL_ID:
+				line = append(line, fmt.Sprintf("%d", t.LocalId))
+			case COL_STATUS:
+				var updated string
+				if t.LocalStatus == task.STATUS_UPDATED {
+					updated = "*"
+				}
+				line = append(line, updated)
+			case COL_DATE:
+				line = append(line, t.Due.String())
+			case COL_TASK:
+				line = append(line, t.Action)
+			case COL_PROJECT:
+				line = append(line, t.Project)
+			}
+		}
+		data = append(data, line)
+	}
+
+	return FormatTable(data)
 }
 
 func FormatTask(t *task.LocalTask) string {
@@ -88,4 +132,33 @@ func ParseTaskFieldArgs(args []string) (*task.LocalUpdate, error) {
 	lu.Fields = fields
 
 	return lu, nil
+}
+
+func FormatTable(data [][]string) string {
+	if len(data) == 0 {
+		return ""
+	}
+	max := make([]int, len(data))
+	for _, line := range data {
+		for i, col := range line {
+			if len(col) > max[i] {
+				max[i] = len(col)
+			}
+		}
+	}
+
+	var output string
+	for _, line := range data {
+		for i, col := range line {
+			output += col
+			for s := 0; s < max[i]-len(col); s++ {
+				output += " "
+			}
+			output += " "
+		}
+		output += "\n"
+
+	}
+
+	return output
 }

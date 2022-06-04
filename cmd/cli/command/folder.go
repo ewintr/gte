@@ -55,5 +55,5 @@ func (f *Folder) Do() string {
 		return "no tasks here\n\n"
 	}
 
-	return format.FormatTaskTable(res.Tasks)
+	return format.FormatTasks(res.Tasks)
 }

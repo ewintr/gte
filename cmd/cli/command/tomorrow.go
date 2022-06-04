@@ -36,5 +36,5 @@ func (t *Tomorrow) Do() string {
 		return format.FormatError(err)
 	}
 
-	return format.FormatTaskTable(res.Tasks)
+	return format.FormatTasks(res.Tasks)
 }
