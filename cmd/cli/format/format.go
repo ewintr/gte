@@ -62,7 +62,7 @@ func FormatTaskTable(tasks []*task.LocalTask, cols []Column) string {
 		data = append(data, line)
 	}
 
-	return fmt.Sprintf("\n%s", FormatTable(data))
+	return fmt.Sprintf("\n%s\n", FormatTable(data))
 }
 
 func FormatTask(t *task.LocalTask) string {
@@ -120,7 +120,7 @@ func FormatTable(data [][]string) string {
 	if len(data) == 0 {
 		return ""
 	}
-	max := make([]int, len(data))
+	max := make([]int, len(data[0]))
 	for _, line := range data {
 		for i, col := range line {
 			if len(col) > max[i] {
@@ -146,7 +146,7 @@ func FormatTable(data [][]string) string {
 		if r%3 == 0 {
 			output += fmt.Sprintf("%s", "\x1b[49m")
 		}
-		output += "\r\n"
+		output += "\n"
 
 	}
 
