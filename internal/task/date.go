@@ -184,6 +184,19 @@ func (d Date) String() string {
 	return strings.ToLower(d.t.Format(DateFormat))
 }
 
+func (d Date) Human() string {
+	if d.t.IsZero() {
+		return "-"
+	}
+
+	fmt.Println(Today.String(), d.String())
+	if Today.Add(7).After(d) {
+		return strings.ToLower(d.t.Format("Monday"))
+	}
+
+	return strings.ToLower(d.t.Format(DateFormat))
+}
+
 func (d Date) IsZero() bool {
 	return d.t.IsZero()
 }

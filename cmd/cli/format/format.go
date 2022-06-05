@@ -47,12 +47,12 @@ func FormatTaskTable(tasks []*task.LocalTask, cols []Column) string {
 				if t.LocalStatus == task.STATUS_UPDATED {
 					updated = append(updated, "u")
 				}
-				if task.Today.After(t.Due) {
+				if !t.Due.IsZero() && task.Today.After(t.Due) {
 					updated = append(updated, "o")
 				}
 				line = append(line, strings.Join(updated, ""))
 			case COL_DATE:
-				line = append(line, t.Due.String())
+				line = append(line, t.Due.Human())
 			case COL_ACTION:
 				line = append(line, t.Action)
 			case COL_PROJECT:
