@@ -1,12 +1,14 @@
 package command
 
 import (
+	"sort"
 	"strings"
 
 	"ewintr.nl/gte/cmd/cli/format"
 	"ewintr.nl/gte/internal/configuration"
 	"ewintr.nl/gte/internal/process"
 	"ewintr.nl/gte/internal/storage"
+	"ewintr.nl/gte/internal/task"
 )
 
 type Project struct {
@@ -38,5 +40,8 @@ func (p *Project) Do() string {
 		return format.FormatError(err)
 	}
 
-	return format.FormatTaskTable(res.Tasks, format.COL_ALL)
+	sort.Sort(task.ByDefault(res.Tasks))
+	cols := []format.Column{format.COL_ID, format.COL_STATUS, format.COL_DUE, format.COL_ACTION}
+
+	return format.FormatTaskTable(res.Tasks, cols)
 }

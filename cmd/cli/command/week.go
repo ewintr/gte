@@ -1,6 +1,8 @@
 package command
 
 import (
+	"sort"
+
 	"ewintr.nl/gte/cmd/cli/format"
 	"ewintr.nl/gte/internal/configuration"
 	"ewintr.nl/gte/internal/process"
@@ -33,6 +35,8 @@ func (w *Week) Do() string {
 	if err != nil {
 		return format.FormatError(err)
 	}
+
+	sort.Sort(task.ByDefault(res.Tasks))
 
 	return format.FormatTaskTable(res.Tasks, format.COL_ALL)
 }

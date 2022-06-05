@@ -77,6 +77,9 @@ type ByDefault []*LocalTask
 func (lt ByDefault) Len() int      { return len(lt) }
 func (lt ByDefault) Swap(i, j int) { lt[i], lt[j] = lt[j], lt[i] }
 func (lt ByDefault) Less(i, j int) bool {
+	if lt[i].IsRecurrer() != lt[j].IsRecurrer() {
+		return lt[i].IsRecurrer()
+	}
 	if !lt[j].Due.Equal(lt[i].Due) {
 		return lt[j].Due.After(lt[i].Due)
 	}

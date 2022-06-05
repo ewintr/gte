@@ -38,12 +38,12 @@ func (p *Projects) Do() string {
 		return "no projects here\n\n"
 	}
 
-	var out string
+	var data [][]string
 	for _, project := range projects {
 		if project != "" {
-			out += fmt.Sprintf("%s\n", project)
+			data = append(data, []string{project})
 		}
 	}
 
-	return fmt.Sprintf("%s\n", out)
+	return fmt.Sprintf("%s", format.FormatTable(data))
 }

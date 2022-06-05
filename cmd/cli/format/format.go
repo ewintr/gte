@@ -17,13 +17,13 @@ type Column int
 const (
 	COL_ID Column = iota
 	COL_STATUS
-	COL_DATE
+	COL_DUE
 	COL_ACTION
 	COL_PROJECT
 )
 
 var (
-	COL_ALL = []Column{COL_ID, COL_STATUS, COL_DATE, COL_ACTION, COL_PROJECT}
+	COL_ALL = []Column{COL_ID, COL_STATUS, COL_DUE, COL_ACTION, COL_PROJECT}
 )
 
 func FormatError(err error) string {
@@ -44,14 +44,21 @@ func FormatTaskTable(tasks []*task.LocalTask, cols []Column) string {
 				line = append(line, fmt.Sprintf("%d", t.LocalId))
 			case COL_STATUS:
 				var updated []string
+				if t.IsRecurrer() {
+					updated = append(updated, "r")
+				}
 				if t.LocalStatus == task.STATUS_UPDATED {
 					updated = append(updated, "u")
 				}
 				if !t.Due.IsZero() && task.Today.After(t.Due) {
 					updated = append(updated, "o")
 				}
-				line = append(line, strings.Join(updated, ""))
-			case COL_DATE:
+				line = append(line, strings.Join(updated, " "))
+			case COL_DUE:
+				if t.Due.IsZero() {
+					line = append(line, "")
+					continue
+				}
 				line = append(line, t.Due.Human())
 			case COL_ACTION:
 				line = append(line, t.Action)

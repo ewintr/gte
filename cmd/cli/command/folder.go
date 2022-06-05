@@ -1,6 +1,7 @@
 package command
 
 import (
+	"sort"
 	"strings"
 
 	"ewintr.nl/gte/cmd/cli/format"
@@ -50,6 +51,8 @@ func (f *Folder) Do() string {
 	if err != nil {
 		return format.FormatError(err)
 	}
+
+	sort.Sort(task.ByDefault(res.Tasks))
 
 	return format.FormatTaskTable(res.Tasks, format.COL_ALL)
 }

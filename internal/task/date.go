@@ -189,7 +189,6 @@ func (d Date) Human() string {
 		return "-"
 	}
 
-	fmt.Println(Today.String(), d.String())
 	if Today.Add(7).After(d) {
 		return strings.ToLower(d.t.Format("Monday"))
 	}
