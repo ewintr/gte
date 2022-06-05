@@ -34,5 +34,5 @@ func (w *Week) Do() string {
 		return format.FormatError(err)
 	}
 
-	return format.FormatTasks(res.Tasks)
+	return format.FormatTaskTable(res.Tasks, format.COL_ALL)
 }

@@ -38,9 +38,5 @@ func (p *Project) Do() string {
 		return format.FormatError(err)
 	}
 
-	if len(res.Tasks) == 0 {
-		return "no tasks here\n\n"
-	}
-
-	return format.FormatTasks(res.Tasks)
+	return format.FormatTaskTable(res.Tasks, format.COL_ALL)
 }

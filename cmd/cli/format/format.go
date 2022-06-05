@@ -3,7 +3,6 @@ package format
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 
 	"ewintr.nl/gte/internal/task"
@@ -13,47 +12,27 @@ var (
 	ErrFieldAlreadyUsed = errors.New("field was already used")
 )
 
-type column int
+type Column int
 
 const (
-	COL_ID column = iota
+	COL_ID Column = iota
 	COL_STATUS
 	COL_DATE
-	COL_TASK
+	COL_ACTION
 	COL_PROJECT
+)
+
+var (
+	COL_ALL = []Column{COL_ID, COL_STATUS, COL_DATE, COL_ACTION, COL_PROJECT}
 )
 
 func FormatError(err error) string {
 	return fmt.Sprintf("could not perform command.\n\nerror: %s\n", err.Error())
 }
 
-func FormatTasks(tasks []*task.LocalTask) string {
+func FormatTaskTable(tasks []*task.LocalTask, cols []Column) string {
 	if len(tasks) == 0 {
 		return "no tasks to display\n"
-	}
-
-	sort.Sort(task.ByDefault(tasks))
-
-	normal, recurring := []*task.LocalTask{}, []*task.LocalTask{}
-	for _, lt := range tasks {
-		if lt.Folder == task.FOLDER_RECURRING {
-			recurring = append(recurring, lt)
-			continue
-		}
-		normal = append(normal, lt)
-	}
-
-	output := ""
-	if len(recurring) > 0 {
-		output = fmt.Sprintf("%s\nRecurring:\n%s\nTasks:\n", output, FormatTaskTable(recurring))
-	}
-
-	return fmt.Sprintf("%s\n%s\n", output, FormatTaskTable(normal))
-}
-
-func FormatTaskTable(tasks []*task.LocalTask, cols ...column) string {
-	if len(cols) == 0 {
-		cols = []column{COL_ID, COL_STATUS, COL_DATE, COL_TASK, COL_PROJECT}
 	}
 
 	var data [][]string
@@ -64,14 +43,17 @@ func FormatTaskTable(tasks []*task.LocalTask, cols ...column) string {
 			case COL_ID:
 				line = append(line, fmt.Sprintf("%d", t.LocalId))
 			case COL_STATUS:
-				var updated string
+				var updated []string
 				if t.LocalStatus == task.STATUS_UPDATED {
-					updated = "*"
+					updated = append(updated, "u")
 				}
-				line = append(line, updated)
+				if task.Today.After(t.Due) {
+					updated = append(updated, "o")
+				}
+				line = append(line, strings.Join(updated, ""))
 			case COL_DATE:
 				line = append(line, t.Due.String())
-			case COL_TASK:
+			case COL_ACTION:
 				line = append(line, t.Action)
 			case COL_PROJECT:
 				line = append(line, t.Project)
@@ -80,7 +62,7 @@ func FormatTaskTable(tasks []*task.LocalTask, cols ...column) string {
 		data = append(data, line)
 	}
 
-	return FormatTable(data)
+	return fmt.Sprintf("\n%s", FormatTable(data))
 }
 
 func FormatTask(t *task.LocalTask) string {
@@ -157,7 +139,9 @@ func FormatTable(data [][]string) string {
 			for s := 0; s < max[c]-len(col); s++ {
 				output += " "
 			}
-			output += " "
+			if c != len(line)-1 {
+				output += " "
+			}
 		}
 		if r%3 == 0 {
 			output += fmt.Sprintf("%s", "\x1b[49m")
