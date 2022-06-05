@@ -148,15 +148,21 @@ func FormatTable(data [][]string) string {
 	}
 
 	var output string
-	for _, line := range data {
-		for i, col := range line {
+	for r, line := range data {
+		if r%3 == 0 {
+			output += fmt.Sprintf("%s", "\x1b[48;5;237m")
+		}
+		for c, col := range line {
 			output += col
-			for s := 0; s < max[i]-len(col); s++ {
+			for s := 0; s < max[c]-len(col); s++ {
 				output += " "
 			}
 			output += " "
 		}
-		output += "\n"
+		if r%3 == 0 {
+			output += fmt.Sprintf("%s", "\x1b[49m")
+		}
+		output += "\r\n"
 
 	}
 
