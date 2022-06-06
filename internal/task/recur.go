@@ -25,20 +25,13 @@ func NewRecurrer(recurStr string) Recurrer {
 
 	terms = terms[1:]
 
-	if recur, ok := ParseDaily(start, terms); ok {
-		return recur
-	}
-	if recur, ok := ParseWeekly(start, terms); ok {
-		return recur
-	}
-	if recur, ok := ParseBiweekly(start, terms); ok {
-		return recur
-	}
-	if recur, ok := ParseEveryNWeeks(start, terms); ok {
-		return recur
-	}
-	if recur, ok := ParseEveryNMonths(start, terms); ok {
-		return recur
+	for _, parseFunc := range []func(Date, []string) (Recurrer, bool){
+		ParseDaily, ParseEveryNDays, ParseWeekly, ParseBiweekly,
+		ParseEveryNWeeks, ParseEveryNMonths,
+	} {
+		if recur, ok := parseFunc(start, terms); ok {
+			return recur
+		}
 	}
 
 	return nil
@@ -48,6 +41,7 @@ type Daily struct {
 	Start Date
 }
 
+// yyyy-mm-dd, daily
 func ParseDaily(start Date, terms []string) (Recurrer, bool) {
 	if len(terms) < 1 {
 		return nil, false
@@ -68,6 +62,55 @@ func (d Daily) RecursOn(date Date) bool {
 
 func (d Daily) String() string {
 	return fmt.Sprintf("%s, daily", d.Start.String())
+}
+
+type EveryNDays struct {
+	Start Date
+	N     int
+}
+
+// yyyy-mm-dd, every 3 days
+func ParseEveryNDays(start Date, terms []string) (Recurrer, bool) {
+	if len(terms) != 1 {
+		return EveryNDays{}, false
+	}
+
+	terms = strings.Split(terms[0], " ")
+	if len(terms) != 3 || terms[0] != "every" || terms[2] != "days" {
+		return EveryNDays{}, false
+	}
+
+	n, err := strconv.Atoi(terms[1])
+	if err != nil {
+		return EveryNDays{}, false
+	}
+
+	return EveryNDays{
+		Start: start,
+		N:     n,
+	}, true
+}
+
+func (nd EveryNDays) RecursOn(date Date) bool {
+	if nd.Start.After(date) {
+		return false
+	}
+
+	testDate := nd.Start
+	for {
+		switch {
+		case testDate.Equal(date):
+			return true
+		case testDate.After(date):
+			return false
+		default:
+			testDate = testDate.Add(nd.N)
+		}
+	}
+}
+
+func (nd EveryNDays) String() string {
+	return fmt.Sprintf("%s, every %d days", nd.Start.String(), nd.N)
 }
 
 type Weekly struct {

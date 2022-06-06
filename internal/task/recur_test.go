@@ -50,6 +50,53 @@ func TestDaily(t *testing.T) {
 	})
 }
 
+func TestEveryNDays(t *testing.T) {
+	every := task.EveryNDays{
+		Start: task.NewDate(2022, 6, 8),
+		N:     5,
+	}
+	everyStr := "2022-06-08 (wednesday), every 5 days"
+
+	t.Run("parse", func(t *testing.T) {
+		test.Equals(t, every, task.NewRecurrer(everyStr))
+	})
+
+	t.Run("string", func(t *testing.T) {
+		test.Equals(t, everyStr, every.String())
+	})
+
+	t.Run("recurs on", func(t *testing.T) {
+		for _, tc := range []struct {
+			name string
+			date task.Date
+			exp  bool
+		}{
+			{
+				name: "before",
+				date: task.NewDate(2022, 1, 1),
+			},
+			{
+				name: "start",
+				date: every.Start,
+				exp:  true,
+			},
+			{
+				name: "after true",
+				date: every.Start.Add(15),
+				exp:  true,
+			},
+			{
+				name: "after false",
+				date: every.Start.Add(16),
+			},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				test.Equals(t, tc.exp, every.RecursOn(tc.date))
+			})
+		}
+	})
+}
+
 func TestParseWeekly(t *testing.T) {
 	start := task.NewDate(2021, 2, 7)
 	for _, tc := range []struct {
