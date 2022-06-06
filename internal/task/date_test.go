@@ -283,6 +283,52 @@ func TestDateString(t *testing.T) {
 	}
 }
 
+func TestDateHuman(t *testing.T) {
+	monday := task.Today.Add(1)
+	for {
+		if monday.Weekday() == time.Monday {
+			break
+		}
+		monday = monday.Add(1)
+	}
+
+	for _, tc := range []struct {
+		name string
+		date task.Date
+		exp  string
+	}{
+		{
+			name: "zero",
+			date: task.NewDate(0, 0, 0),
+			exp:  "-",
+		},
+		{
+			name: "weekday",
+			date: monday,
+			exp:  "monday",
+		},
+		{
+			name: "default",
+			date: task.NewDate(2020, 1, 1),
+			exp:  "2020-01-01 (wednesday)",
+		},
+		{
+			name: "today",
+			date: task.Today,
+			exp:  "today",
+		},
+		{
+			name: "tomorrow",
+			date: task.Today.Add(1),
+			exp:  "tomorrow",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			test.Equals(t, tc.exp, tc.date.Human())
+		})
+	}
+}
+
 func TestDateIsZero(t *testing.T) {
 	test.Equals(t, true, task.Date{}.IsZero())
 	test.Equals(t, false, task.NewDate(2021, 6, 24).IsZero())

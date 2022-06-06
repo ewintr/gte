@@ -185,15 +185,18 @@ func (d Date) String() string {
 }
 
 func (d Date) Human() string {
-	if d.t.IsZero() {
+	switch {
+	case d.IsZero():
 		return "-"
-	}
-
-	if Today.Add(7).After(d) {
+	case d.Equal(Today):
+		return "today"
+	case d.Equal(Today.Add(1)):
+		return "tomorrow"
+	case d.After(Today) && Today.Add(8).After(d):
 		return strings.ToLower(d.t.Format("Monday"))
+	default:
+		return strings.ToLower(d.t.Format(DateFormat))
 	}
-
-	return strings.ToLower(d.t.Format(DateFormat))
 }
 
 func (d Date) IsZero() bool {
