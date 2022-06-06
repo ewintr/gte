@@ -11,11 +11,9 @@ const (
 	DateFormat = "2006-01-02 (Monday)"
 )
 
-var Today Date
-
-func init() {
+func Today() Date {
 	year, month, day := time.Now().Date()
-	Today = NewDate(year, int(month), day)
+	return NewDate(year, int(month), day)
 }
 
 type Weekdays []time.Weekday
@@ -104,36 +102,10 @@ func NewDateFromString(date string) Date {
 		return Date{}
 
 	case "today":
-		return Today
+		return Today()
 
 	case "tomorrow":
-		return Today.AddDays(1)
-
-	case "day after tomorrow":
-		fallthrough
-	case "day-after-tomorrow":
-		return Today.AddDays(2)
-
-	case "this week":
-		fallthrough
-	case "this-week":
-		daysToAdd := findDaysToWeekday(Today.Weekday(), time.Friday)
-		return Today.Add(daysToAdd)
-
-	case "next week":
-		fallthrough
-	case "next-week":
-		daysToAdd := findDaysToWeekday(Today.Weekday(), time.Friday) + 7
-		return Today.Add(daysToAdd)
-
-	case "this sprint":
-		tDate := NewDate(2021, 1, 28) // a sprint end
-		for {
-			if tDate.After(Today) {
-				return tDate
-			}
-			tDate = tDate.AddDays(14)
-		}
+		return Today().AddDays(1)
 	}
 
 	t, err := time.Parse("2006-01-02", fmt.Sprintf("%.10s", date))
@@ -145,9 +117,9 @@ func NewDateFromString(date string) Date {
 	if !ok {
 		return Date{}
 	}
-	daysToAdd := findDaysToWeekday(Today.Weekday(), newWeekday)
+	daysToAdd := findDaysToWeekday(Today().Weekday(), newWeekday)
 
-	return Today.Add(daysToAdd)
+	return Today().Add(daysToAdd)
 }
 
 func findDaysToWeekday(current, wanted time.Weekday) int {
@@ -188,11 +160,11 @@ func (d Date) Human() string {
 	switch {
 	case d.IsZero():
 		return "-"
-	case d.Equal(Today):
+	case d.Equal(Today()):
 		return "today"
-	case d.Equal(Today.Add(1)):
+	case d.Equal(Today().Add(1)):
 		return "tomorrow"
-	case d.After(Today) && Today.Add(8).After(d):
+	case d.After(Today()) && Today().Add(8).After(d):
 		return strings.ToLower(d.t.Format("Monday"))
 	default:
 		return strings.ToLower(d.t.Format(DateFormat))

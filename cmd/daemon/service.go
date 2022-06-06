@@ -54,7 +54,7 @@ func Run(inboxProc *process.Inbox, recurProc *process.Recur, logger log.Logger) 
 	logger = logger.WithField("func", "run")
 	inboxTicker := time.NewTicker(30 * time.Second)
 	recurTicker := time.NewTicker(time.Hour)
-	oldToday := task.Today
+	oldToday := task.Today()
 
 	for {
 		select {
@@ -69,14 +69,12 @@ func Run(inboxProc *process.Inbox, recurProc *process.Recur, logger log.Logger) 
 				logger.WithField("result", result).Info("finished processing inbox")
 			}
 		case <-recurTicker.C:
-			year, month, day := time.Now().Date()
-			task.Today = task.NewDate(year, int(month), day)
-			if oldToday.Equal(task.Today) {
+			if oldToday.Equal(task.Today()) {
 
 				continue
 			}
 
-			oldToday = task.NewDate(year, int(month), day)
+			oldToday = task.Today()
 			result, err := recurProc.Process()
 			if err != nil {
 				logger.WithErr(err).Error("failed generating recurring tasks")

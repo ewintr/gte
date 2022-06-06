@@ -22,7 +22,7 @@ func NewTomorrow(conf *configuration.Configuration) (*Tomorrow, error) {
 	}
 
 	reqs := process.ListReqs{
-		Due:          task.Today.Add(1),
+		Due:          task.Today().Add(1),
 		ApplyUpdates: true,
 	}
 	lister := process.NewList(local, reqs)

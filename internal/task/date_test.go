@@ -76,7 +76,6 @@ func TestWeekdaysUnique(t *testing.T) {
 
 func TestNewDateFromString(t *testing.T) {
 	t.Run("no date", func(t *testing.T) {
-		task.Today = task.NewDate(2021, 1, 30)
 		for _, tc := range []struct {
 			name  string
 			input string
@@ -99,7 +98,6 @@ func TestNewDateFromString(t *testing.T) {
 	})
 
 	t.Run("digits", func(t *testing.T) {
-		task.Today = task.NewDate(2021, 1, 30)
 		for _, tc := range []struct {
 			name  string
 			input string
@@ -124,7 +122,13 @@ func TestNewDateFromString(t *testing.T) {
 	})
 
 	t.Run("day name", func(t *testing.T) {
-		task.Today = task.NewDate(2021, 1, 30)
+		monday := task.Today().Add(1)
+		for {
+			if monday.Weekday() == time.Monday {
+				break
+			}
+			monday = monday.Add(1)
+		}
 		for _, tc := range []struct {
 			name  string
 			input string
@@ -133,82 +137,36 @@ func TestNewDateFromString(t *testing.T) {
 			{
 				name:  "dayname lowercase",
 				input: "monday",
-				exp:   task.NewDate(2021, 2, 1),
 			},
 			{
 				name:  "dayname capitalized",
 				input: "Monday",
-				exp:   task.NewDate(2021, 2, 1),
 			},
 		} {
 			t.Run(tc.name, func(t *testing.T) {
-				test.Equals(t, tc.exp, task.NewDateFromString(tc.input))
+				test.Equals(t, monday, task.NewDateFromString(tc.input))
 			})
 		}
 	})
 
 	t.Run("relative days", func(t *testing.T) {
-		task.Today = task.NewDate(2021, 1, 30)
 		for _, tc := range []struct {
 			name string
 			exp  task.Date
 		}{
 			{
 				name: "today",
-				exp:  task.NewDate(2021, 1, 30),
+				exp:  task.Today(),
 			},
 			{
 				name: "tomorrow",
-				exp:  task.NewDate(2021, 1, 31),
-			},
-			{
-				name: "day after tomorrow",
-				exp:  task.NewDate(2021, 2, 1),
-			},
-			{
-				name: "this week",
-				exp:  task.NewDate(2021, 2, 5),
-			},
-			{
-				name: "next week",
-				exp:  task.NewDate(2021, 2, 12),
+				exp:  task.Today().Add(1),
 			},
 		} {
 			t.Run(tc.name, func(t *testing.T) {
 				test.Equals(t, tc.exp, task.NewDateFromString(tc.name))
 			})
 		}
-	})
-
-	t.Run("sprint", func(t *testing.T) {
-		for _, tc := range []struct {
-			name  string
-			today task.Date
-			input string
-			exp   task.Date
-		}{
-			{
-				name:  "this sprint",
-				today: task.NewDate(2021, 1, 30),
-				input: "this sprint",
-				exp:   task.NewDate(2021, 2, 11),
-			},
-			{
-				name:  "jump week",
-				today: task.NewDate(2021, 2, 5),
-				input: "this sprint",
-				exp:   task.NewDate(2021, 2, 11),
-			},
-		} {
-			t.Run(tc.name, func(t *testing.T) {
-				task.Today = tc.today
-				test.Equals(t, tc.exp, task.NewDateFromString(tc.input))
-			})
-		}
-	})
-
-	t.Run("empty", func(t *testing.T) {
-		test.Equals(t, task.Date{}, task.NewDateFromString("test"))
 	})
 }
 
@@ -284,7 +242,7 @@ func TestDateString(t *testing.T) {
 }
 
 func TestDateHuman(t *testing.T) {
-	monday := task.Today.Add(1)
+	monday := task.Today().Add(1)
 	for {
 		if monday.Weekday() == time.Monday {
 			break
@@ -314,12 +272,12 @@ func TestDateHuman(t *testing.T) {
 		},
 		{
 			name: "today",
-			date: task.Today,
+			date: task.Today(),
 			exp:  "today",
 		},
 		{
 			name: "tomorrow",
-			date: task.Today.Add(1),
+			date: task.Today().Add(1),
 			exp:  "tomorrow",
 		},
 	} {

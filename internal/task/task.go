@@ -209,7 +209,7 @@ func (t *Task) IsRecurrer() bool {
 }
 
 func (t *Task) RecursToday() bool {
-	return t.RecursOn(Today)
+	return t.RecursOn(Today())
 }
 
 func (t *Task) RecursOn(date Date) bool {

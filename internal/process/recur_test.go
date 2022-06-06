@@ -1,7 +1,9 @@
 package process_test
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"ewintr.nl/go-kit/test"
 	"ewintr.nl/gte/internal/process"
@@ -12,7 +14,10 @@ import (
 )
 
 func TestRecurProcess(t *testing.T) {
-	task.Today = task.NewDate(2021, 5, 14)
+	strFormat := "2006-01-02"
+	todayStr := time.Now().Format(strFormat)
+	nextMonthStr := time.Now().Add(30 * 24 * time.Hour).Format(strFormat)
+	tomorrowStr := task.Today().Add(1).String()
 	for _, tc := range []struct {
 		name      string
 		recurMsgs []*mstore.Message
@@ -27,17 +32,17 @@ func TestRecurProcess(t *testing.T) {
 			name: "one of two recurring",
 			recurMsgs: []*mstore.Message{
 				{
-					Subject: "not recurring",
-					Body:    "recur: 2021-05-20, daily\nid: xxx-xxx\nversion: 1",
+					Subject: "recurring",
+					Body:    fmt.Sprintf("recur: %s, daily\nid: xxx-xxx\nversion: 1", todayStr),
 				},
 				{
-					Subject: "recurring",
-					Body:    "recur: 2021-05-10, daily\nid: xxx-xxx\nversion: 1",
+					Subject: "not recurring",
+					Body:    fmt.Sprintf("recur: %s, daily\nid: xxx-xxx\nversion: 1", nextMonthStr),
 				},
 			},
 			expCount: 1,
 			expMsgs: []*msend.Message{
-				{Subject: "2021-05-15 (saturday) - recurring"},
+				{Subject: fmt.Sprintf("%s - recurring", tomorrowStr)},
 			},
 		},
 	} {

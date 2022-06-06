@@ -21,7 +21,7 @@ func NewWeek(conf *configuration.Configuration) (*Week, error) {
 	}
 
 	reqs := process.ListReqs{
-		Due:           task.Today.Add(7),
+		Due:           task.Today().Add(7),
 		IncludeBefore: true,
 		ApplyUpdates:  true,
 	}

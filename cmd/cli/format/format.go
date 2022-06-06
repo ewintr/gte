@@ -50,7 +50,7 @@ func FormatTaskTable(tasks []*task.LocalTask, cols []Column) string {
 				if t.LocalStatus == task.STATUS_UPDATED {
 					updated = append(updated, "u")
 				}
-				if !t.Due.IsZero() && task.Today.After(t.Due) {
+				if !t.Due.IsZero() && task.Today().After(t.Due) {
 					updated = append(updated, "o")
 				}
 				line = append(line, strings.Join(updated, " "))

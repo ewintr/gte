@@ -47,7 +47,7 @@ func (recur *Recur) Process() (*RecurResult, error) {
 		return &RecurResult{}, fmt.Errorf("%w: %v", ErrRecurProcess, err)
 	}
 
-	rDate := task.Today.AddDays(recur.daysAhead)
+	rDate := task.Today().AddDays(recur.daysAhead)
 	var count int
 	for _, t := range tasks {
 		if t.RecursOn(rDate) {
