@@ -242,14 +242,6 @@ func TestDateString(t *testing.T) {
 }
 
 func TestDateHuman(t *testing.T) {
-	monday := task.Today().Add(1)
-	for {
-		if monday.Weekday() == time.Monday {
-			break
-		}
-		monday = monday.Add(1)
-	}
-
 	for _, tc := range []struct {
 		name string
 		date task.Date
@@ -259,11 +251,6 @@ func TestDateHuman(t *testing.T) {
 			name: "zero",
 			date: task.NewDate(0, 0, 0),
 			exp:  "-",
-		},
-		{
-			name: "weekday",
-			date: monday,
-			exp:  "monday",
 		},
 		{
 			name: "default",
