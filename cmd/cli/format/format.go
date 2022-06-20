@@ -30,48 +30,6 @@ func FormatError(err error) string {
 	return fmt.Sprintf("could not perform command.\n\nerror: %s\n", err.Error())
 }
 
-func FormatTaskTable(tasks []*task.LocalTask, cols []Column) string {
-	if len(tasks) == 0 {
-		return "no tasks to display\n"
-	}
-
-	var data [][]string
-	for _, t := range tasks {
-		var line []string
-		for _, col := range cols {
-			switch col {
-			case COL_ID:
-				line = append(line, fmt.Sprintf("%d", t.LocalId))
-			case COL_STATUS:
-				var updated []string
-				if t.IsRecurrer() {
-					updated = append(updated, "r")
-				}
-				if t.LocalStatus == task.STATUS_UPDATED {
-					updated = append(updated, "u")
-				}
-				if !t.Due.IsZero() && task.Today().After(t.Due) {
-					updated = append(updated, "o")
-				}
-				line = append(line, strings.Join(updated, " "))
-			case COL_DUE:
-				if t.Due.IsZero() {
-					line = append(line, "")
-					continue
-				}
-				line = append(line, t.Due.Human())
-			case COL_ACTION:
-				line = append(line, t.Action)
-			case COL_PROJECT:
-				line = append(line, t.Project)
-			}
-		}
-		data = append(data, line)
-	}
-
-	return fmt.Sprintf("\n%s\n", FormatTable(data))
-}
-
 func FormatTask(t *task.LocalTask) string {
 	output := fmt.Sprintf(`folder: %s
 action:  %s
@@ -121,41 +79,4 @@ func ParseTaskFieldArgs(args []string) (*task.LocalUpdate, error) {
 	lu.Fields = fields
 
 	return lu, nil
-}
-
-func FormatTable(data [][]string) string {
-	if len(data) == 0 {
-		return ""
-	}
-	max := make([]int, len(data[0]))
-	for _, line := range data {
-		for i, col := range line {
-			if len(col) > max[i] {
-				max[i] = len(col)
-			}
-		}
-	}
-
-	var output string
-	for r, line := range data {
-		if r%3 == 0 {
-			output += fmt.Sprintf("%s", "\x1b[48;5;237m")
-		}
-		for c, col := range line {
-			output += col
-			for s := 0; s < max[c]-len(col); s++ {
-				output += " "
-			}
-			if c != len(line)-1 {
-				output += " "
-			}
-		}
-		if r%3 == 0 {
-			output += fmt.Sprintf("%s", "\x1b[49m")
-		}
-		output += "\n"
-
-	}
-
-	return output
 }
