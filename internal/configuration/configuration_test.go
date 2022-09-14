@@ -78,7 +78,7 @@ func TestNew(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			test.Equals(t, tc.exp, configuration.New(strings.NewReader(tc.source)))
+			test.Equals(t, tc.exp, configuration.NewFromFile(strings.NewReader(tc.source)))
 		})
 	}
 }
