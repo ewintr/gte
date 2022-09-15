@@ -46,4 +46,4 @@ Another thing that is certainly not possible with every random email client is e
 
 == First version
 
-With the above ideas in mind, I created a very, very limited prototype and I have been using it exclusively for some time now. I am convinced that this is something that could work well, so I am going to continue developing it. https://git.ewintr.nl/gte[Code is here]. Stay tuned.
+With the above ideas in mind, I created a very, very limited prototype and I have been using it exclusively for some time now. I am convinced that this is something that could work well, so I am going to continue developing it. https://codeberg.org/ewintr/gte[Code is here]. Stay tuned.
