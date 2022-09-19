@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"errors"
 	"io"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -33,13 +35,14 @@ type Configuration struct {
 	ToAddress string
 
 	LocalDBPath string
+	DaysAhead   int
 }
 
 type LocalConfiguration struct {
 	MinSyncInterval time.Duration
 }
 
-func New(src io.Reader) *Configuration {
+func NewFromFile(src io.Reader) *Configuration {
 	conf := &Configuration{}
 	scanner := bufio.NewScanner(src)
 	for scanner.Scan() {
@@ -79,6 +82,25 @@ func New(src io.Reader) *Configuration {
 	}
 
 	return conf
+}
+
+func NewFromEnvironment() *Configuration {
+	days, _ := strconv.Atoi(os.Getenv("GTE_DAYS_AHEAD"))
+
+	return &Configuration{
+		IMAPURL:          os.Getenv("IMAP_URL"),
+		IMAPUsername:     os.Getenv("IMAP_USER"),
+		IMAPPassword:     os.Getenv("IMAP_PASSWORD"),
+		IMAPFolderPrefix: os.Getenv("IMAP_FOLDER_PREFIX"),
+		SMTPURL:          os.Getenv("SMTP_URL"),
+		SMTPUsername:     os.Getenv("SMTP_USER"),
+		SMTPPassword:     os.Getenv("SMTP_PASSWORD"),
+		ToName:           os.Getenv("GTE_TO_NAME"),
+		ToAddress:        os.Getenv("GTE_TO_ADDRESS"),
+		FromName:         os.Getenv("GTE_FROM_NAME"),
+		FromAddress:      os.Getenv("GTE_FROM_ADDRESS"),
+		DaysAhead:        days,
+	}
 }
 
 func (c *Configuration) IMAP() *mstore.IMAPConfig {

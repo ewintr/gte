@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"os"
 	"os/signal"
 	"time"
@@ -18,21 +17,11 @@ import (
 func main() {
 	logger := log.New(os.Stdout)
 
-	configPath := flag.String("c", "~/.config/gte/gte.conf", "path to configuration file")
-	daysAhead := flag.Int("d", 6, "generate for this amount of days from now")
-	flag.Parse()
-
-	logger.With(log.Fields{
-		"config":    *configPath,
-		"daysAhead": *daysAhead,
-	}).Info("started")
-
-	configFile, err := os.Open(*configPath)
-	if err != nil {
-		logger.WithErr(err).Error("could not open config file")
-		os.Exit(1)
-	}
-	config := configuration.New(configFile)
+	config := configuration.NewFromEnvironment()
+	cfgCopy := *config
+	cfgCopy.IMAPPassword = "***"
+	cfgCopy.SMTPPassword = "***"
+	logger.WithField("config", cfgCopy).Info("started")
 
 	msgStore := mstore.NewIMAP(config.IMAP())
 	mailSend := msend.NewSSLSMTP(config.SMTP())
@@ -40,7 +29,7 @@ func main() {
 	disp := storage.NewDispatcher(mailSend)
 
 	inboxProc := process.NewInbox(repo)
-	recurProc := process.NewRecur(repo, disp, *daysAhead)
+	recurProc := process.NewRecur(repo, disp, config.DaysAhead)
 
 	go Run(inboxProc, recurProc, logger)
 

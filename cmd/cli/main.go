@@ -18,7 +18,7 @@ func main() {
 		fmt.Println(err, "could not open config file")
 		os.Exit(1)
 	}
-	config := configuration.New(configFile)
+	config := configuration.NewFromFile(configFile)
 
 	cmd, err := command.Parse(os.Args[1:], config)
 	if err != nil {
