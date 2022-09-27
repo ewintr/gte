@@ -15,16 +15,16 @@ In the past it has run as a systemd service, but now there is a simple Docker co
 The Dockerfile is configured with the following environment variables:
 
 ----
-IMAP_URL 						# IMAP hostname including port number, for instance: imap.example.com:993
+IMAP_URL            # IMAP hostname including port number, for instance: imap.example.com:993
 IMAP_USER
 IMAP_PASSWORD
-IMAP_FOLDER_PREFIX 	# To be used if combined with a normal email account, for instance: GTE/
-SMTP_URL  					# SMTP hostname, including port number, for instance: smtp.example.com:465
+IMAP_FOLDER_PREFIX  # To be used if combined with a normal email account, for instance: GTE/
+SMTP_URL            # SMTP hostname, including port number, for instance: smtp.example.com:465
 SMTP_USER
 SMTP_PASSWORD
-GTE_TO_NAME					# Name of recipient when sending mails for tasks, for instance: gte
-GTE_TO_ADDRESS			# Address of recipient when sending mails for tasks, for instance: gte@example.com
-GTE_FROM_NAME				# Name of sender when sending mails for tasks, fot instance: gte
-GTE_FROM_ADDRESS		# Address of recipient when sending mails for tasks, for instance: gte@example.com
-GTE_DAYS_AHEAD			# Number of days in the future for which recurring tasks must be instantiated, for example: 6 
+GTE_TO_NAME         # Name of recipient when sending mails for tasks, for instance: gte
+GTE_TO_ADDRESS      # Address of recipient when sending mails for tasks, for instance: gte@example.com
+GTE_FROM_NAME       # Name of sender when sending mails for tasks, fot instance: gte
+GTE_FROM_ADDRESS    # Address of recipient when sending mails for tasks, for instance: gte@example.com
+GTE_DAYS_AHEAD      # Number of days in the future for which recurring tasks must be instantiated, for example: 6 
 ----
