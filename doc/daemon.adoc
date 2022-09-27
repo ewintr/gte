@@ -6,7 +6,7 @@ There are two scripts that need to be executed on a regular basis:
 * Processing newly arrived emails
 * Generating new instances of recurring tasks
 
-This can be done by the cli app, but that requires a manual action. Generating new instances of recurring tasks should happen only once a day, but the processing of new emails is ideally done as often as every couple of minutes. One can use a cron job to do this, but that requires a machine that is switched on for the majority of the day, at least during waking hours. to make sure changes are reflected. At that point we might as well have a real service, with proper logging, etc. The `gte-daemon` is just that. The cli can still be used as a fallback though.
+This can be done by the cli app, but that requires a manual action. Generating new instances of recurring tasks should happen only once a day, but the processing of new emails is ideally done as often as every couple of minutes. One can use a cron job to do this, but that requires a machine that is switched on for the majority of the day, at least during waking hours, to make sure changes are reflected. At that point we might as well have a real service, with proper logging, etc. The `gte-daemon` is just that. The cli can still be used as a fallback though.
 
 In the past it has run as a systemd service, but now there is a simple Docker container for portability between hosting providers. See `Dockerfile.daemon` in the repository. It is a simple service and does not require much.
 
