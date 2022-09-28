@@ -2,9 +2,12 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
 
 	"ewintr.nl/gte/internal/configuration"
+	"ewintr.nl/gte/internal/task"
 )
 
 var (
@@ -12,6 +15,9 @@ var (
 	ErrInvalidArg          = errors.New("invalid argument")
 	ErrCouldNotFindTask    = errors.New("could not find task")
 	ErrUnknownFolder       = errors.New("unknown folder")
+	ErrFieldAlreadyUsed    = errors.New("field was already used")
+	ErrInvalidDate         = errors.New("could not understand date format")
+	ErrInvalidProject      = errors.New("could not understand project")
 )
 
 type Command interface {
@@ -88,4 +94,67 @@ func parseRemote(conf *configuration.Configuration, cmdArgs []string) (Command, 
 		cmd, _ := NewEmpty()
 		return cmd, ErrInvalidArg
 	}
+}
+
+func ParseTaskFieldArgs(args []string) (*task.LocalUpdate, error) {
+	lu := &task.LocalUpdate{}
+
+	action, fields := []string{}, []string{}
+	for _, f := range args {
+		if project, ok := parseProjectField(f); ok {
+			if lu.Project != "" {
+				return &task.LocalUpdate{}, fmt.Errorf("%w: %s", ErrFieldAlreadyUsed, task.FIELD_PROJECT)
+
+			}
+			if project == "" {
+				return &task.LocalUpdate{}, ErrInvalidProject
+			}
+			lu.Project = project
+			fields = append(fields, task.FIELD_PROJECT)
+			continue
+		}
+		if due, ok := parseDueField(f); ok {
+			if due.IsZero() {
+				return &task.LocalUpdate{}, ErrInvalidDate
+			}
+			if !lu.Due.IsZero() {
+				return &task.LocalUpdate{}, fmt.Errorf("%w: %s", ErrFieldAlreadyUsed, task.FIELD_DUE)
+			}
+			lu.Due = due
+			fields = append(fields, task.FIELD_DUE)
+			continue
+		}
+		if len(f) > 0 {
+			action = append(action, f)
+		}
+	}
+
+	if len(action) > 0 {
+		lu.Action = strings.Join(action, " ")
+		fields = append(fields, task.FIELD_ACTION)
+	}
+
+	lu.Fields = fields
+
+	return lu, nil
+}
+
+func parseProjectField(s string) (string, bool) {
+	if !strings.HasPrefix(s, "project:") && !strings.HasPrefix(s, "p:") {
+		return "", false
+	}
+	split := strings.SplitN(s, ":", 2)
+
+	return split[1], true
+}
+
+func parseDueField(s string) (task.Date, bool) {
+	if !strings.HasPrefix(s, "due:") && !strings.HasPrefix(s, "d:") {
+		return task.Date{}, false
+	}
+	split := strings.SplitN(s, ":", 2)
+
+	due := task.NewDateFromString(split[1])
+
+	return due, true
 }

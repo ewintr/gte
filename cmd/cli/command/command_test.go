@@ -1,4 +1,4 @@
-package format_test
+package command_test
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"ewintr.nl/go-kit/test"
-	"ewintr.nl/gte/cmd/cli/format"
+	"ewintr.nl/gte/cmd/cli/command"
 	"ewintr.nl/gte/internal/task"
 )
 
@@ -53,12 +53,47 @@ func TestParseTaskFieldArgs(t *testing.T) {
 			name:      "two projects",
 			input:     "project:project1 project:project2",
 			expUpdate: &task.LocalUpdate{},
-			expErr:    format.ErrFieldAlreadyUsed,
+			expErr:    command.ErrFieldAlreadyUsed,
+		},
+		{
+			name:  "abbreviated",
+			input: "p:project1 d:2022-09-28",
+			expUpdate: &task.LocalUpdate{
+				Fields:  []string{task.FIELD_PROJECT, task.FIELD_DUE},
+				Project: "project1",
+				Due:     task.NewDate(2022, 9, 28),
+			},
+		},
+		{
+			name:      "empty project",
+			input:     "action project:",
+			expUpdate: &task.LocalUpdate{},
+			expErr:    command.ErrInvalidProject,
+		},
+		{
+			name:      "empty date",
+			input:     "action due:",
+			expUpdate: &task.LocalUpdate{},
+			expErr:    command.ErrInvalidDate,
+		},
+		{
+			name:  "url",
+			input: "https://ewintr.nl/something?arg=1",
+			expUpdate: &task.LocalUpdate{
+				Fields: []string{task.FIELD_ACTION},
+				Action: "https://ewintr.nl/something?arg=1",
+			},
+		},
+		{
+			name:      "misformatted date",
+			input:     "d:20-wrong",
+			expUpdate: &task.LocalUpdate{},
+			expErr:    command.ErrInvalidDate,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			args := strings.Split(tc.input, " ")
-			act, err := format.ParseTaskFieldArgs(args)
+			act, err := command.ParseTaskFieldArgs(args)
 			test.Equals(t, tc.expUpdate, act)
 			test.Assert(t, errors.Is(err, tc.expErr), "wrong err")
 		})

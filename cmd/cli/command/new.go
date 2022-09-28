@@ -18,7 +18,7 @@ func NewNew(conf *configuration.Configuration, cmdArgs []string) (*New, error) {
 		return &New{}, err
 	}
 
-	update, err := format.ParseTaskFieldArgs(cmdArgs)
+	update, err := ParseTaskFieldArgs(cmdArgs)
 	if err != nil {
 		return &New{}, err
 	}

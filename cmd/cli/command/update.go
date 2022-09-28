@@ -17,7 +17,7 @@ func NewUpdate(localId int, conf *configuration.Configuration, cmdArgs []string)
 		return &Update{}, err
 	}
 
-	update, err := format.ParseTaskFieldArgs(cmdArgs)
+	update, err := ParseTaskFieldArgs(cmdArgs)
 	if err != nil {
 		return &Update{}, err
 	}
