@@ -1,5 +1,5 @@
 = Mail format
-2022-10-03
+2022-10-13
 
 The mails that are sent back and forth are in plain text and contain key-value pairs, one per line:
 
