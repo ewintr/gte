@@ -30,7 +30,6 @@ Recognized fields are:
 
 There are several options to specify a date. The general form is `YYYY-MM-DD`. In addition to that `today` and `tomorrow` are also understood, as are the days of the week: `monday`, `tuesday`, `wednesday`, `friday`, `saturday`, `sunday`. Those indicate the first occurence of that weekday _after_ the current day. Unrecognized values will erase the field.
 
-
 == Recur string
 
 The recur string consists of two to three parts, separated by a comma. The first is the start date and follows the same semantics as a date string. The second specifies the period and the third can contain optional parameters. 
@@ -39,16 +38,11 @@ The date format as `YYYY-MM-DD (weekday)` is also permitted, to facilitate proce
 
 For the second part, the following periods are available: 
 
-`daily`
-
-`every N days`, where N is an integer.
-
-`weekly`, with the weekdays specified in the third part, separated by `&` signs. For example, this recurrer starts today and recurs every Monday and Wednesday: `today, weekly, monday & wednesday`.
-
-`biweekly`, like `weekly`, but recurs only every other week.
-
-`every N weeks`, where N is an integer.
-
-`every N months`, where N is an integer.
+* `daily`
+* `every N days`, where N is an integer.
+* `weekly`, with the weekdays specified in the third part, separated by `&` signs. For example, this recurrer starts today and recurs every Monday and Wednesday: `today, weekly, monday & wednesday`.
+* `biweekly`, like `weekly`, but recurs only every other week.
+* `every N weeks`, where N is an integer.
+* `every N months`, where N is an integer.
 
 
