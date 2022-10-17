@@ -90,6 +90,22 @@ func TestParseTaskFieldArgs(t *testing.T) {
 			expUpdate: &task.LocalUpdate{},
 			expErr:    command.ErrInvalidDate,
 		},
+		{
+			name:  "recur",
+			input: "recur:today,daily",
+			expUpdate: &task.LocalUpdate{
+				Fields: []string{task.FIELD_RECUR},
+				Recur:  task.NewRecurrer("today, daily"),
+			},
+		},
+		{
+			name:  "recurs short",
+			input: "r:today,daily",
+			expUpdate: &task.LocalUpdate{
+				Fields: []string{task.FIELD_RECUR},
+				Recur:  task.NewRecurrer("today, daily"),
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			args := strings.Split(tc.input, " ")

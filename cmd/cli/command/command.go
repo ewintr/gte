@@ -18,6 +18,7 @@ var (
 	ErrFieldAlreadyUsed    = errors.New("field was already used")
 	ErrInvalidDate         = errors.New("could not understand date format")
 	ErrInvalidProject      = errors.New("could not understand project")
+	ErrInvalidRecur        = errors.New("could not understand recurrer")
 )
 
 type Command interface {
@@ -124,6 +125,18 @@ func ParseTaskFieldArgs(args []string) (*task.LocalUpdate, error) {
 			fields = append(fields, task.FIELD_DUE)
 			continue
 		}
+		if recur, ok := parseRecurField(f); ok {
+			fmt.Printf("%+v\n", recur)
+			if recur == nil {
+				return &task.LocalUpdate{}, ErrInvalidRecur
+			}
+			if lu.Recur != nil {
+				return &task.LocalUpdate{}, fmt.Errorf("%w: %v", ErrFieldAlreadyUsed, task.FIELD_RECUR)
+			}
+			lu.Recur = recur
+			fields = append(fields, task.FIELD_RECUR)
+			continue
+		}
 		if len(f) > 0 {
 			action = append(action, f)
 		}
@@ -157,4 +170,16 @@ func parseDueField(s string) (task.Date, bool) {
 	due := task.NewDateFromString(split[1])
 
 	return due, true
+}
+
+func parseRecurField(s string) (task.Recurrer, bool) {
+	if !strings.HasPrefix(s, "recur:") && !strings.HasPrefix(s, "r:") {
+		return nil, false
+	}
+	split := strings.SplitN(s, ":", 2)
+	fmt.Printf("s: %+v\n", split[1])
+
+	recur := task.NewRecurrer(split[1])
+
+	return recur, true
 }

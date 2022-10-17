@@ -13,7 +13,7 @@ type Recurrer interface {
 }
 
 func NewRecurrer(recurStr string) Recurrer {
-	terms := strings.Split(recurStr, ", ")
+	terms := strings.Split(recurStr, ",")
 	if len(terms) < 2 {
 		return nil
 	}
@@ -24,6 +24,9 @@ func NewRecurrer(recurStr string) Recurrer {
 	}
 
 	terms = terms[1:]
+	for i, t := range terms {
+		terms[i] = strings.TrimSpace(t)
+	}
 
 	for _, parseFunc := range []func(Date, []string) (Recurrer, bool){
 		ParseDaily, ParseEveryNDays, ParseWeekly, ParseBiweekly,

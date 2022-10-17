@@ -23,7 +23,7 @@ func NewFolder(conf *configuration.Configuration, cmdArgs []string) (*Folder, er
 	if len(cmdArgs) < 1 {
 		return &Folder{}, ErrInvalidAmountOfArgs
 	}
-	knownFolders := []string{task.FOLDER_NEW, task.FOLDER_PLANNED, task.FOLDER_UNPLANNED}
+	knownFolders := []string{task.FOLDER_NEW, task.FOLDER_RECURRING, task.FOLDER_PLANNED, task.FOLDER_UNPLANNED}
 	var folder string
 	for _, f := range knownFolders {
 		if strings.ToLower(f) == strings.ToLower(cmdArgs[0]) {
