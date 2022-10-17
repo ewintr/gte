@@ -28,10 +28,11 @@ func FormatTask(t *task.LocalTask) string {
 	output := fmt.Sprintf(`folder:  %s
 action:  %s
 project: %s
-due:     %s
-`, t.Folder, t.Action, t.Project, t.Due.String())
+`, t.Folder, t.Action, t.Project)
 	if t.IsRecurrer() {
 		output += fmt.Sprintf("recur:   %s\n", t.Recur.String())
+	} else {
+		output += fmt.Sprintf("due:     %s", t.Due.String())
 	}
 
 	return fmt.Sprintf("\n%s\n", output)
