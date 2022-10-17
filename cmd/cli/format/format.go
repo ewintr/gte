@@ -32,7 +32,7 @@ project: %s
 	if t.IsRecurrer() {
 		output += fmt.Sprintf("recur:   %s\n", t.Recur.String())
 	} else {
-		output += fmt.Sprintf("due:     %s", t.Due.String())
+		output += fmt.Sprintf("due:     %s\n", t.Due.String())
 	}
 
 	return fmt.Sprintf("\n%s\n", output)
