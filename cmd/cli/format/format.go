@@ -25,14 +25,18 @@ func FormatError(err error) string {
 }
 
 func FormatTask(t *task.LocalTask) string {
+	tl := t
+	tl.ApplyUpdate()
+
 	output := fmt.Sprintf(`folder:  %s
+status:  %s
 action:  %s
 project: %s
-`, t.Folder, t.Action, t.Project)
+`, tl.Folder, tl.LocalStatus, tl.Action, tl.Project)
 	if t.IsRecurrer() {
-		output += fmt.Sprintf("recur:   %s\n", t.Recur.String())
+		output += fmt.Sprintf("recur:   %s\n", tl.Recur.String())
 	} else {
-		output += fmt.Sprintf("due:     %s\n", t.Due.String())
+		output += fmt.Sprintf("due:     %s\n", tl.Due.String())
 	}
 
 	return fmt.Sprintf("\n%s\n", output)
