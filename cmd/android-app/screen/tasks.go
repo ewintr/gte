@@ -24,10 +24,12 @@ func NewTasks(out chan interface{}) *Tasks {
 }
 
 func (t *Tasks) Refresh(state State) {
+	t.status.Set(state.Status)
 	t.tasks.Set(state.Tasks)
 }
 
 func (t *Tasks) Content() fyne.CanvasObject {
+	statusLabel := widget.NewLabelWithData(t.status)
 	refreshButton := widget.NewButton("refresh", func() {
 		t.out <- SyncTasksRequest{}
 	})
@@ -42,7 +44,7 @@ func (t *Tasks) Content() fyne.CanvasObject {
 	)
 
 	return container.NewBorder(
-		refreshButton,
+		container.NewHBox(refreshButton, statusLabel),
 		nil,
 		nil,
 		nil,

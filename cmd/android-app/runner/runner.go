@@ -17,12 +17,15 @@ type Runner struct {
 	logger     *component.Logger
 	tasks      *component.Tasks
 	screens    []screen.Screen
+	status     string
 	requests   chan interface{}
+	refresh    chan bool
 }
 
 func NewRunner() *Runner {
 	return &Runner{
 		requests: make(chan interface{}, 3),
+		refresh:  make(chan bool),
 	}
 }
 
@@ -57,12 +60,11 @@ func (r *Runner) Init() {
 	r.fyneApp = fyneApp
 	r.fyneWindow = w
 
-	r.refresh()
-
 	r.requests <- screen.SyncTasksRequest{}
 }
 
 func (r *Runner) Run() {
+	go r.refresher()
 	go r.processRequest()
 	r.fyneWindow.ShowAndRun()
 }
@@ -77,30 +79,36 @@ func (r *Runner) processRequest() {
 				r.conf.Set(k, val)
 			}
 		case screen.SyncTasksRequest:
+			r.status = "syncing..."
+			r.refresh <- true
 			count, err := r.tasks.Sync()
 			if err != nil {
 				r.logger.Log(err.Error())
 			}
 			r.logger.Log(fmt.Sprintf("fetched: %d", count))
+			r.status = "synced"
+			r.refresh <- true
 		default:
 			r.logger.Log("request unknown")
 		}
-		r.refresh()
 	}
 }
 
-func (r *Runner) refresh() {
-	tasks, err := r.tasks.Today()
-	if err != nil {
-		r.logger.Log(err.Error())
-	}
-	state := screen.State{
-		Tasks:  tasks,
-		Config: r.conf.Fields(),
-		Logs:   r.logger.Lines(),
-	}
+func (r *Runner) refresher() {
+	for range r.refresh {
+		tasks, err := r.tasks.Today()
+		if err != nil {
+			r.logger.Log(err.Error())
+		}
+		state := screen.State{
+			Status: r.status,
+			Tasks:  tasks,
+			Config: r.conf.Fields(),
+			Logs:   r.logger.Lines(),
+		}
 
-	for _, s := range r.screens {
-		s.Refresh(state)
+		for _, s := range r.screens {
+			s.Refresh(state)
+		}
 	}
 }
