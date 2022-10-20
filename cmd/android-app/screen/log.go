@@ -17,9 +17,7 @@ func NewLog() *Log {
 }
 
 func (l *Log) Refresh(state State) {
-	for i := l.lines.Length(); i < len(state.Logs); i++ {
-		l.lines.Append(state.Logs[i])
-	}
+	l.lines.Set(state.Logs)
 }
 
 func (l *Log) Content() fyne.CanvasObject {

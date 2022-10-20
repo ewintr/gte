@@ -2,6 +2,7 @@ package runner
 
 import (
 	"fmt"
+	"time"
 
 	"ewintr.nl/gte/cmd/android-app/component"
 	"ewintr.nl/gte/cmd/android-app/screen"
@@ -66,6 +67,7 @@ func (r *Runner) Init() {
 func (r *Runner) Run() {
 	go r.refresher()
 	go r.processRequest()
+	go r.backgroundSync()
 	r.fyneWindow.ShowAndRun()
 }
 
@@ -129,5 +131,13 @@ func (r *Runner) refresher() {
 		for _, s := range r.screens {
 			s.Refresh(state)
 		}
+	}
+}
+
+func (r *Runner) backgroundSync() {
+	ticker := time.NewTicker(time.Minute)
+	for {
+		<-ticker.C
+		r.requests <- screen.SyncTasksRequest{}
 	}
 }

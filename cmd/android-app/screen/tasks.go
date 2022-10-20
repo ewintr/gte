@@ -35,11 +35,13 @@ func NewTasks(out chan interface{}) *Tasks {
 func (t *Tasks) Refresh(state State) {
 	t.status.Set(state.Status)
 	t.tasks = state.Tasks
+	sort.Slice(t.tasks, func(i, j int) bool {
+		return t.tasks[i].Action < t.tasks[j].Action
+	})
 	tls := []string{}
 	for _, t := range t.tasks {
 		tls = append(tls, t.Action)
 	}
-	sort.Strings(tls)
 	t.taskLabels.Set(tls)
 }
 
