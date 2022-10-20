@@ -135,7 +135,7 @@ func (r *Runner) refresher() {
 }
 
 func (r *Runner) backgroundSync() {
-	ticker := time.NewTicker(time.Minute)
+	ticker := time.NewTicker(5 * time.Second)
 	for {
 		<-ticker.C
 		r.requests <- screen.SyncTasksRequest{}
