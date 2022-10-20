@@ -33,8 +33,6 @@ func NewFetch(remote *storage.RemoteRepository, local storage.LocalRepository) *
 
 func (s *Fetch) Process() (*FetchResult, error) {
 	start := time.Now()
-	fmt.Printf("proc: %+v\n", s)
-
 	tasks := []*task.Task{}
 	for _, folder := range task.KnownFolders {
 		if folder == task.FOLDER_INBOX {

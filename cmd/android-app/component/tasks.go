@@ -2,6 +2,7 @@ package component
 
 import (
 	"sort"
+	"time"
 
 	"ewintr.nl/gte/internal/process"
 	"ewintr.nl/gte/internal/storage"
@@ -28,7 +29,7 @@ func NewTasks(conf *Configuration) (*Tasks, error) {
 	}, nil
 }
 
-func (t *Tasks) Today() ([]string, error) {
+func (t *Tasks) Today() (map[string]string, error) {
 	reqs := process.ListReqs{
 		Due:           task.Today(),
 		IncludeBefore: true,
@@ -36,22 +37,50 @@ func (t *Tasks) Today() ([]string, error) {
 	}
 	res, err := process.NewList(t.local, reqs).Process()
 	if err != nil {
-		return []string{}, err
+		return map[string]string{}, err
 	}
 	sort.Sort(task.ByDefault(res.Tasks))
 
-	tasks := []string{}
+	tasks := map[string]string{}
 	for _, t := range res.Tasks {
-		tasks = append(tasks, t.Action)
+		tasks[t.Id] = t.Action
 	}
 
 	return tasks, nil
 }
 
-func (t *Tasks) Sync() (int, error) {
+func (t *Tasks) Sync() (int, int, error) {
+	countDisp, err := process.NewSend(t.local, t.disp).Process()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	latestFetch, err := t.local.LatestSync()
+	if err != nil {
+		return 0, 0, err
+	}
+	if time.Now().Before(latestFetch.Add(15 * time.Minute)) {
+		return countDisp, 0, nil
+	}
+
 	res, err := process.NewFetch(t.remote, t.local).Process()
 	if err != nil {
-		return 0, err
+		return countDisp, 0, err
 	}
-	return res.Count, nil
+	return countDisp, res.Count, nil
+}
+
+func (t *Tasks) MarkDone(id string) error {
+	localTask, err := t.local.FindById(id)
+	if err != nil {
+		return err
+	}
+
+	update := &task.LocalUpdate{
+		ForVersion: localTask.Version,
+		Fields:     []string{task.FIELD_DONE},
+		Done:       true,
+	}
+
+	return process.NewUpdate(t.local, id, update).Process()
 }

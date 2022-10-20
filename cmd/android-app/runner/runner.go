@@ -71,22 +71,34 @@ func (r *Runner) Run() {
 
 func (r *Runner) processRequest() {
 	for req := range r.requests {
-		r.logger.Log(fmt.Sprintf("request %T: %s", req, req))
-
 		switch v := req.(type) {
 		case screen.SaveConfigRequest:
+			r.logger.Log("saving new config...")
+			r.status = "saving..."
+			r.refresh <- true
 			for k, val := range v.Fields {
 				r.conf.Set(k, val)
 			}
+			r.logger.Log("new config saved")
+			r.status = "ready"
+			r.refresh <- true
 		case screen.SyncTasksRequest:
+			r.logger.Log("syncing tasks...")
 			r.status = "syncing..."
 			r.refresh <- true
-			count, err := r.tasks.Sync()
+			countDisp, countFetch, err := r.tasks.Sync()
 			if err != nil {
 				r.logger.Log(err.Error())
 			}
-			r.logger.Log(fmt.Sprintf("fetched: %d", count))
-			r.status = "synced"
+			r.logger.Log(fmt.Sprintf("dispatched: %d, fetched: %d", countDisp, countFetch))
+			r.status = "ready"
+			r.refresh <- true
+		case screen.MarkTaskDoneRequest:
+			r.logger.Log(fmt.Sprintf("marking task %s done...", v.ID))
+			if err := r.tasks.MarkDone(v.ID); err != nil {
+				r.logger.Log(err.Error())
+			}
+			r.logger.Log("marked done")
 			r.refresh <- true
 		default:
 			r.logger.Log("request unknown")
@@ -100,13 +112,20 @@ func (r *Runner) refresher() {
 		if err != nil {
 			r.logger.Log(err.Error())
 		}
+		sTasks := []screen.Task{}
+		for id, action := range tasks {
+			sTasks = append(sTasks, screen.Task{
+				ID:     id,
+				Action: action,
+			})
+		}
+
 		state := screen.State{
 			Status: r.status,
-			Tasks:  tasks,
+			Tasks:  sTasks,
 			Config: r.conf.Fields(),
 			Logs:   r.logger.Lines(),
 		}
-
 		for _, s := range r.screens {
 			s.Refresh(state)
 		}

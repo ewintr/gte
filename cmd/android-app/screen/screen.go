@@ -2,9 +2,14 @@ package screen
 
 import "fyne.io/fyne/v2"
 
+type Task struct {
+	ID     string
+	Action string
+}
+
 type State struct {
 	Status string
-	Tasks  []string
+	Tasks  []Task
 	Config map[string]string
 	Logs   []string
 }
