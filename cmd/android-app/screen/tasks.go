@@ -1,6 +1,8 @@
 package screen
 
 import (
+	"sort"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
@@ -37,6 +39,7 @@ func (t *Tasks) Refresh(state State) {
 	for _, t := range t.tasks {
 		tls = append(tls, t.Action)
 	}
+	sort.Strings(tls)
 	t.taskLabels.Set(tls)
 }
 
