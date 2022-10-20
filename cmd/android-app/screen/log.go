@@ -1,6 +1,8 @@
 package screen
 
 import (
+	"sort"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
@@ -17,7 +19,11 @@ func NewLog() *Log {
 }
 
 func (l *Log) Refresh(state State) {
-	l.lines.Set(state.Logs)
+	lines := state.Logs
+	sort.Slice(lines, func(i, j int) bool {
+		return lines[i] > lines[j]
+	})
+	l.lines.Set(lines)
 }
 
 func (l *Log) Content() fyne.CanvasObject {

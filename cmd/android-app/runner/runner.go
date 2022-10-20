@@ -45,7 +45,6 @@ func (r *Runner) Init() {
 	configTab := container.NewTabItem("config", configScreen.Content())
 	r.screens = append(r.screens, configScreen)
 
-	r.logger.Log("initializing tasks...")
 	tasks, err := component.NewTasks(r.conf)
 	if err != nil {
 		r.logger.Log(err.Error())
@@ -60,6 +59,7 @@ func (r *Runner) Init() {
 
 	r.fyneApp = fyneApp
 	r.fyneWindow = w
+	r.logger.Log("app started")
 
 	r.requests <- screen.SyncTasksRequest{}
 }
@@ -75,7 +75,6 @@ func (r *Runner) processRequest() {
 	for req := range r.requests {
 		switch v := req.(type) {
 		case screen.SaveConfigRequest:
-			r.logger.Log("saving new config...")
 			r.status = "saving..."
 			r.refresh <- true
 			for k, val := range v.Fields {
@@ -85,22 +84,22 @@ func (r *Runner) processRequest() {
 			r.status = "ready"
 			r.refresh <- true
 		case screen.SyncTasksRequest:
-			r.logger.Log("syncing tasks...")
 			r.status = "syncing..."
 			r.refresh <- true
 			countDisp, countFetch, err := r.tasks.Sync()
 			if err != nil {
 				r.logger.Log(err.Error())
 			}
-			r.logger.Log(fmt.Sprintf("dispatched: %d, fetched: %d", countDisp, countFetch))
+			if countDisp > 0 || countFetch > 0 {
+				r.logger.Log(fmt.Sprintf("task sync: dispatched: %d, fetched: %d", countDisp, countFetch))
+			}
 			r.status = "ready"
 			r.refresh <- true
 		case screen.MarkTaskDoneRequest:
-			r.logger.Log(fmt.Sprintf("marking task %s done...", v.ID))
 			if err := r.tasks.MarkDone(v.ID); err != nil {
 				r.logger.Log(err.Error())
 			}
-			r.logger.Log("marked done")
+			r.logger.Log(fmt.Sprintf("marked task %q done", v.ID))
 			r.refresh <- true
 		default:
 			r.logger.Log("request unknown")
