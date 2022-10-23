@@ -16,7 +16,7 @@ func NewLogger() *Logger {
 }
 
 func (l *Logger) Log(line string) {
-	l.lines = append(l.lines, fmt.Sprintf("%s: %s", time.Now().Format("15:04:05"), line))
+	l.lines = append(l.lines, fmt.Sprintf("%s: %s", time.Now().Format(time.Stamp), line))
 	if len(l.lines) > 50 {
 		l.lines = l.lines[1:]
 	}

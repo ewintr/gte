@@ -1,6 +1,7 @@
 package screen
 
 import (
+	"fmt"
 	"sort"
 
 	"fyne.io/fyne/v2"
@@ -33,7 +34,7 @@ func NewTasks(out chan interface{}) *Tasks {
 }
 
 func (t *Tasks) Refresh(state State) {
-	t.status.Set(state.Status)
+	t.status.Set(fmt.Sprintf("> %s", state.Status))
 	t.tasks = state.Tasks
 	sort.Slice(t.tasks, func(i, j int) bool {
 		return t.tasks[i].Action < t.tasks[j].Action
@@ -46,10 +47,9 @@ func (t *Tasks) Refresh(state State) {
 }
 
 func (t *Tasks) Content() fyne.CanvasObject {
-	statusLabel := widget.NewLabelWithData(t.status)
-	refreshButton := widget.NewButton("refresh", func() {
-		t.out <- SyncTasksRequest{}
-	})
+	statusLabel := widget.NewLabel("> init...")
+	statusLabel.Bind(t.status)
+	statusLabel.TextStyle.Italic = true
 	doneButton := widget.NewButton("done", func() {
 		t.markDone()
 	})
@@ -65,7 +65,7 @@ func (t *Tasks) Content() fyne.CanvasObject {
 	list.OnSelected = t.selectItem
 
 	return container.NewBorder(
-		container.NewHBox(refreshButton, statusLabel),
+		container.NewHBox(statusLabel),
 		doneButton,
 		nil,
 		nil,
