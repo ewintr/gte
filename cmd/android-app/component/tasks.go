@@ -1,7 +1,6 @@
 package component
 
 import (
-	"fmt"
 	"sort"
 	"time"
 
@@ -66,26 +65,27 @@ func (t *Tasks) Today() (map[string]string, error) {
 	return tasks, nil
 }
 
-func (t *Tasks) Sync(logger *Logger) (int, int, error) {
+func (t *Tasks) Sync() (int, int, error) {
 	countDisp, err := process.NewSend(t.local, t.disp).Process()
 	if err != nil {
 		return 0, 0, err
 	}
-	logger.Log("finished dispatch")
 
 	latestFetch, err := t.local.LatestSync()
 	if err != nil {
 		return 0, 0, err
 	}
-	logger.Log(fmt.Sprintf("latest fetch time, was at %s", latestFetch.Format(time.Stamp)))
-	if time.Now().Before(latestFetch.Add(15 * time.Minute)) {
+	// use unix timestamp for time comparison, because time.Before and
+	// time.After depend on a monotonic clock and in Android the
+	// monotonic clock stops ticking if the phone is in suspended sleep
+	if latestFetch.Add(15*time.Minute).Unix() > time.Now().Unix() {
 		return countDisp, 0, nil
 	}
+
 	res, err := process.NewFetch(t.remote, t.local).Process()
 	if err != nil {
 		return countDisp, 0, err
 	}
-	logger.Log("fininshed actual fetch")
 	return countDisp, res.Count, nil
 }
 

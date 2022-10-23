@@ -73,7 +73,6 @@ func (r *Runner) Run() {
 
 func (r *Runner) processRequest() {
 	for req := range r.requests {
-		r.logger.Log(fmt.Sprintf("processing request %T", req))
 		switch v := req.(type) {
 		case screen.SaveConfigRequest:
 			r.status = "saving..."
@@ -81,33 +80,28 @@ func (r *Runner) processRequest() {
 			for k, val := range v.Fields {
 				r.conf.Set(k, val)
 			}
-			r.logger.Log("new config saved")
 			r.status = "ready"
+			r.logger.Log("config saved")
 		case screen.SyncTasksRequest:
-			r.logger.Log("starting sync request")
 			r.status = "syncing..."
 			r.refresh <- true
-			countDisp, countFetch, err := r.tasks.Sync(r.logger)
+			countDisp, countFetch, err := r.tasks.Sync()
 			if err != nil {
 				r.logger.Log(err.Error())
 			}
-			//if countDisp > 0 || countFetch > 0 {
-			r.logger.Log(fmt.Sprintf("task sync: dispatched: %d, fetched: %d", countDisp, countFetch))
-			//}
+			if countDisp > 0 || countFetch > 0 {
+				r.logger.Log(fmt.Sprintf("task sync: dispatched: %d, fetched: %d", countDisp, countFetch))
+			}
 			r.status = "ready"
-
-			r.logger.Log("fetching all")
 			all, err := r.tasks.All()
 			if err != nil {
 				r.logger.Log(err.Error())
 				break
 			}
-			r.logger.Log("saving all")
 			if err := save(r.fileURI, all); err != nil {
 				r.logger.Log(err.Error())
 				break
 			}
-			r.logger.Log("sync request done")
 		case screen.MarkTaskDoneRequest:
 			if err := r.tasks.MarkDone(v.ID); err != nil {
 				r.logger.Log(err.Error())
@@ -117,19 +111,15 @@ func (r *Runner) processRequest() {
 			r.logger.Log("request unknown")
 		}
 		r.refresh <- true
-		r.logger.Log("processing request done")
 	}
-
 }
 
 func (r *Runner) refresher() {
 	for <-r.refresh {
-		r.logger.Log("start refresh")
 		tasks, err := r.tasks.Today()
 		if err != nil {
 			r.logger.Log(err.Error())
 		}
-		r.logger.Log(fmt.Sprintf("found %d tasks", len(tasks)))
 		sTasks := []screen.Task{}
 		for id, action := range tasks {
 			sTasks = append(sTasks, screen.Task{
