@@ -27,15 +27,17 @@ type Runner struct {
 	status     string
 	requests   chan interface{}
 	refresh    chan bool
+	fileURI    fyne.URI
 }
 
-func NewRunner(conf *component.Configuration, logger *component.Logger) *Runner {
+func NewRunner(conf *component.Configuration, fileURI fyne.URI, logger *component.Logger) *Runner {
 	return &Runner{
 		status:   "init",
 		conf:     conf,
 		logger:   logger,
 		requests: make(chan interface{}),
 		refresh:  make(chan bool),
+		fileURI:  fileURI,
 	}
 }
 
@@ -49,7 +51,7 @@ func (r *Runner) Init() fyne.CanvasObject {
 	configTab := container.NewTabItem("config", configScreen.Content())
 	r.screens = append(r.screens, configScreen)
 
-	stored, err := load()
+	stored, err := load(r.fileURI)
 	if err != nil {
 		r.logger.Log(err.Error())
 	}
@@ -101,7 +103,7 @@ func (r *Runner) processRequest() {
 				break
 			}
 			r.logger.Log("saving all")
-			if err := save(all); err != nil {
+			if err := save(r.fileURI, all); err != nil {
 				r.logger.Log(err.Error())
 				break
 			}
@@ -157,15 +159,14 @@ func (r *Runner) backgroundSync() {
 	}
 }
 
-func load() ([]*task.Task, error) {
-	uri := storage.NewFileURI("tasks.json")
-	fr, err := storage.Reader(uri)
+func load(fu fyne.URI) ([]*task.Task, error) {
+	fr, err := storage.Reader(fu)
 	if err != nil {
 		return []*task.Task{}, err
 	}
 	defer fr.Close()
 
-	exists, err := storage.Exists(uri)
+	exists, err := storage.Exists(fu)
 	if !exists {
 		return []*task.Task{}, fmt.Errorf("uri does not exist")
 	}
@@ -185,9 +186,8 @@ func load() ([]*task.Task, error) {
 	return storedTasks, nil
 }
 
-func save(tasks []*task.Task) error {
-	uri := storage.NewFileURI("tasks.json")
-	fw, err := storage.Writer(uri)
+func save(fu fyne.URI, tasks []*task.Task) error {
+	fw, err := storage.Writer(fu)
 	if err != nil {
 		return err
 	}
