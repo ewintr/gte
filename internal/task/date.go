@@ -1,6 +1,7 @@
 package task
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -47,6 +48,21 @@ func (wds Weekdays) Unique() Weekdays {
 
 type Date struct {
 	t time.Time
+}
+
+func (d *Date) MarshalJSON() ([]byte, error) {
+	return json.Marshal(d.String())
+}
+
+func (d *Date) UnmarshalJSON(data []byte) error {
+	dateString := ""
+	if err := json.Unmarshal(data, &dateString); err != nil {
+		return err
+	}
+	nd := NewDateFromString(dateString)
+	d.t = nd.Time()
+
+	return nil
 }
 
 func NewDate(year, month, day int) Date {

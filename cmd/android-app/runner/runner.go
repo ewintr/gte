@@ -1,14 +1,18 @@
 package runner
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"sync"
 	"time"
 
 	"ewintr.nl/gte/cmd/android-app/component"
 	"ewintr.nl/gte/cmd/android-app/screen"
+	"ewintr.nl/gte/internal/task"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/storage"
 )
 
 var runnerLock = sync.Mutex{}
@@ -45,11 +49,12 @@ func (r *Runner) Init() fyne.CanvasObject {
 	configTab := container.NewTabItem("config", configScreen.Content())
 	r.screens = append(r.screens, configScreen)
 
-	tasks, err := component.NewTasks(r.conf)
+	stored, err := load()
 	if err != nil {
 		r.logger.Log(err.Error())
 	}
-	r.tasks = tasks
+	r.logger.Log(fmt.Sprintf("loaded %d tasks from file", len(stored)))
+	r.tasks = component.NewTasks(r.conf, stored)
 	taskScreen := screen.NewTasks(r.requests)
 	taskTab := container.NewTabItem("tasks", taskScreen.Content())
 	r.screens = append(r.screens, taskScreen)
@@ -88,8 +93,19 @@ func (r *Runner) processRequest() {
 			r.logger.Log(fmt.Sprintf("task sync: dispatched: %d, fetched: %d", countDisp, countFetch))
 			//}
 			r.status = "ready"
-			r.logger.Log("sync request done")
 
+			r.logger.Log("fetching all")
+			all, err := r.tasks.All()
+			if err != nil {
+				r.logger.Log(err.Error())
+				break
+			}
+			r.logger.Log("saving all")
+			if err := save(all); err != nil {
+				r.logger.Log(err.Error())
+				break
+			}
+			r.logger.Log("sync request done")
 		case screen.MarkTaskDoneRequest:
 			if err := r.tasks.MarkDone(v.ID); err != nil {
 				r.logger.Log(err.Error())
@@ -111,6 +127,7 @@ func (r *Runner) refresher() {
 		if err != nil {
 			r.logger.Log(err.Error())
 		}
+		r.logger.Log(fmt.Sprintf("found %d tasks", len(tasks)))
 		sTasks := []screen.Task{}
 		for id, action := range tasks {
 			sTasks = append(sTasks, screen.Task{
@@ -138,4 +155,51 @@ func (r *Runner) backgroundSync() {
 		r.requests <- screen.SyncTasksRequest{}
 		<-ticker.C
 	}
+}
+
+func load() ([]*task.Task, error) {
+	uri := storage.NewFileURI("tasks.json")
+	fr, err := storage.Reader(uri)
+	if err != nil {
+		return []*task.Task{}, err
+	}
+	defer fr.Close()
+
+	exists, err := storage.Exists(uri)
+	if !exists {
+		return []*task.Task{}, fmt.Errorf("uri does not exist")
+	}
+	if err != nil {
+		return []*task.Task{}, err
+	}
+	data, err := io.ReadAll(fr)
+	if err != nil {
+		return []*task.Task{}, err
+	}
+
+	storedTasks := []*task.Task{}
+	if err := json.Unmarshal(data, &storedTasks); err != nil {
+		return []*task.Task{}, err
+	}
+
+	return storedTasks, nil
+}
+
+func save(tasks []*task.Task) error {
+	uri := storage.NewFileURI("tasks.json")
+	fw, err := storage.Writer(uri)
+	if err != nil {
+		return err
+	}
+
+	data, err := json.Marshal(tasks)
+	if err != nil {
+		return err
+	}
+	if _, err := fw.Write(data); err != nil {
+		return err
+	}
+	defer fw.Close()
+
+	return nil
 }

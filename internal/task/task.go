@@ -64,15 +64,15 @@ type Task struct {
 	// local situations. It will be filtered out in LocalRepository.SetTasks()
 	Message *mstore.Message
 
-	Id      string
-	Version int
-	Folder  string
+	Id      string `json:"id"`
+	Version int    `json:"version"`
+	Folder  string `json:"folder"`
 
-	Action  string
-	Project string
-	Due     Date
-	Recur   Recurrer
-	Done    bool
+	Action  string   `json:"action"`
+	Project string   `json:"project"`
+	Due     Date     `json:"date"`
+	Recur   Recurrer `json:"-"`
+	Done    bool     `json:"done"`
 }
 
 func NewFromMessage(msg *mstore.Message) *Task {

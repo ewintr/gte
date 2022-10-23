@@ -18,8 +18,8 @@ type Tasks struct {
 	disp   *storage.Dispatcher
 }
 
-func NewTasks(conf *Configuration) (*Tasks, error) {
-	local := storage.NewMemory()
+func NewTasks(conf *Configuration, tasks []*task.Task) *Tasks {
+	local := storage.NewMemory(tasks...)
 	remote := storage.NewRemoteRepository(mstore.NewIMAP(conf.IMAP()))
 	disp := storage.NewDispatcher(msend.NewSSLSMTP(conf.SMTP()))
 
@@ -27,7 +27,23 @@ func NewTasks(conf *Configuration) (*Tasks, error) {
 		local:  local,
 		remote: remote,
 		disp:   disp,
-	}, nil
+	}
+}
+
+func (t *Tasks) All() ([]*task.Task, error) {
+	lts, err := t.local.FindAll()
+	if err != nil {
+		return []*task.Task{}, err
+	}
+	for _, lt := range lts {
+		lt.ApplyUpdate()
+	}
+	ts := []*task.Task{}
+	for _, lt := range lts {
+		ts = append(ts, &lt.Task)
+	}
+
+	return ts, nil
 }
 
 func (t *Tasks) Today() (map[string]string, error) {

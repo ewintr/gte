@@ -21,6 +21,7 @@ type Tasks struct {
 	tasks        []Task
 	taskLabels   binding.StringList
 	selectedTask string
+	list         *widget.List
 	out          chan interface{}
 }
 
@@ -44,6 +45,9 @@ func (t *Tasks) Refresh(state State) {
 		tls = append(tls, t.Action)
 	}
 	t.taskLabels.Set(tls)
+	if t.selectedTask == "" {
+		t.list.UnselectAll()
+	}
 }
 
 func (t *Tasks) Content() fyne.CanvasObject {
@@ -53,7 +57,7 @@ func (t *Tasks) Content() fyne.CanvasObject {
 	doneButton := widget.NewButton("done", func() {
 		t.markDone()
 	})
-	list := widget.NewListWithData(
+	t.list = widget.NewListWithData(
 		t.taskLabels,
 		func() fyne.CanvasObject {
 			return widget.NewLabel("template")
@@ -62,14 +66,14 @@ func (t *Tasks) Content() fyne.CanvasObject {
 			o.(*widget.Label).Bind(i.(binding.String))
 		},
 	)
-	list.OnSelected = t.selectItem
+	t.list.OnSelected = t.selectItem
 
 	return container.NewBorder(
 		container.NewHBox(statusLabel),
 		doneButton,
 		nil,
 		nil,
-		list,
+		t.list,
 	)
 }
 
@@ -89,4 +93,5 @@ func (t *Tasks) markDone() {
 	t.out <- MarkTaskDoneRequest{
 		ID: t.selectedTask,
 	}
+	t.selectedTask = ""
 }

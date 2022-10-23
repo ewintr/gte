@@ -13,10 +13,10 @@ func main() {
 	conf.Load()
 	logger := component.NewLogger()
 
-	runner := runner.NewRunner(conf, logger)
-	tabs := runner.Init()
+	r := runner.NewRunner(conf, logger)
+	tabs := r.Init()
 	w.SetContent(tabs)
-	go runner.Run()
+	go r.Run()
 
 	w.ShowAndRun()
 }

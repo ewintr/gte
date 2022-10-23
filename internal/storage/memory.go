@@ -13,9 +13,17 @@ type Memory struct {
 	latestSync time.Time
 }
 
-func NewMemory() *Memory {
+func NewMemory(initTasks ...*task.Task) *Memory {
+	tasks := map[string]*task.LocalTask{}
+	for _, t := range initTasks {
+		tasks[t.Id] = &task.LocalTask{
+			Task:        *t,
+			LocalUpdate: &task.LocalUpdate{},
+		}
+	}
+
 	return &Memory{
-		tasks: map[string]*task.LocalTask{},
+		tasks: tasks,
 	}
 }
 
