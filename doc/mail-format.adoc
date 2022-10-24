@@ -28,7 +28,7 @@ Recognized fields are:
 
 == Date string
 
-There are several options to specify a date. The general form is `YYYY-MM-DD`. In addition to that `today` and `tomorrow` are also understood, as are the days of the week: `monday`, `tuesday`, `wednesday`, `friday`, `saturday`, `sunday`. Those indicate the first occurence of that weekday _after_ the current day. Unrecognized values will erase the field.
+There are several options to specify a date. The general form is `YYYY-MM-DD`. In addition to that `today` and `tomorrow` are also understood, as are the days of the week: `monday`, `tuesday`, `wednesday`, `friday`, `saturday`, `sunday` and their abbreviations `tod`, `tom`, `mon`, `tue`, `wed`, `thu`, `fri`, `sat` and `sun`. Those indicate the first occurence of that weekday _after_ the current day. Unrecognized values will erase the field. 
 
 == Recur string
 

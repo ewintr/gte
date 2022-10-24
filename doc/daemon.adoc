@@ -1,4 +1,4 @@
-= Long running daemon
+= App: daemon for inbox processing and generating recurring tasks
 2022-09-26
 
 There are two scripts that need to be executed on a regular basis:
