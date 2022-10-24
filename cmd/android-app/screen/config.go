@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
 )
@@ -45,11 +46,13 @@ func (ff *FormField) GetValue() string {
 }
 
 type Config struct {
-	fields []*FormField
-	out    chan interface{}
+	fields   []*FormField
+	commands chan interface{}
+	show     chan string
+	root     *fyne.Container
 }
 
-func NewConfig(out chan interface{}) *Config {
+func NewConfig(commands chan interface{}, show chan string) *Config {
 	fields := []*FormField{}
 	for _, f := range [][2]string{
 		{"ConfigIMAPURL", "imap url"},
@@ -68,10 +71,14 @@ func NewConfig(out chan interface{}) *Config {
 		fields = append(fields, NewFormField(f[0], f[1]))
 	}
 
-	return &Config{
-		fields: fields,
-		out:    out,
+	config := &Config{
+		fields:   fields,
+		commands: commands,
+		show:     show,
 	}
+	config.Init()
+
+	return config
 }
 
 func (cf *Config) Save() {
@@ -81,7 +88,8 @@ func (cf *Config) Save() {
 	for _, f := range cf.fields {
 		req.Fields[f.Key] = f.GetValue()
 	}
-	cf.out <- req
+	cf.commands <- req
+	cf.show <- "tasks"
 }
 
 func (cf *Config) Refresh(state State) {
@@ -92,7 +100,7 @@ func (cf *Config) Refresh(state State) {
 	}
 }
 
-func (cf *Config) Content() fyne.CanvasObject {
+func (cf *Config) Init() {
 	configForm := widget.NewForm()
 	for _, f := range cf.fields {
 		w := widget.NewEntry()
@@ -104,5 +112,23 @@ func (cf *Config) Content() fyne.CanvasObject {
 	configForm.OnSubmit = cf.Save
 	configForm.Enable()
 
-	return configForm
+	cf.root = container.NewBorder(
+		nil,
+		nil,
+		nil,
+		nil,
+		configForm,
+	)
+}
+
+func (cf *Config) Content() *fyne.Container {
+	return cf.root
+}
+
+func (cf *Config) Hide() {
+	cf.root.Hide()
+}
+
+func (cf *Config) Show() {
+	cf.root.Show()
 }

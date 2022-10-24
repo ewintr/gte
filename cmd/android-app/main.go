@@ -9,7 +9,7 @@ import (
 
 func main() {
 	fyneApp := app.NewWithID("nl.ewintr.gte")
-	w := fyneApp.NewWindow("gte - getting things email")
+	fyneWindow := fyneApp.NewWindow("gte - getting things email")
 	conf := component.NewConfigurationFromPreferences(fyneApp.Preferences())
 	conf.Load()
 	logger := component.NewLogger()
@@ -20,9 +20,9 @@ func main() {
 	}
 
 	r := runner.NewRunner(conf, tasksURI, logger)
-	tabs := r.Init()
-	w.SetContent(tabs)
+	rootContainer := r.Init()
+	fyneWindow.SetContent(rootContainer)
 	go r.Run()
 
-	w.ShowAndRun()
+	fyneWindow.ShowAndRun()
 }

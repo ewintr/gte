@@ -11,7 +11,6 @@ import (
 	"ewintr.nl/gte/cmd/android-app/screen"
 	"ewintr.nl/gte/internal/task"
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/storage"
 )
 
@@ -23,11 +22,11 @@ type Runner struct {
 	conf       *component.Configuration
 	logger     *component.Logger
 	tasks      *component.Tasks
-	screens    []screen.Screen
 	status     string
 	requests   chan interface{}
 	refresh    chan bool
 	fileURI    fyne.URI
+	screenSet  *screen.ScreenSet
 }
 
 func NewRunner(conf *component.Configuration, fileURI fyne.URI, logger *component.Logger) *Runner {
@@ -42,30 +41,20 @@ func NewRunner(conf *component.Configuration, fileURI fyne.URI, logger *componen
 }
 
 func (r *Runner) Init() fyne.CanvasObject {
-
-	logScreen := screen.NewLog()
-	logTab := container.NewTabItem("log", logScreen.Content())
-	r.screens = append(r.screens, logScreen)
-
-	configScreen := screen.NewConfig(r.requests)
-	configTab := container.NewTabItem("config", configScreen.Content())
-	r.screens = append(r.screens, configScreen)
-
 	stored, err := load(r.fileURI)
 	if err != nil {
 		r.logger.Log(err.Error())
 	}
 	r.logger.Log(fmt.Sprintf("loaded %d tasks from file", len(stored)))
 	r.tasks = component.NewTasks(r.conf, stored)
-	taskScreen := screen.NewTasks(r.requests)
-	taskTab := container.NewTabItem("tasks", taskScreen.Content())
-	r.screens = append(r.screens, taskScreen)
-	tabs := container.NewAppTabs(taskTab, configTab, logTab)
 
-	return tabs
+	r.screenSet = screen.NewScreenSet(r.requests)
+
+	return r.screenSet.Content()
 }
 
 func (r *Runner) Run() {
+	go r.screenSet.Run()
 	go r.refresher()
 	go r.processRequest()
 	r.backgroundSync()
@@ -80,7 +69,7 @@ func (r *Runner) processRequest() {
 			for k, val := range v.Fields {
 				r.conf.Set(k, val)
 			}
-			r.status = "ready"
+			r.status = "config saved"
 			r.logger.Log("config saved")
 		case screen.SyncTasksRequest:
 			r.status = "syncing..."
@@ -92,7 +81,7 @@ func (r *Runner) processRequest() {
 			if countDisp > 0 || countFetch > 0 {
 				r.logger.Log(fmt.Sprintf("task sync: dispatched: %d, fetched: %d", countDisp, countFetch))
 			}
-			r.status = "ready"
+			r.status = "synced"
 			all, err := r.tasks.All()
 			if err != nil {
 				r.logger.Log(err.Error())
@@ -103,10 +92,13 @@ func (r *Runner) processRequest() {
 				break
 			}
 		case screen.MarkTaskDoneRequest:
+			r.status = "marking done..."
+			r.refresh <- true
 			if err := r.tasks.MarkDone(v.ID); err != nil {
 				r.logger.Log(err.Error())
 			}
 			r.logger.Log(fmt.Sprintf("marked task %q done", v.ID))
+			r.status = "marked done"
 		default:
 			r.logger.Log("request unknown")
 		}
@@ -135,9 +127,7 @@ func (r *Runner) refresher() {
 			Logs:   r.logger.Lines(),
 		}
 
-		for _, s := range r.screens {
-			s.Refresh(state)
-		}
+		r.screenSet.Refresh(state)
 	}
 }
 

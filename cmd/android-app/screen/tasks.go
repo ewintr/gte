@@ -1,7 +1,6 @@
 package screen
 
 import (
-	"fmt"
 	"sort"
 
 	"fyne.io/fyne/v2"
@@ -17,25 +16,28 @@ type MarkTaskDoneRequest struct {
 }
 
 type Tasks struct {
-	status       binding.String
 	tasks        []Task
 	taskLabels   binding.StringList
 	selectedTask string
 	list         *widget.List
-	out          chan interface{}
+	commands     chan interface{}
+	show         chan string
+	root         *fyne.Container
 }
 
-func NewTasks(out chan interface{}) *Tasks {
-	return &Tasks{
-		status:     binding.NewString(),
+func NewTasks(commands chan interface{}, show chan string) *Tasks {
+	tasks := &Tasks{
 		tasks:      []Task{},
 		taskLabels: binding.NewStringList(),
-		out:        out,
+		commands:   commands,
+		show:       show,
 	}
+	tasks.Init()
+
+	return tasks
 }
 
 func (t *Tasks) Refresh(state State) {
-	t.status.Set(fmt.Sprintf("> %s", state.Status))
 	t.tasks = state.Tasks
 	sort.Slice(t.tasks, func(i, j int) bool {
 		return t.tasks[i].Action < t.tasks[j].Action
@@ -50,10 +52,7 @@ func (t *Tasks) Refresh(state State) {
 	}
 }
 
-func (t *Tasks) Content() fyne.CanvasObject {
-	statusLabel := widget.NewLabel("> init...")
-	statusLabel.Bind(t.status)
-	statusLabel.TextStyle.Italic = true
+func (t *Tasks) Init() {
 	doneButton := widget.NewButton("done", func() {
 		t.markDone()
 	})
@@ -68,13 +67,25 @@ func (t *Tasks) Content() fyne.CanvasObject {
 	)
 	t.list.OnSelected = t.selectItem
 
-	return container.NewBorder(
-		container.NewHBox(statusLabel),
+	t.root = container.NewBorder(
+		nil,
 		doneButton,
 		nil,
 		nil,
 		t.list,
 	)
+}
+
+func (t *Tasks) Content() *fyne.Container {
+	return t.root
+}
+
+func (t *Tasks) Hide() {
+	t.root.Hide()
+}
+
+func (t *Tasks) Show() {
+	t.root.Show()
 }
 
 func (t *Tasks) selectItem(lid widget.ListItemID) {
@@ -90,7 +101,7 @@ func (t *Tasks) markDone() {
 	if t.selectedTask == "" {
 		return
 	}
-	t.out <- MarkTaskDoneRequest{
+	t.commands <- MarkTaskDoneRequest{
 		ID: t.selectedTask,
 	}
 	t.selectedTask = ""
