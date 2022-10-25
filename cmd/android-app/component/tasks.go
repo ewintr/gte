@@ -71,18 +71,18 @@ func (t *Tasks) Sync() (int, int, error) {
 		return 0, 0, err
 	}
 
-	latestFetch, err := t.local.LatestSync()
+	latestFetch, latestDisp, err := t.local.LatestSyncs()
 	if err != nil {
 		return 0, 0, err
 	}
 	// use unix timestamp for time comparison, because time.Before and
-	// time.After depend on a monotonic clock and in Android the
-	// monotonic clock stops ticking if the phone is in suspended sleep
-	if latestFetch.Add(15*time.Minute).Unix() > time.Now().Unix() {
+	// time.After depend on a monotonic clock and on my phone the
+	// monotonic clock stops ticking when it goes to suspended sleep
+	if latestFetch.Add(15*time.Minute).Unix() > time.Now().Unix() || latestDisp.Add(2*time.Minute).Unix() > time.Now().Unix() {
 		return countDisp, 0, nil
 	}
 
-	res, err := process.NewFetch(t.remote, t.local).Process()
+	res, err := process.NewFetch(t.remote, t.local, task.FOLDER_PLANNED).Process()
 	if err != nil {
 		return countDisp, 0, err
 	}

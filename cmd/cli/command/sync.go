@@ -17,6 +17,8 @@ type Sync struct {
 	sender        *process.Send
 	fetchInterval time.Duration
 	fetchLatest   time.Time
+	dispInterval  time.Duration
+	dispLatest    time.Time
 }
 
 func NewSync(conf *configuration.Configuration) (*Sync, error) {
@@ -27,17 +29,20 @@ func NewSync(conf *configuration.Configuration) (*Sync, error) {
 	remote := storage.NewRemoteRepository(mstore.NewIMAP(conf.IMAP()))
 	disp := storage.NewDispatcher(msend.NewSSLSMTP(conf.SMTP()))
 
-	fetchLatest, err := local.LatestSync()
+	fetchLatest, dispLatest, err := local.LatestSyncs()
 	if err != nil {
 		return &Sync{}, err
 	}
 	fetchInterval := 15 * time.Minute // not yet configurable
+	dispInterval := 2 * time.Minute
 
 	return &Sync{
 		fetcher:       process.NewFetch(remote, local),
 		sender:        process.NewSend(local, disp),
 		fetchInterval: fetchInterval,
 		fetchLatest:   fetchLatest,
+		dispInterval:  dispInterval,
+		dispLatest:    dispLatest,
 	}, nil
 }
 
@@ -46,9 +51,16 @@ func (s *Sync) Do() string {
 	if err != nil {
 		return format.FormatError(err)
 	}
+	if countSend > 0 {
+		return fmt.Sprintf("sent %d tasks, not fetching yet\n", countSend)
+	}
+
+	if time.Now().Before(s.dispLatest.Add(s.dispInterval)) {
+		return "sent 0 tasks, send interval has not passed yet\n"
+	}
 
 	if time.Now().Before(s.fetchLatest.Add(s.fetchInterval)) {
-		return fmt.Sprintf("sent %d tasks, not time to fetch yet\n", countSend)
+		return "sent 0 tasks, fetch interval has not passed yet\n"
 	}
 
 	fResult, err := s.fetcher.Process()
@@ -56,5 +68,5 @@ func (s *Sync) Do() string {
 		return format.FormatError(err)
 	}
 
-	return fmt.Sprintf("sent %d, fetched %d tasks\n", countSend, fResult.Count)
+	return fmt.Sprintf("fetched %d tasks\n", fResult.Count)
 }

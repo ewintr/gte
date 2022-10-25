@@ -9,17 +9,21 @@ import (
 
 // Memory is an in memory implementation of LocalRepository
 type Memory struct {
-	tasks      map[string]*task.LocalTask
-	latestSync time.Time
+	tasks          map[string]*task.LocalTask
+	latestFetch    time.Time
+	latestDispatch time.Time
 }
 
 func NewMemory(initTasks ...*task.Task) *Memory {
 	tasks := map[string]*task.LocalTask{}
+	id := 1
 	for _, t := range initTasks {
 		tasks[t.Id] = &task.LocalTask{
 			Task:        *t,
 			LocalUpdate: &task.LocalUpdate{},
+			LocalId:     id,
 		}
+		id++
 	}
 
 	return &Memory{
@@ -27,8 +31,8 @@ func NewMemory(initTasks ...*task.Task) *Memory {
 	}
 }
 
-func (m *Memory) LatestSync() (time.Time, error) {
-	return m.latestSync, nil
+func (m *Memory) LatestSyncs() (time.Time, time.Time, error) {
+	return m.latestFetch, m.latestDispatch, nil
 }
 
 func (m *Memory) SetTasks(tasks []*task.Task) error {
@@ -43,7 +47,7 @@ func (m *Memory) SetTasks(tasks []*task.Task) error {
 	for _, nt := range newTasks {
 		m.tasks[nt.Id] = nt
 	}
-	m.latestSync = time.Now()
+	m.latestFetch = time.Now()
 
 	return nil
 }
@@ -87,6 +91,7 @@ func (m *Memory) SetLocalUpdate(id string, update *task.LocalUpdate) error {
 func (m *Memory) MarkDispatched(localId int) error {
 	t, _ := m.FindByLocalId(localId)
 	m.tasks[t.Id].LocalStatus = task.STATUS_DISPATCHED
+	m.latestDispatch = time.Now()
 
 	return nil
 }

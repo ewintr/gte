@@ -13,7 +13,7 @@ var (
 )
 
 type LocalRepository interface {
-	LatestSync() (time.Time, error)
+	LatestSyncs() (time.Time, time.Time, error) // last fetch, last dispatch, err
 	SetTasks(tasks []*task.Task) error
 	FindAll() ([]*task.LocalTask, error)
 	FindById(id string) (*task.LocalTask, error)

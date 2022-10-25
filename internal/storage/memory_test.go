@@ -48,16 +48,19 @@ func TestMemory(t *testing.T) {
 	localTask3 := &task.LocalTask{Task: *task3, LocalUpdate: emptyUpdate, LocalStatus: task.STATUS_FETCHED}
 
 	t.Run("sync", func(t *testing.T) {
-		mem := storage.NewMemory()
-		latest, err := mem.LatestSync()
+		mem := storage.NewMemory(task1)
+		latestFetch, latestDisp, err := mem.LatestSyncs()
 		test.OK(t, err)
-		test.Assert(t, latest.IsZero(), "lastest was not zero")
+		test.Assert(t, latestFetch.IsZero(), "latestfetch was not zero")
+		test.Assert(t, latestDisp.IsZero(), "latestdisp  was not zero")
 
 		start := time.Now()
 		test.OK(t, mem.SetTasks(tasks))
-		latest, err = mem.LatestSync()
+		test.OK(t, mem.MarkDispatched(1))
+		latestFetch, latestDisp, err = mem.LatestSyncs()
 		test.OK(t, err)
-		test.Assert(t, latest.After(start), "latest was not after start")
+		test.Assert(t, latestFetch.After(start), "latestfetch was not after start")
+		test.Assert(t, latestDisp.After(start), "latestdisp was not after start")
 	})
 
 	t.Run("findallin", func(t *testing.T) {

@@ -27,6 +27,9 @@ var sqliteMigrations = []sqliteMigration{
 	`DROP TABLE local_task`,
 	`ALTER TABLE task ADD COLUMN local_status TEXT`,
 	`UPDATE task SET local_status = "fetched"`,
+	`DROP TABLE system`,
+	`CREATE TABLE system ("latest_fetch" INTEGER, "latest_dispatch" INTEGER)`,
+	`INSERT INTO system (latest_fetch, latest_dispatch) VALUES (0, 0)`,
 }
 
 var (
@@ -62,20 +65,20 @@ func NewSqlite(conf *SqliteConfig) (*Sqlite, error) {
 	return s, nil
 }
 
-func (s *Sqlite) LatestSync() (time.Time, error) {
-	rows, err := s.db.Query(`SELECT strftime('%s', latest_sync) FROM system`)
+func (s *Sqlite) LatestSyncs() (time.Time, time.Time, error) {
+	rows, err := s.db.Query(`SELECT strftime('%s', latest_fetch), strftime('%s', latest_dispatch) FROM system`)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+		return time.Time{}, time.Time{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
 	defer rows.Close()
 
 	rows.Next()
-	var latest int64
-	if err := rows.Scan(&latest); err != nil {
-		return time.Time{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+	var latest_fetch, latest_dispatch int64
+	if err := rows.Scan(&latest_fetch, &latest_dispatch); err != nil {
+		return time.Time{}, time.Time{}, fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
 
-	return time.Unix(latest, 0), nil
+	return time.Unix(latest_fetch, 0), time.Unix(latest_dispatch, 0), nil
 }
 
 func (s *Sqlite) SetTasks(tasks []*task.Task) error {
@@ -112,7 +115,7 @@ VALUES
 		}
 	}
 
-	if _, err := s.db.Exec(`UPDATE system SET latest_sync=DATETIME('now')`); err != nil {
+	if _, err := s.db.Exec(`UPDATE system SET latest_fetch=DATETIME('now')`); err != nil {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
 
@@ -221,6 +224,13 @@ SET local_status = ?
 WHERE local_id = ?`, task.STATUS_DISPATCHED, localId); err != nil {
 		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
 	}
+
+	if _, err := s.db.Exec(`
+UPDATE system
+SET latest_dispatch=DATETIME('now')`); err != nil {
+		return fmt.Errorf("%w: %v", ErrSqliteFailure, err)
+	}
+
 	return nil
 }
 

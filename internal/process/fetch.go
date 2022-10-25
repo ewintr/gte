@@ -15,8 +15,9 @@ var (
 
 // Fetch fetches all tasks in regular folders from the remote repository and overwrites what is stored locally
 type Fetch struct {
-	remote *storage.RemoteRepository
-	local  storage.LocalRepository
+	remote  *storage.RemoteRepository
+	local   storage.LocalRepository
+	folders []string
 }
 
 type FetchResult struct {
@@ -24,17 +25,22 @@ type FetchResult struct {
 	Count    int    `json:"count"`
 }
 
-func NewFetch(remote *storage.RemoteRepository, local storage.LocalRepository) *Fetch {
+func NewFetch(remote *storage.RemoteRepository, local storage.LocalRepository, folders ...string) *Fetch {
+	if len(folders) == 0 {
+		folders = task.KnownFolders
+	}
+
 	return &Fetch{
-		remote: remote,
-		local:  local,
+		remote:  remote,
+		local:   local,
+		folders: folders,
 	}
 }
 
 func (s *Fetch) Process() (*FetchResult, error) {
 	start := time.Now()
 	tasks := []*task.Task{}
-	for _, folder := range task.KnownFolders {
+	for _, folder := range s.folders {
 		if folder == task.FOLDER_INBOX {
 			continue
 		}
