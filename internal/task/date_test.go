@@ -142,6 +142,10 @@ func TestNewDateFromString(t *testing.T) {
 				name:  "dayname capitalized",
 				input: "Monday",
 			},
+			{
+				name:  "dayname short",
+				input: "mon",
+			},
 		} {
 			t.Run(tc.name, func(t *testing.T) {
 				test.Equals(t, monday, task.NewDateFromString(tc.input))
@@ -159,7 +163,15 @@ func TestNewDateFromString(t *testing.T) {
 				exp:  task.Today(),
 			},
 			{
+				name: "tod",
+				exp:  task.Today(),
+			},
+			{
 				name: "tomorrow",
+				exp:  task.Today().Add(1),
+			},
+			{
+				name: "tom",
 				exp:  task.Today().Add(1),
 			},
 		} {

@@ -116,11 +116,13 @@ func NewDateFromString(date string) Date {
 		fallthrough
 	case "no date":
 		return Date{}
-
 	case "today":
 		return Today()
-
+	case "tod":
+		return Today()
 	case "tomorrow":
+		return Today().AddDays(1)
+	case "tom":
 		return Today().AddDays(1)
 	}
 
@@ -241,35 +243,35 @@ func ParseWeekday(wd string) (time.Weekday, bool) {
 	switch lowerAndTrim(wd) {
 	case "monday":
 		return time.Monday, true
+	case "mon":
+		return time.Monday, true
 	case "tuesday":
+		return time.Tuesday, true
+	case "tue":
 		return time.Tuesday, true
 	case "wednesday":
 		return time.Wednesday, true
+	case "wed":
+		return time.Wednesday, true
 	case "thursday":
+		return time.Thursday, true
+	case "thu":
 		return time.Thursday, true
 	case "friday":
 		return time.Friday, true
+	case "fri":
+		return time.Friday, true
 	case "saturday":
+		return time.Saturday, true
+	case "sat":
 		return time.Saturday, true
 	case "sunday":
 		return time.Sunday, true
-	case "maandag":
-		return time.Monday, true
-	case "dinsdag":
-		return time.Tuesday, true
-	case "woensdag":
-		return time.Wednesday, true
-	case "donderdag":
-		return time.Thursday, true
-	case "vrijdag":
-		return time.Friday, true
-	case "zaterdag":
-		return time.Saturday, true
-	case "zondag":
+	case "sun":
 		return time.Sunday, true
+	default:
+		return time.Monday, false
 	}
-
-	return time.Monday, false
 }
 
 func lowerAndTrim(str string) string {
