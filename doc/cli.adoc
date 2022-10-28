@@ -1,5 +1,5 @@
-= App - command line interface
-2022-10-24
+= App: command line interface
+2022-10-28
 
 The Taskwarrior inspired cli app allows for quick and flexible access to the tasks. It uses an Sqlite database that can be synchonized in the background by a cron job. See the paragraph on Configuration below.
 
