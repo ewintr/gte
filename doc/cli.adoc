@@ -35,7 +35,7 @@ Shows all tasks that are due tomorrow.
 
 Shows all tasks that are due this week.
 
-==== Task management
+=== Task management
 
 `$ gte projects`
 
@@ -49,7 +49,7 @@ Show all tasks in project with name `[PROJECT]`.
 
 Show all tasks in folder with name `[FOLDER]`. Can be `new`, `recurring`, `planned` or `unplanned`.
 
-==== Single task operations
+=== Single task operations
 
 `$ gte new [TASK STRING]`
 
