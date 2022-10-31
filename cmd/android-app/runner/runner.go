@@ -107,6 +107,15 @@ func (r *Runner) processRequest() {
 			}
 			r.status = "saved"
 			r.refresh <- true
+		case screen.UpdateTaskRequest:
+			r.status = "saving..."
+			r.refresh <- true
+			if err := r.tasks.Update(v.ID, v.Due); err != nil {
+				r.logger.Log(err.Error())
+			}
+			r.logger.Log(fmt.Sprintf("updated due date task %q", v.ID))
+			r.status = "saved"
+			r.refresh <- true
 		default:
 			r.logger.Log("request unknown")
 		}

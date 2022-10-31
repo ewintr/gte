@@ -52,6 +52,6 @@ func (l *Log) Hide() {
 	l.root.Hide()
 }
 
-func (l *Log) Show() {
+func (l *Log) Show(_ Task) {
 	l.root.Show()
 }

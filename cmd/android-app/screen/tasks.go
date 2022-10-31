@@ -12,19 +12,20 @@ import (
 type Tasks struct {
 	tasks        []Task
 	taskLabels   binding.StringList
-	selectedTask string
+	selectedTask Task
 	list         *widget.List
 	commands     chan interface{}
-	show         chan string
+	show         chan ShowRequest
 	root         *fyne.Container
 }
 
-func NewTasks(commands chan interface{}, show chan string) *Tasks {
+func NewTasks(commands chan interface{}, show chan ShowRequest) *Tasks {
 	tasks := &Tasks{
-		tasks:      []Task{},
-		taskLabels: binding.NewStringList(),
-		commands:   commands,
-		show:       show,
+		tasks:        []Task{},
+		taskLabels:   binding.NewStringList(),
+		commands:     commands,
+		show:         show,
+		selectedTask: Task{},
 	}
 	tasks.Init()
 
@@ -41,14 +42,17 @@ func (t *Tasks) Refresh(state State) {
 		tls = append(tls, t.Action)
 	}
 	t.taskLabels.Set(tls)
-	if t.selectedTask == "" {
+	if t.selectedTask.ID == "" {
 		t.list.UnselectAll()
 	}
 }
 
 func (t *Tasks) Init() {
 	newButton := widget.NewButton("new", func() {
-		t.show <- "new"
+		t.show <- ShowRequest{Screen: "new"}
+	})
+	updateButton := widget.NewButton("update", func() {
+		t.updateTask()
 	})
 	doneButton := widget.NewButton("done", func() {
 		t.markDone()
@@ -66,7 +70,7 @@ func (t *Tasks) Init() {
 
 	t.root = container.NewBorder(
 		newButton,
-		doneButton,
+		container.NewVBox(updateButton, doneButton),
 		nil,
 		nil,
 		t.list,
@@ -81,7 +85,7 @@ func (t *Tasks) Hide() {
 	t.root.Hide()
 }
 
-func (t *Tasks) Show() {
+func (t *Tasks) Show(_ Task) {
 	t.root.Show()
 }
 
@@ -91,15 +95,26 @@ func (t *Tasks) selectItem(lid widget.ListItemID) {
 		return
 	}
 
-	t.selectedTask = t.tasks[id].ID
+	t.selectedTask = t.tasks[id]
 }
 
 func (t *Tasks) markDone() {
-	if t.selectedTask == "" {
+	if t.selectedTask.ID == "" {
 		return
 	}
 	t.commands <- MarkTaskDoneRequest{
-		ID: t.selectedTask,
+		ID: t.selectedTask.ID,
 	}
-	t.selectedTask = ""
+	t.selectedTask = Task{}
+}
+
+func (t *Tasks) updateTask() {
+	if t.selectedTask.ID == "" {
+		return
+	}
+
+	t.show <- ShowRequest{
+		Screen: "update",
+		Task:   t.selectedTask,
+	}
 }

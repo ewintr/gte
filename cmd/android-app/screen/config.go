@@ -9,11 +9,11 @@ import (
 type Config struct {
 	fields   []*FormField
 	commands chan interface{}
-	show     chan string
+	show     chan ShowRequest
 	root     *fyne.Container
 }
 
-func NewConfig(commands chan interface{}, show chan string) *Config {
+func NewConfig(commands chan interface{}, show chan ShowRequest) *Config {
 	fields := []*FormField{}
 	for _, f := range [][2]string{
 		{"ConfigIMAPURL", "imap url"},
@@ -50,7 +50,7 @@ func (cf *Config) Save() {
 		req.Fields[f.Key] = f.GetValue()
 	}
 	cf.commands <- req
-	cf.show <- "tasks"
+	cf.show <- ShowRequest{Screen: "tasks"}
 }
 
 func (cf *Config) Refresh(state State) {
@@ -90,6 +90,6 @@ func (cf *Config) Hide() {
 	cf.root.Hide()
 }
 
-func (cf *Config) Show() {
+func (cf *Config) Show(_ Task) {
 	cf.root.Show()
 }

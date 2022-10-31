@@ -1,23 +1,19 @@
 package screen
 
 import (
-	"sync"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 )
 
-var newLock sync.Mutex
-
 type NewTask struct {
 	fields   []*FormField
 	commands chan interface{}
-	show     chan string
+	show     chan ShowRequest
 	root     *fyne.Container
 }
 
-func NewNewTask(commands chan interface{}, show chan string) *NewTask {
+func NewNewTask(commands chan interface{}, show chan ShowRequest) *NewTask {
 	fields := []*FormField{}
 	for _, f := range [][2]string{
 		{"action", "action"},
@@ -48,6 +44,8 @@ func (nt *NewTask) Init() {
 
 	taskForm.SubmitText = "save"
 	taskForm.OnSubmit = nt.Save
+	taskForm.CancelText = "cancel"
+	taskForm.OnCancel = nt.Cancel
 	taskForm.Enable()
 	nt.clearForm()
 
@@ -68,9 +66,13 @@ func (nt *NewTask) Save() {
 		req.Fields[f.Key] = f.GetValue()
 	}
 	nt.commands <- req
-	nt.show <- "tasks"
+	nt.show <- ShowRequest{Screen: "tasks"}
 
 	nt.clearForm()
+}
+
+func (nt *NewTask) Cancel() {
+	nt.show <- ShowRequest{Screen: "tasks"}
 }
 
 func (nt *NewTask) clearForm() {
@@ -89,6 +91,6 @@ func (nt *NewTask) Hide() {
 	nt.root.Hide()
 }
 
-func (nt *NewTask) Show() {
+func (nt *NewTask) Show(_ Task) {
 	nt.root.Show()
 }

@@ -13,3 +13,8 @@ type SyncTasksRequest struct{}
 type MarkTaskDoneRequest struct {
 	ID string
 }
+
+type UpdateTaskRequest struct {
+	ID  string
+	Due string
+}

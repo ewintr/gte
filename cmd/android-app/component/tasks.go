@@ -137,3 +137,18 @@ func (t *Tasks) Add(fields map[string]string) error {
 
 	return nil
 }
+
+func (t *Tasks) Update(id, newDue string) error {
+	due := task.NewDateFromString(newDue)
+	localTask, err := t.local.FindById(id)
+	if err != nil {
+		return err
+	}
+	update := &task.LocalUpdate{
+		ForVersion: localTask.Version,
+		Due:        due,
+		Fields:     []string{task.FIELD_DUE},
+	}
+
+	return process.NewUpdate(t.local, localTask.Id, update).Process()
+}

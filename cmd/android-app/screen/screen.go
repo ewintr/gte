@@ -14,6 +14,11 @@ type Task struct {
 	Action string
 }
 
+type ShowRequest struct {
+	Screen string
+	Task   Task
+}
+
 type State struct {
 	Status        string
 	CurrentScreen string
@@ -26,12 +31,12 @@ type Screen interface {
 	Content() *fyne.Container
 	Refresh(state State)
 	Hide()
-	Show()
+	Show(Task)
 }
 
 type ScreenSet struct {
 	current string
-	show    chan string
+	show    chan ShowRequest
 	status  binding.String
 	menu    *fyne.Container
 	screens map[string]Screen
@@ -40,16 +45,16 @@ type ScreenSet struct {
 
 func NewScreenSet(requests chan interface{}) *ScreenSet {
 	status := binding.NewString()
-	show := make(chan string)
+	show := make(chan ShowRequest)
 
 	tasksButton := widget.NewButton("tasks", func() {
-		show <- "tasks"
+		show <- ShowRequest{Screen: "tasks"}
 	})
 	configButton := widget.NewButton("config", func() {
-		show <- "config"
+		show <- ShowRequest{Screen: "config"}
 	})
 	logsButton := widget.NewButton("logs", func() {
-		show <- "logs"
+		show <- ShowRequest{Screen: "logs"}
 	})
 	statusLabel := widget.NewLabel("> init...")
 	statusLabel.Bind(status)
@@ -61,6 +66,7 @@ func NewScreenSet(requests chan interface{}) *ScreenSet {
 		"logs":   NewLog(),
 		"config": NewConfig(requests, show),
 		"new":    NewNewTask(requests, show),
+		"update": NewUpdateTask(requests, show),
 	}
 
 	cs := []fyne.CanvasObject{}
@@ -68,7 +74,7 @@ func NewScreenSet(requests chan interface{}) *ScreenSet {
 		s.Hide()
 		cs = append(cs, s.Content())
 	}
-	screens["tasks"].Show()
+	screens["tasks"].Show(Task{})
 
 	root := container.NewBorder(menu, nil, nil, nil, cs...)
 
@@ -83,10 +89,10 @@ func NewScreenSet(requests chan interface{}) *ScreenSet {
 
 func (ss *ScreenSet) Run() {
 	for s := range ss.show {
-		if s != ss.current {
+		if s.Screen != ss.current {
 			ss.screens[ss.current].Hide()
-			ss.screens[s].Show()
-			ss.current = s
+			ss.screens[s.Screen].Show(s.Task)
+			ss.current = s.Screen
 
 			ss.root.Refresh()
 		}
