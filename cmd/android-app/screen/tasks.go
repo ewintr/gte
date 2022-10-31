@@ -9,12 +9,6 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-type SyncTasksRequest struct{}
-
-type MarkTaskDoneRequest struct {
-	ID string
-}
-
 type Tasks struct {
 	tasks        []Task
 	taskLabels   binding.StringList
@@ -53,6 +47,9 @@ func (t *Tasks) Refresh(state State) {
 }
 
 func (t *Tasks) Init() {
+	newButton := widget.NewButton("new", func() {
+		t.show <- "new"
+	})
 	doneButton := widget.NewButton("done", func() {
 		t.markDone()
 	})
@@ -68,7 +65,7 @@ func (t *Tasks) Init() {
 	t.list.OnSelected = t.selectItem
 
 	t.root = container.NewBorder(
-		nil,
+		newButton,
 		doneButton,
 		nil,
 		nil,

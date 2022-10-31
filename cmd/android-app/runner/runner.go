@@ -99,6 +99,14 @@ func (r *Runner) processRequest() {
 			}
 			r.logger.Log(fmt.Sprintf("marked task %q done", v.ID))
 			r.status = "marked done"
+		case screen.SaveNewTaskRequest:
+			r.status = "saving..."
+			r.refresh <- true
+			if err := r.tasks.Add(v.Fields); err != nil {
+				r.logger.Log(err.Error())
+			}
+			r.status = "saved"
+			r.refresh <- true
 		default:
 			r.logger.Log("request unknown")
 		}

@@ -60,6 +60,7 @@ func NewScreenSet(requests chan interface{}) *ScreenSet {
 		"tasks":  NewTasks(requests, show),
 		"logs":   NewLog(),
 		"config": NewConfig(requests, show),
+		"new":    NewNewTask(requests, show),
 	}
 
 	cs := []fyne.CanvasObject{}

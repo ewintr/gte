@@ -1,6 +1,7 @@
 package component
 
 import (
+	"fmt"
 	"sort"
 	"time"
 
@@ -102,4 +103,37 @@ func (t *Tasks) MarkDone(id string) error {
 	}
 
 	return process.NewUpdate(t.local, id, update).Process()
+}
+
+func (t *Tasks) Add(fields map[string]string) error {
+	update := &task.LocalUpdate{
+		Fields: []string{},
+	}
+	if len(fields["action"]) != 0 {
+		update.Action = fields["action"]
+		update.Fields = append(update.Fields, task.FIELD_ACTION)
+	}
+	if len(fields["project"]) != 0 {
+		update.Project = fields["project"]
+		update.Fields = append(update.Fields, task.FIELD_PROJECT)
+	}
+	due := task.NewDateFromString(fields["due"])
+	if !due.IsZero() {
+		update.Due = due
+		update.Fields = append(update.Fields, task.FIELD_DUE)
+	}
+	recur := task.NewRecurrer(fields["recur"])
+	if recur != nil {
+		update.Recur = recur
+		update.Fields = append(update.Fields, task.FIELD_RECUR)
+	}
+	if len(update.Fields) == 0 {
+		return fmt.Errorf("no fields in new task")
+	}
+
+	if err := process.NewNew(t.local, update).Process(); err != nil {
+		return err
+	}
+
+	return nil
 }
