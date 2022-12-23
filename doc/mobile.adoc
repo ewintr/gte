@@ -1,0 +1,12 @@
+= App: android mobile app
+2022-12-22
+
+Go is not commonly used as a language for creating applications with a graphical interface, let alone for creating mobile apps. But there are tools and frameworks that let you do this. fyne.io[https://fyne.io] is such a framework. The mobile version of GTE is an experiment to see what that looks like, a mobile app in Go.
+
+Features are deliberately kept simple. When you are on the run, you should not be bothered by elaborate thinking about planning. There are two things that you need: a list of things that need to be done now, or today, and a way to jot down new things that come up. The actual organizing and planning can be done later, when you have set time aside for that. This limited scope helped to keep the experiment small.
+
+== Experience
+
+Although the fyne framework actually works pretty nice, once you get the hang of it, I did not end up using the app much. It is not that hard to make it work and look nice, but the style of synchronisation of the tasks does not really work well on a phone. There is some back and forth between an app and the email server before everything is neatly synced. This takes time and is assumed to happen in the background. With the lower transfer speed and with the phone constant falling back in an unconsious sleep mode, it was not really possible to make it look smooth.
+
+To fix this, the synchronisation would have to be a lot smarter on what to fetch and when to send updates. There are general methods of solving this, of course, but combining that with the current available IMAP libraries and the requirement that the system can always be used from a normal email app too would make this a challenge. Maybe I'll get to that, some day. 
