@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"ewintr.nl/go-kit/test"
-	"ewintr.nl/gte/internal/task"
+	"code.ewintr.nl/go-kit/test"
+	"code.ewintr.nl/gte/internal/task"
 )
 
 func TestDaily(t *testing.T) {

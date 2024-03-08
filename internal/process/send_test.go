@@ -3,11 +3,11 @@ package process_test
 import (
 	"testing"
 
-	"ewintr.nl/go-kit/test"
-	"ewintr.nl/gte/internal/process"
-	"ewintr.nl/gte/internal/storage"
-	"ewintr.nl/gte/internal/task"
-	"ewintr.nl/gte/pkg/msend"
+	"code.ewintr.nl/go-kit/test"
+	"code.ewintr.nl/gte/internal/process"
+	"code.ewintr.nl/gte/internal/storage"
+	"code.ewintr.nl/gte/internal/task"
+	"code.ewintr.nl/gte/pkg/msend"
 )
 
 func TestSend(t *testing.T) {

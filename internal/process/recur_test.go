@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"ewintr.nl/go-kit/test"
-	"ewintr.nl/gte/internal/process"
-	"ewintr.nl/gte/internal/storage"
-	"ewintr.nl/gte/internal/task"
-	"ewintr.nl/gte/pkg/msend"
-	"ewintr.nl/gte/pkg/mstore"
+	"code.ewintr.nl/go-kit/test"
+	"code.ewintr.nl/gte/internal/process"
+	"code.ewintr.nl/gte/internal/storage"
+	"code.ewintr.nl/gte/internal/task"
+	"code.ewintr.nl/gte/pkg/msend"
+	"code.ewintr.nl/gte/pkg/mstore"
 )
 
 func TestRecurProcess(t *testing.T) {

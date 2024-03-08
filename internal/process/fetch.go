@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"ewintr.nl/gte/internal/storage"
-	"ewintr.nl/gte/internal/task"
+	"code.ewintr.nl/gte/internal/storage"
+	"code.ewintr.nl/gte/internal/task"
 )
 
 var (

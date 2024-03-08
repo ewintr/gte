@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"ewintr.nl/gte/internal/task"
-	"ewintr.nl/gte/pkg/mstore"
+	"code.ewintr.nl/gte/internal/task"
+	"code.ewintr.nl/gte/pkg/mstore"
 )
 
 var (

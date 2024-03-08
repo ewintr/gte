@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"ewintr.nl/go-kit/test"
-	"ewintr.nl/gte/pkg/mstore"
+	"code.ewintr.nl/go-kit/test"
+	"code.ewintr.nl/gte/pkg/mstore"
 )
 
 func TestNewMemory(t *testing.T) {

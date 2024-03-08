@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"ewintr.nl/gte/internal/configuration"
-	"ewintr.nl/gte/internal/task"
+	"code.ewintr.nl/gte/internal/configuration"
+	"code.ewintr.nl/gte/internal/task"
 )
 
 var (

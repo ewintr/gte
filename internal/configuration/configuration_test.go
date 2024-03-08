@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"ewintr.nl/go-kit/test"
-	"ewintr.nl/gte/internal/configuration"
-	"ewintr.nl/gte/internal/storage"
-	"ewintr.nl/gte/pkg/msend"
-	"ewintr.nl/gte/pkg/mstore"
+	"code.ewintr.nl/go-kit/test"
+	"code.ewintr.nl/gte/internal/configuration"
+	"code.ewintr.nl/gte/internal/storage"
+	"code.ewintr.nl/gte/pkg/msend"
+	"code.ewintr.nl/gte/pkg/mstore"
 )
 
 func TestNew(t *testing.T) {

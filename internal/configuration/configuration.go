@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"ewintr.nl/gte/internal/storage"
-	"ewintr.nl/gte/pkg/msend"
-	"ewintr.nl/gte/pkg/mstore"
+	"code.ewintr.nl/gte/internal/storage"
+	"code.ewintr.nl/gte/pkg/msend"
+	"code.ewintr.nl/gte/pkg/mstore"
 )
 
 var (

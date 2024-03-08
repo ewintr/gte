@@ -4,11 +4,11 @@ import (
 	"sort"
 	"strings"
 
-	"ewintr.nl/gte/cmd/cli/format"
-	"ewintr.nl/gte/internal/configuration"
-	"ewintr.nl/gte/internal/process"
-	"ewintr.nl/gte/internal/storage"
-	"ewintr.nl/gte/internal/task"
+	"code.ewintr.nl/gte/cmd/cli/format"
+	"code.ewintr.nl/gte/internal/configuration"
+	"code.ewintr.nl/gte/internal/process"
+	"code.ewintr.nl/gte/internal/storage"
+	"code.ewintr.nl/gte/internal/task"
 )
 
 type Project struct {

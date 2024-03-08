@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"ewintr.nl/gte/cmd/cli/format"
-	"ewintr.nl/gte/internal/configuration"
-	"ewintr.nl/gte/internal/process"
-	"ewintr.nl/gte/internal/storage"
-	"ewintr.nl/gte/pkg/msend"
-	"ewintr.nl/gte/pkg/mstore"
+	"code.ewintr.nl/gte/cmd/cli/format"
+	"code.ewintr.nl/gte/internal/configuration"
+	"code.ewintr.nl/gte/internal/process"
+	"code.ewintr.nl/gte/internal/storage"
+	"code.ewintr.nl/gte/pkg/msend"
+	"code.ewintr.nl/gte/pkg/mstore"
 )
 
 type Sync struct {

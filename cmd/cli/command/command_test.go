@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"ewintr.nl/go-kit/test"
-	"ewintr.nl/gte/cmd/cli/command"
-	"ewintr.nl/gte/internal/task"
+	"code.ewintr.nl/go-kit/test"
+	"code.ewintr.nl/gte/cmd/cli/command"
+	"code.ewintr.nl/gte/internal/task"
 )
 
 func TestParseTaskFieldArgs(t *testing.T) {

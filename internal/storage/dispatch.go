@@ -1,8 +1,8 @@
 package storage
 
 import (
-	"ewintr.nl/gte/internal/task"
-	"ewintr.nl/gte/pkg/msend"
+	"code.ewintr.nl/gte/internal/task"
+	"code.ewintr.nl/gte/pkg/msend"
 )
 
 type Dispatcher struct {

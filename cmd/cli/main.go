@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"ewintr.nl/gte/cmd/cli/command"
-	"ewintr.nl/gte/internal/configuration"
+	"code.ewintr.nl/gte/cmd/cli/command"
+	"code.ewintr.nl/gte/internal/configuration"
 )
 
 func main() {

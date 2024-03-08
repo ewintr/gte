@@ -1,8 +1,8 @@
 package main
 
 import (
-	"ewintr.nl/gte/cmd/android-app/component"
-	"ewintr.nl/gte/cmd/android-app/runner"
+	"code.ewintr.nl/gte/cmd/android-app/component"
+	"code.ewintr.nl/gte/cmd/android-app/runner"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/storage"
 )

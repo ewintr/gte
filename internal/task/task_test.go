@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"ewintr.nl/go-kit/test"
-	"ewintr.nl/gte/internal/task"
-	"ewintr.nl/gte/pkg/mstore"
+	"code.ewintr.nl/go-kit/test"
+	"code.ewintr.nl/gte/internal/task"
+	"code.ewintr.nl/gte/pkg/mstore"
 )
 
 func TestNewFromMessage(t *testing.T) {
@@ -405,15 +405,15 @@ field: valueb
 			expValue: ": val:ue",
 		},
 		{
-			name:  "trim field",
-			field: "field",
-			body: " field		: value",
+			name:     "trim field",
+			field:    "field",
+			body:     " field		: value",
 			expValue: "value",
 		},
 		{
-			name:  "trim value",
-			field: "field",
-			body: "field: 			value  ",
+			name:     "trim value",
+			field:    "field",
+			body:     "field: 			value  ",
 			expValue: "value",
 		},
 		{

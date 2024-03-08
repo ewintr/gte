@@ -3,7 +3,7 @@ package storage
 import (
 	"time"
 
-	"ewintr.nl/gte/internal/task"
+	"code.ewintr.nl/gte/internal/task"
 	"github.com/google/uuid"
 )
 
