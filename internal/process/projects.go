@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"code.ewintr.nl/gte/internal/storage"
+	"go-mod.ewintr.nl/gte/internal/storage"
 )
 
 var (

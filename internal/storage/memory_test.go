@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"code.ewintr.nl/go-kit/test"
-	"code.ewintr.nl/gte/internal/storage"
-	"code.ewintr.nl/gte/internal/task"
-	"code.ewintr.nl/gte/pkg/mstore"
+	"go-mod.ewintr.nl/go-kit/test"
+	"go-mod.ewintr.nl/gte/internal/storage"
+	"go-mod.ewintr.nl/gte/internal/task"
+	"go-mod.ewintr.nl/gte/pkg/mstore"
 )
 
 func TestMemory(t *testing.T) {

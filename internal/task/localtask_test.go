@@ -3,8 +3,8 @@ package task_test
 import (
 	"testing"
 
-	"code.ewintr.nl/go-kit/test"
-	"code.ewintr.nl/gte/internal/task"
+	"go-mod.ewintr.nl/go-kit/test"
+	"go-mod.ewintr.nl/gte/internal/task"
 )
 
 func TestLocalTaskApply(t *testing.T) {

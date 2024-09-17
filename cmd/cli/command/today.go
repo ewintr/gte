@@ -3,11 +3,11 @@ package command
 import (
 	"sort"
 
-	"code.ewintr.nl/gte/cmd/cli/format"
-	"code.ewintr.nl/gte/internal/configuration"
-	"code.ewintr.nl/gte/internal/process"
-	"code.ewintr.nl/gte/internal/storage"
-	"code.ewintr.nl/gte/internal/task"
+	"go-mod.ewintr.nl/gte/cmd/cli/format"
+	"go-mod.ewintr.nl/gte/internal/configuration"
+	"go-mod.ewintr.nl/gte/internal/process"
+	"go-mod.ewintr.nl/gte/internal/storage"
+	"go-mod.ewintr.nl/gte/internal/task"
 )
 
 // Today lists all task that are due today or past their due date

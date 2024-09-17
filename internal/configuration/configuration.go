@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"code.ewintr.nl/gte/internal/storage"
-	"code.ewintr.nl/gte/pkg/msend"
-	"code.ewintr.nl/gte/pkg/mstore"
+	"go-mod.ewintr.nl/gte/internal/storage"
+	"go-mod.ewintr.nl/gte/pkg/msend"
+	"go-mod.ewintr.nl/gte/pkg/mstore"
 )
 
 var (

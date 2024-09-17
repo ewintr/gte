@@ -3,7 +3,7 @@ package format
 import (
 	"fmt"
 
-	"code.ewintr.nl/gte/internal/task"
+	"go-mod.ewintr.nl/gte/internal/task"
 )
 
 type Column int

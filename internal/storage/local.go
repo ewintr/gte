@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"code.ewintr.nl/gte/internal/task"
+	"go-mod.ewintr.nl/gte/internal/task"
 )
 
 var (

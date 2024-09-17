@@ -5,11 +5,11 @@ import (
 	"sort"
 	"time"
 
-	"code.ewintr.nl/gte/internal/process"
-	"code.ewintr.nl/gte/internal/storage"
-	"code.ewintr.nl/gte/internal/task"
-	"code.ewintr.nl/gte/pkg/msend"
-	"code.ewintr.nl/gte/pkg/mstore"
+	"go-mod.ewintr.nl/gte/internal/process"
+	"go-mod.ewintr.nl/gte/internal/storage"
+	"go-mod.ewintr.nl/gte/internal/task"
+	"go-mod.ewintr.nl/gte/pkg/msend"
+	"go-mod.ewintr.nl/gte/pkg/mstore"
 )
 
 type Tasks struct {

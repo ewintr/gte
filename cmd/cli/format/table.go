@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"code.ewintr.nl/gte/internal/task"
+	"go-mod.ewintr.nl/gte/internal/task"
 )
 
 func FormatTaskTable(tasks []*task.LocalTask, cols []Column) string {

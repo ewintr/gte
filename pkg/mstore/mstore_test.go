@@ -3,8 +3,8 @@ package mstore_test
 import (
 	"testing"
 
-	"code.ewintr.nl/go-kit/test"
-	"code.ewintr.nl/gte/pkg/mstore"
+	"go-mod.ewintr.nl/go-kit/test"
+	"go-mod.ewintr.nl/gte/pkg/mstore"
 )
 
 func TestMessageValid(t *testing.T) {

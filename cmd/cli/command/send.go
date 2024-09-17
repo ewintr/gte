@@ -3,11 +3,11 @@ package command
 import (
 	"fmt"
 
-	"code.ewintr.nl/gte/cmd/cli/format"
-	"code.ewintr.nl/gte/internal/configuration"
-	"code.ewintr.nl/gte/internal/process"
-	"code.ewintr.nl/gte/internal/storage"
-	"code.ewintr.nl/gte/pkg/msend"
+	"go-mod.ewintr.nl/gte/cmd/cli/format"
+	"go-mod.ewintr.nl/gte/internal/configuration"
+	"go-mod.ewintr.nl/gte/internal/process"
+	"go-mod.ewintr.nl/gte/internal/storage"
+	"go-mod.ewintr.nl/gte/pkg/msend"
 )
 
 type Send struct {

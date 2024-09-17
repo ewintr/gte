@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"code.ewintr.nl/gte/internal/storage"
-	"code.ewintr.nl/gte/internal/task"
+	"go-mod.ewintr.nl/gte/internal/storage"
+	"go-mod.ewintr.nl/gte/internal/task"
 )
 
 var (

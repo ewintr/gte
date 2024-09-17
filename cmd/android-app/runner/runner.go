@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"code.ewintr.nl/gte/cmd/android-app/component"
-	"code.ewintr.nl/gte/cmd/android-app/screen"
-	"code.ewintr.nl/gte/internal/task"
+	"go-mod.ewintr.nl/gte/cmd/android-app/component"
+	"go-mod.ewintr.nl/gte/cmd/android-app/screen"
+	"go-mod.ewintr.nl/gte/internal/task"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/storage"
 )
