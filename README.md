@@ -4,7 +4,7 @@ Email based task management. Use your ordinary IMAP mailbox as a todo app from y
 
 See the `/doc` folder for more information:
 
-- [Introduction](doc/getting-things-email.adoc)
+- [Introduction](doc/gte-getting-things-email.adoc)
 - [Basic flow](doc/basic-flow.adoc)
 - [CLI tool](doc/cli.adoc)
 - [Daemon](doc/daemon.adoc)
