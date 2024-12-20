@@ -2,5 +2,14 @@
 
 Email based task management. Use your ordinary IMAP mailbox as a todo app from your terminal, webmail or a generic email app.
 
-Documentation found in the `/doc` folder can also be read online at [https://go-mod.ewintr.nl/gte](https://code.ewintr.nl/gte)
+See the `/doc` folder for more information:
+
+- [Introduction](doc/getting-things-email.adoc)
+- [Basic flow](doc/basic-flow.adoc)
+- [CLI tool](doc/cli.adoc)
+- [Daemon](doc/daemon.adoc)
+- [Mail format](doc/mail-format.adoc)
+- [Mobile app](doc/mobile.adoc)
+
+
 
